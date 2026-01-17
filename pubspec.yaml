@@ -1,0 +1,42 @@
+name: festeasy
+description: A Very Good Project created by Very Good CLI.
+version: 1.0.0+1
+publish_to: none
+
+environment:
+  sdk: ^3.9.0
+  flutter: ^3.35.0
+
+dependencies:
+  bloc: ^9.0.1
+  dio: ^5.9.0
+  flutter:
+    sdk: flutter
+  flutter_bloc: ^9.1.1
+  flutter_localizations:
+    sdk: flutter
+  flutter_map: ^7.0.2
+  font_awesome_flutter: ^10.12.0
+  geocoding: ^4.0.0
+  geolocator: ^14.0.2
+  google_fonts: ^7.0.2
+  http: ^1.2.0
+  intl: ^0.20.2
+  json_annotation: ^4.9.0
+  latlong2: ^0.9.1
+  retrofit: ^4.9.2
+  supabase_flutter: ^2.12.0
+
+dev_dependencies:
+  bloc_test: ^10.0.0
+  build_runner: ^2.10.5
+  flutter_test:
+    sdk: flutter
+  json_serializable: ^6.11.2
+  mocktail: ^1.0.4
+  retrofit_generator: ^10.2.1
+  very_good_analysis: ^10.0.0
+
+flutter:
+  generate: true
+  uses-material-design: true
