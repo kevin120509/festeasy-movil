@@ -7,7 +7,8 @@ class ProviderSearchService {
   static final ProviderSearchService instance = ProviderSearchService._();
 
   // API Key de SerpAPI
-  static const String _apiKey = '44602cc38581c73caee60072799897507f5fa02de0ae5167adc785db23cebefc';
+  static const String _apiKey =
+      '44602cc38581c73caee60072799897507f5fa02de0ae5167adc785db23cebefc';
   static const String _baseUrl = 'https://serpapi.com/search.json';
 
   /// Busca proveedores en Google Maps según la categoría de servicio
@@ -38,8 +39,12 @@ class ProviderSearchService {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final localResults = data['local_results'] as List<dynamic>? ?? [];
-        
-        return localResults.map((item) => ProviderResult.fromJson(item as Map<String, dynamic>)).toList();
+
+        return localResults
+            .map(
+              (item) => ProviderResult.fromJson(item as Map<String, dynamic>),
+            )
+            .toList();
       } else {
         throw Exception('Error al buscar proveedores: ${response.statusCode}');
       }

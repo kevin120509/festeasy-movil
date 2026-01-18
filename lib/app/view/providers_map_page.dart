@@ -7,11 +7,17 @@ import 'package:latlong2/latlong.dart';
 class ProvidersMapPage extends StatefulWidget {
   final String categoryName;
   final String categoryId;
+  final String? serviceAddress;
+  final DateTime? serviceDate;
+  final TimeOfDay? serviceTime;
 
   const ProvidersMapPage({
     Key? key,
     required this.categoryName,
     required this.categoryId,
+    this.serviceAddress,
+    this.serviceDate,
+    this.serviceTime,
   }) : super(key: key);
 
   @override
@@ -62,9 +68,14 @@ class _ProvidersMapPageState extends State<ProvidersMapPage> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
-                      color: isSelected ? const Color(0xFFE01D25) : Colors.white,
+                      color: isSelected
+                          ? const Color(0xFFE01D25)
+                          : Colors.white,
                       borderRadius: BorderRadius.circular(8),
                       boxShadow: [
                         BoxShadow(
@@ -86,8 +97,8 @@ class _ProvidersMapPageState extends State<ProvidersMapPage> {
                   ),
                   Icon(
                     Icons.location_pin,
-                    color: isSelected 
-                        ? const Color(0xFFE01D25) 
+                    color: isSelected
+                        ? const Color(0xFFE01D25)
                         : (provider.isPlus ? Colors.orange : Colors.blue),
                     size: 30,
                   ),
@@ -111,27 +122,29 @@ class _ProvidersMapPageState extends State<ProvidersMapPage> {
 
     try {
       // Buscar proveedores de la base de datos por nombre de categoría
-      final results = await ProviderDatabaseService.instance.getProvidersByCategoryName(
-        widget.categoryName,
-      );
-      
+      final results = await ProviderDatabaseService.instance
+          .getProvidersByCategoryName(
+            widget.categoryName,
+          );
+
       // NO cargar ratings individualmente - muy lento
       // Los ratings se pueden cargar lazy cuando el usuario ve el detalle
-      
+
       if (mounted) {
         setState(() {
           providers = results;
           isLoading = false;
         });
         _updateMarkers();
-        
+
         // Centrar el mapa en el primer proveedor con coordenadas
         if (results.isNotEmpty) {
           final firstWithCoords = results.firstWhere(
             (p) => p.latitud != null && p.longitud != null,
             orElse: () => results.first,
           );
-          if (firstWithCoords.latitud != null && firstWithCoords.longitud != null) {
+          if (firstWithCoords.latitud != null &&
+              firstWithCoords.longitud != null) {
             _mapController.move(
               LatLng(firstWithCoords.latitud!, firstWithCoords.longitud!),
               13,
@@ -187,7 +200,11 @@ class _ProvidersMapPageState extends State<ProvidersMapPage> {
                     ),
                   ],
                 ),
-                child: const Icon(Icons.arrow_back_ios_new, size: 20, color: Color(0xFF010302)),
+                child: const Icon(
+                  Icons.arrow_back_ios_new,
+                  size: 20,
+                  color: Color(0xFF010302),
+                ),
               ),
             ),
             const SizedBox(width: 12),
@@ -195,7 +212,10 @@ class _ProvidersMapPageState extends State<ProvidersMapPage> {
             Expanded(
               child: Center(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(20),
@@ -209,7 +229,11 @@ class _ProvidersMapPageState extends State<ProvidersMapPage> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.location_on, color: Color(0xFFE01D25), size: 16),
+                      const Icon(
+                        Icons.location_on,
+                        color: Color(0xFFE01D25),
+                        size: 16,
+                      ),
                       const SizedBox(width: 6),
                       Flexible(
                         child: Text(
@@ -344,8 +368,8 @@ class _ProvidersMapPageState extends State<ProvidersMapPage> {
                             isLoading
                                 ? 'Buscando...'
                                 : errorMessage != null
-                                    ? 'Error'
-                                    : '${providers.length} Proveedores',
+                                ? 'Error'
+                                : '${providers.length} Proveedores',
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 18,
@@ -357,10 +381,17 @@ class _ProvidersMapPageState extends State<ProvidersMapPage> {
                         ),
                         TextButton.icon(
                           onPressed: _loadProviders,
-                          icon: const Icon(Icons.refresh, color: Color(0xFFE01D25), size: 16),
+                          icon: const Icon(
+                            Icons.refresh,
+                            color: Color(0xFFE01D25),
+                            size: 16,
+                          ),
                           label: const Text(
                             'Actualizar',
-                            style: TextStyle(color: Color(0xFFE01D25), fontSize: 12),
+                            style: TextStyle(
+                              color: Color(0xFFE01D25),
+                              fontSize: 12,
+                            ),
                           ),
                         ),
                       ],
@@ -368,7 +399,10 @@ class _ProvidersMapPageState extends State<ProvidersMapPage> {
                     // Mostrar categoría filtrada
                     Container(
                       margin: const EdgeInsets.only(top: 4),
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFFFE5E7),
                         borderRadius: BorderRadius.circular(8),
@@ -376,7 +410,11 @@ class _ProvidersMapPageState extends State<ProvidersMapPage> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.filter_alt, size: 14, color: Color(0xFFE01D25)),
+                          const Icon(
+                            Icons.filter_alt,
+                            size: 14,
+                            color: Color(0xFFE01D25),
+                          ),
                           const SizedBox(width: 4),
                           Flexible(
                             child: Text(
@@ -402,139 +440,156 @@ class _ProvidersMapPageState extends State<ProvidersMapPage> {
                 child: isLoading
                     ? const Center(
                         child: CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE01D25)),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Color(0xFFE01D25),
+                          ),
                         ),
                       )
                     : errorMessage != null
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Icons.error_outline, size: 48, color: Colors.grey),
-                                const SizedBox(height: 12),
-                                Text(
-                                  errorMessage!,
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(color: Colors.grey),
-                                ),
-                                const SizedBox(height: 16),
-                                ElevatedButton(
-                                  onPressed: _loadProviders,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFFE01D25),
-                                  ),
-                                  child: const Text('Reintentar', style: TextStyle(color: Colors.white)),
-                                ),
-                              ],
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.error_outline,
+                              size: 48,
+                              color: Colors.grey,
                             ),
-                          )
-                        : providers.isEmpty
-                            ? Center(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(24),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(20),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFFFE5E7),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: const Icon(
-                                          Icons.store_mall_directory_outlined,
-                                          size: 48,
-                                          color: Color(0xFFE01D25),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 20),
-                                      Text(
-                                        'No hay proveedores de ${widget.categoryName}',
-                                        style: const TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                          color: Color(0xFF010302),
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        'Aún no tenemos proveedores registrados en esta categoría de servicio.',
-                                        style: TextStyle(
-                                          color: Colors.grey.shade600,
-                                          fontSize: 14,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                      const SizedBox(height: 20),
-                                      OutlinedButton.icon(
-                                        onPressed: () => Navigator.of(context).pop(),
-                                        icon: const Icon(Icons.arrow_back),
-                                        label: const Text('Elegir otra categoría'),
-                                        style: OutlinedButton.styleFrom(
-                                          foregroundColor: const Color(0xFFE01D25),
-                                          side: const BorderSide(color: Color(0xFFE01D25)),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 20,
-                                            vertical: 12,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
+                            const SizedBox(height: 12),
+                            Text(
+                              errorMessage!,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(color: Colors.grey),
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: _loadProviders,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFE01D25),
+                              ),
+                              child: const Text(
+                                'Reintentar',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : providers.isEmpty
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFE5E7),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.store_mall_directory_outlined,
+                                  size: 48,
+                                  color: Color(0xFFE01D25),
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              Text(
+                                'No hay proveedores de ${widget.categoryName}',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF010302),
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Aún no tenemos proveedores registrados en esta categoría de servicio.',
+                                style: TextStyle(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 14,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 20),
+                              OutlinedButton.icon(
+                                onPressed: () => Navigator.of(context).pop(),
+                                icon: const Icon(Icons.arrow_back),
+                                label: const Text('Elegir otra categoría'),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: const Color(0xFFE01D25),
+                                  side: const BorderSide(
+                                    color: Color(0xFFE01D25),
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                    vertical: 12,
                                   ),
                                 ),
-                              )
-                            : ListView.builder(
-                                controller: scrollController,
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                itemCount: providers.length,
-                                cacheExtent: 500,
-                                addAutomaticKeepAlives: false,
-                                addRepaintBoundaries: true,
-                                itemBuilder: (context, index) {
-                                  final provider = providers[index];
-                                  final isSelected = selectedProviderIndex == index;
-                                  return Padding(
-                                    padding: const EdgeInsets.only(bottom: 14),
-                                    child: RepaintBoundary(
-                                      child: GestureDetector(
-                                        behavior: HitTestBehavior.opaque,
-                                        onTap: () {
-                                          // Cerrar el teclado si está abierto
-                                          FocusScope.of(context).unfocus();
-                                          setState(() {
-                                            selectedProviderIndex = index;
-                                          });
-                                          // Navegar a detalle del proveedor
-                                          Navigator.of(context).push(
-                                        MaterialPageRoute<void>(
-                                          builder: (context) => ProviderDetailPage(
-                                            providerId: provider.id,
-                                            perfilId: provider.perfilId,
-                                            usuarioId: provider.usuarioId,
-                                            providerName: provider.nombreNegocio,
-                                            category: provider.categoria.isNotEmpty 
-                                                ? provider.categoria 
-                                                : widget.categoryName,
-                                            rating: provider.rating ?? 0.0,
-                                            reviews: provider.reviewCount ?? 0,
-                                            address: provider.direccion,
-                                            phone: provider.telefono,
-                                            thumbnail: provider.avatarUrl,
-                                            descripcion: provider.descripcion,
-                                          ),
-                                        ),
-                                        );
-                                      },
-                                      child: _buildProviderCard(provider, isSelected),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    : ListView.builder(
+                        controller: scrollController,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        itemCount: providers.length,
+                        cacheExtent: 500,
+                        addAutomaticKeepAlives: false,
+                        addRepaintBoundaries: true,
+                        itemBuilder: (context, index) {
+                          final provider = providers[index];
+                          final isSelected = selectedProviderIndex == index;
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 14),
+                            child: RepaintBoundary(
+                              child: GestureDetector(
+                                behavior: HitTestBehavior.opaque,
+                                onTap: () {
+                                  // Cerrar el teclado si está abierto
+                                  FocusScope.of(context).unfocus();
+                                  setState(() {
+                                    selectedProviderIndex = index;
+                                  });
+                                  // Navegar a detalle del proveedor
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute<void>(
+                                      builder: (context) => ProviderDetailPage(
+                                        providerId: provider.id,
+                                        perfilId: provider.perfilId,
+                                        usuarioId: provider.usuarioId,
+                                        providerName: provider.nombreNegocio,
+                                        category: provider.categoria.isNotEmpty
+                                            ? provider.categoria
+                                            : widget.categoryName,
+                                        rating: provider.rating ?? 0.0,
+                                        reviews: provider.reviewCount ?? 0,
+                                        address: provider.direccion,
+                                        phone: provider.telefono,
+                                        thumbnail: provider.avatarUrl,
+                                        descripcion: provider.descripcion,
+                                        serviceAddress: widget.serviceAddress,
+                                        serviceDate: widget.serviceDate,
+                                        serviceTime: widget.serviceTime,
+                                      ),
                                     ),
-                                  ),
                                   );
                                 },
+                                child: _buildProviderCard(provider, isSelected),
                               ),
+                            ),
+                          );
+                        },
+                      ),
               ),
             ],
           ),
@@ -570,7 +625,8 @@ class _ProvidersMapPageState extends State<ProvidersMapPage> {
               width: 70,
               height: 70,
               color: const Color(0xFFF4F7F9),
-              child: provider.avatarUrl != null && provider.avatarUrl!.isNotEmpty
+              child:
+                  provider.avatarUrl != null && provider.avatarUrl!.isNotEmpty
                   ? Image.network(
                       provider.avatarUrl!,
                       fit: BoxFit.cover,
@@ -579,11 +635,18 @@ class _ProvidersMapPageState extends State<ProvidersMapPage> {
                       loadingBuilder: (context, child, loadingProgress) {
                         if (loadingProgress == null) return child;
                         return const Center(
-                          child: Icon(Icons.storefront, size: 32, color: Colors.grey),
+                          child: Icon(
+                            Icons.storefront,
+                            size: 32,
+                            color: Colors.grey,
+                          ),
                         );
                       },
-                      errorBuilder: (_, __, ___) =>
-                          const Icon(Icons.storefront, size: 32, color: Colors.grey),
+                      errorBuilder: (_, __, ___) => const Icon(
+                        Icons.storefront,
+                        size: 32,
+                        color: Colors.grey,
+                      ),
                     )
                   : const Icon(Icons.storefront, size: 32, color: Colors.grey),
             ),
@@ -611,7 +674,10 @@ class _ProvidersMapPageState extends State<ProvidersMapPage> {
                     if (provider.isPlus)
                       Container(
                         margin: const EdgeInsets.only(left: 6),
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFE01D25),
                           borderRadius: BorderRadius.circular(6),
@@ -640,10 +706,13 @@ class _ProvidersMapPageState extends State<ProvidersMapPage> {
                     const Icon(Icons.star, color: Colors.amber, size: 16),
                     const SizedBox(width: 4),
                     Text(
-                      provider.rating != null 
-                          ? provider.rating!.toStringAsFixed(1) 
+                      provider.rating != null
+                          ? provider.rating!.toStringAsFixed(1)
                           : '0.0',
-                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
                     ),
                     Text(
                       ' (${provider.reviewCount ?? 0})',
@@ -651,11 +720,18 @@ class _ProvidersMapPageState extends State<ProvidersMapPage> {
                     ),
                     const SizedBox(width: 8),
                     if (provider.paquetes.isNotEmpty) ...[
-                      const Icon(Icons.inventory_2_outlined, size: 14, color: Colors.grey),
+                      const Icon(
+                        Icons.inventory_2_outlined,
+                        size: 14,
+                        color: Colors.grey,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         '${provider.paquetes.length} paquetes',
-                        style: const TextStyle(color: Colors.grey, fontSize: 11),
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 11,
+                        ),
                       ),
                     ],
                   ],

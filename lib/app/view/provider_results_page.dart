@@ -93,7 +93,11 @@ class _ProviderResultsPageState extends State<ProviderResultsPage> {
               color: const Color(0xFFFFE5E7),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.celebration, color: Color(0xFFE01D25), size: 24),
+            child: const Icon(
+              Icons.celebration,
+              color: Color(0xFFE01D25),
+              size: 24,
+            ),
           ),
           const SizedBox(width: 10),
           const Text(
@@ -109,7 +113,10 @@ class _ProviderResultsPageState extends State<ProviderResultsPage> {
           Stack(
             children: [
               IconButton(
-                icon: const Icon(Icons.notifications_outlined, color: Color(0xFF010302)),
+                icon: const Icon(
+                  Icons.notifications_outlined,
+                  color: Color(0xFF010302),
+                ),
                 onPressed: () {},
               ),
               Positioned(
@@ -177,12 +184,17 @@ class _ProviderResultsPageState extends State<ProviderResultsPage> {
                 });
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: isSelected ? const Color(0xFFE01D25) : Colors.white,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: isSelected ? const Color(0xFFE01D25) : Colors.grey.shade300,
+                    color: isSelected
+                        ? const Color(0xFFE01D25)
+                        : Colors.grey.shade300,
                   ),
                 ),
                 child: Row(
@@ -191,7 +203,9 @@ class _ProviderResultsPageState extends State<ProviderResultsPage> {
                       Icon(
                         Icons.near_me,
                         size: 16,
-                        color: isSelected ? Colors.white : const Color(0xFFE01D25),
+                        color: isSelected
+                            ? Colors.white
+                            : const Color(0xFFE01D25),
                       ),
                     if (index == 1)
                       Icon(
@@ -209,7 +223,9 @@ class _ProviderResultsPageState extends State<ProviderResultsPage> {
                     Text(
                       filter,
                       style: TextStyle(
-                        color: isSelected ? Colors.white : const Color(0xFF010302),
+                        color: isSelected
+                            ? Colors.white
+                            : const Color(0xFF010302),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -286,7 +302,9 @@ class _ProviderResultsPageState extends State<ProviderResultsPage> {
           Stack(
             children: [
               ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(18),
+                ),
                 child: Container(
                   height: 160,
                   width: double.infinity,
@@ -300,7 +318,10 @@ class _ProviderResultsPageState extends State<ProviderResultsPage> {
                   top: 12,
                   left: 12,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFE01D25),
                       borderRadius: BorderRadius.circular(8),
@@ -320,7 +341,10 @@ class _ProviderResultsPageState extends State<ProviderResultsPage> {
                 top: 12,
                 right: 12,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
@@ -337,11 +361,17 @@ class _ProviderResultsPageState extends State<ProviderResultsPage> {
                       const SizedBox(width: 4),
                       Text(
                         '${provider['rating']}',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
                       ),
                       Text(
                         ' (${provider['reviews']})',
-                        style: const TextStyle(color: Colors.grey, fontSize: 12),
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 12,
+                        ),
                       ),
                     ],
                   ),
@@ -376,7 +406,8 @@ class _ProviderResultsPageState extends State<ProviderResultsPage> {
                       ),
                       onPressed: () {
                         setState(() {
-                          provider['isFavorite'] = !(provider['isFavorite'] as bool);
+                          provider['isFavorite'] =
+                              !(provider['isFavorite'] as bool);
                         });
                       },
                     ),
@@ -414,14 +445,21 @@ class _ProviderResultsPageState extends State<ProviderResultsPage> {
                               child: CircleAvatar(
                                 radius: 12,
                                 backgroundColor: Colors.grey.shade300,
-                                child: const Icon(Icons.person, size: 14, color: Colors.white),
+                                child: const Icon(
+                                  Icons.person,
+                                  size: 14,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
                           ),
                           const SizedBox(width: 6),
                           Text(
                             '+${provider['usersCount']}',
-                            style: const TextStyle(color: Colors.grey, fontSize: 13),
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 13,
+                            ),
                           ),
                         ],
                       ),
@@ -439,7 +477,10 @@ class _ProviderResultsPageState extends State<ProviderResultsPage> {
                     if ((provider['usersCount'] as int) == 0)
                       Text(
                         ' ${provider['priceLabel']}',
-                        style: const TextStyle(color: Colors.grey, fontSize: 13),
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 13,
+                        ),
                       ),
                     const Spacer(),
                     ElevatedButton(
@@ -450,7 +491,10 @@ class _ProviderResultsPageState extends State<ProviderResultsPage> {
                           borderRadius: BorderRadius.circular(20),
                           side: const BorderSide(color: Color(0xFFE01D25)),
                         ),
-                        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 22,
+                          vertical: 10,
+                        ),
                         elevation: 0,
                       ),
                       onPressed: () {

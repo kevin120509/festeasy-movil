@@ -44,7 +44,8 @@ class _LoginPageState extends State<LoginPage> {
       if (response.user != null) {
         // Obtener el perfil del usuario para mostrar su nombre
         final profile = await AuthService.instance.getClientProfile();
-        final String userName = (profile?['nombre_completo'] as String?) ?? 
+        final String userName =
+            (profile?['nombre_completo'] as String?) ??
             emailController.text.split('@').first;
 
         if (mounted) {
@@ -86,7 +87,9 @@ class _LoginPageState extends State<LoginPage> {
           content: Text(message),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
       );
     }
@@ -103,10 +106,14 @@ class _LoginPageState extends State<LoginPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Se envió un correo para restablecer tu contraseña'),
+            content: const Text(
+              'Se envió un correo para restablecer tu contraseña',
+            ),
             backgroundColor: Colors.green,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
         );
       }
@@ -145,7 +152,8 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     child: Center(
                       child: Icon(
-                        Icons.emoji_emotions, // Cambia por un asset de globo si tienes uno
+                        Icons
+                            .emoji_emotions, // Cambia por un asset de globo si tienes uno
                         color: Colors.white,
                         size: 60,
                       ),
@@ -172,7 +180,10 @@ class _LoginPageState extends State<LoginPage> {
                       filled: true,
                       fillColor: Colors.white,
                       hintText: 'Correo',
-                      prefixIcon: const Icon(Icons.mail_outline, color: Colors.grey),
+                      prefixIcon: const Icon(
+                        Icons.mail_outline,
+                        color: Colors.grey,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide.none,
@@ -198,10 +209,15 @@ class _LoginPageState extends State<LoginPage> {
                       filled: true,
                       fillColor: Colors.white,
                       hintText: 'Contraseña',
-                      prefixIcon: const Icon(Icons.lock_outline, color: Colors.grey),
+                      prefixIcon: const Icon(
+                        Icons.lock_outline,
+                        color: Colors.grey,
+                      ),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          showPassword ? Icons.visibility : Icons.visibility_off,
+                          showPassword
+                              ? Icons.visibility
+                              : Icons.visibility_off,
                           color: Colors.grey,
                         ),
                         onPressed: () {
@@ -243,7 +259,9 @@ class _LoginPageState extends State<LoginPage> {
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFE01D25),
-                        disabledBackgroundColor: const Color(0xFFE01D25).withOpacity(0.5),
+                        disabledBackgroundColor: const Color(
+                          0xFFE01D25,
+                        ).withOpacity(0.5),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(24),
                         ),
@@ -277,7 +295,10 @@ class _LoginPageState extends State<LoginPage> {
                       Expanded(child: Divider(color: Colors.grey.shade300)),
                       const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 8.0),
-                        child: Text('O CONTINÚA CON', style: TextStyle(color: Colors.grey)),
+                        child: Text(
+                          'O CONTINÚA CON',
+                          style: TextStyle(color: Colors.grey),
+                        ),
                       ),
                       Expanded(child: Divider(color: Colors.grey.shade300)),
                     ],
@@ -298,7 +319,11 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                             padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
-                          icon: const Icon(Icons.g_mobiledata, color: Colors.red, size: 24),
+                          icon: const Icon(
+                            Icons.g_mobiledata,
+                            color: Colors.red,
+                            size: 24,
+                          ),
                           label: const Text('Google'),
                           onPressed: () {
                             // TODO: Implementar login con Google
@@ -332,7 +357,10 @@ class _LoginPageState extends State<LoginPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text('¿No tienes cuenta? ', style: TextStyle(color: Colors.grey)),
+                      const Text(
+                        '¿No tienes cuenta? ',
+                        style: TextStyle(color: Colors.grey),
+                      ),
                       GestureDetector(
                         onTap: () {
                           Navigator.of(context).push(

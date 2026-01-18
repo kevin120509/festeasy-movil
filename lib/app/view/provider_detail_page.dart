@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:festeasy/app/view/cart_page.dart';
+import 'package:festeasy/services/favorite_service.dart';
 import 'package:festeasy/services/provider_database_service.dart';
 
 class ProviderDetailPage extends StatefulWidget {
@@ -14,6 +15,9 @@ class ProviderDetailPage extends StatefulWidget {
   final String? phone;
   final String? thumbnail;
   final String? descripcion;
+  final String? serviceAddress;
+  final DateTime? serviceDate;
+  final TimeOfDay? serviceTime;
 
   const ProviderDetailPage({
     Key? key,
@@ -28,6 +32,9 @@ class ProviderDetailPage extends StatefulWidget {
     this.phone,
     this.thumbnail,
     this.descripcion,
+    this.serviceAddress,
+    this.serviceDate,
+    this.serviceTime,
   }) : super(key: key);
 
   @override
@@ -39,13 +46,15 @@ class _ProviderDetailPageState extends State<ProviderDetailPage>
   late TabController _tabController;
   bool isFavorite = false;
   bool isLoading = true;
-  
+
+  String get _providerUserId => widget.usuarioId ?? widget.providerId;
+
   // Paquetes cargados desde la base de datos
   List<PaqueteData> paquetesDB = [];
 
   // Carrito local
   final Map<String, int> cartItems = {};
-  
+
   double get totalPrice {
     double total = 0;
     for (final entry in cartItems.entries) {
@@ -65,26 +74,42 @@ class _ProviderDetailPageState extends State<ProviderDetailPage>
 
   // Convertir paquetes a formato para el carrito
   List<Map<String, dynamic>> get allItemsForCart {
-    return paquetesDB.map((p) => {
-      'id': p.id,
-      'name': p.nombre,
-      'description': p.descripcion ?? '',
-      'price': p.precioBase,
-    }).toList();
+    return paquetesDB
+        .map(
+          (p) => {
+            'id': p.id,
+            'name': p.nombre,
+            'description': p.descripcion ?? '',
+            'price': p.precioBase,
+          },
+        )
+        .toList();
   }
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _loadPackages();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    // Cargar estado de favorito
+    final fav = await FavoriteService.instance.isFavorite(widget.providerId);
+    if (mounted) {
+      setState(() {
+        isFavorite = fav;
+      });
+    }
+    // Cargar paquetes
+    await _loadPackages();
   }
 
   Future<void> _loadPackages() async {
     try {
       final packages = await ProviderDatabaseService.instance
           .getProviderPackages(widget.providerId);
-      
+
       if (mounted) {
         setState(() {
           paquetesDB = packages;
@@ -155,6 +180,11 @@ class _ProviderDetailPageState extends State<ProviderDetailPage>
                     cartItems: cartItems,
                     allItems: allItemsForCart,
                     providerName: widget.providerName,
+                    providerUserId: _providerUserId,
+                    categoryName: widget.category,
+                    initialAddress: widget.serviceAddress,
+                    initialDate: widget.serviceDate,
+                    initialTime: widget.serviceTime,
                   ),
                 ),
               );
@@ -202,10 +232,16 @@ class _ProviderDetailPageState extends State<ProviderDetailPage>
         ),
         // Botón de favorito
         GestureDetector(
-          onTap: () {
-            setState(() {
-              isFavorite = !isFavorite;
-            });
+          onTap: () async {
+            // Toggle favorite
+            final newStatus = await FavoriteService.instance.toggleFavorite(
+              widget.providerId,
+            );
+            if (mounted) {
+              setState(() {
+                isFavorite = newStatus;
+              });
+            }
           },
           child: Container(
             margin: const EdgeInsets.all(8),
@@ -245,11 +281,15 @@ class _ProviderDetailPageState extends State<ProviderDetailPage>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.storefront, size: 80, color: Colors.white),
+                      const Icon(
+                        Icons.storefront,
+                        size: 80,
+                        color: Colors.white,
+                      ),
                       const SizedBox(height: 10),
                       Text(
-                        widget.providerName.isNotEmpty 
-                            ? widget.providerName[0].toUpperCase() 
+                        widget.providerName.isNotEmpty
+                            ? widget.providerName[0].toUpperCase()
                             : 'P',
                         style: const TextStyle(
                           fontSize: 40,
@@ -283,7 +323,10 @@ class _ProviderDetailPageState extends State<ProviderDetailPage>
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFE01D25),
                   borderRadius: BorderRadius.circular(8),
@@ -372,7 +415,11 @@ class _ProviderDetailPageState extends State<ProviderDetailPage>
         child: Center(
           child: Column(
             children: [
-              Icon(Icons.inventory_2_outlined, size: 60, color: Colors.grey.shade400),
+              Icon(
+                Icons.inventory_2_outlined,
+                size: 60,
+                color: Colors.grey.shade400,
+              ),
               const SizedBox(height: 16),
               const Text(
                 'Este proveedor aún no tiene paquetes publicados',
@@ -438,7 +485,7 @@ class _ProviderDetailPageState extends State<ProviderDetailPage>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: qty > 0 
+        border: qty > 0
             ? Border.all(color: const Color(0xFFE01D25), width: 2)
             : null,
         boxShadow: [
@@ -481,11 +528,15 @@ class _ProviderDetailPageState extends State<ProviderDetailPage>
                         fontSize: 16,
                       ),
                     ),
-                    if (pkg.descripcion != null && pkg.descripcion!.isNotEmpty) ...[
+                    if (pkg.descripcion != null &&
+                        pkg.descripcion!.isNotEmpty) ...[
                       const SizedBox(height: 4),
                       Text(
                         pkg.descripcion!,
-                        style: const TextStyle(color: Colors.grey, fontSize: 13),
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 13,
+                        ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -525,24 +576,32 @@ class _ProviderDetailPageState extends State<ProviderDetailPage>
                     ),
                   ),
                   const SizedBox(height: 6),
-                  ...pkg.items.take(4).map((item) => Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.check_circle, 
-                          size: 16, 
-                          color: Color(0xFF4CAF50),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            '${item.cantidad} ${item.unidad ?? 'x'} ${item.nombre}',
-                            style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ...pkg.items
+                      .take(4)
+                      .map(
+                        (item) => Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.check_circle,
+                                size: 16,
+                                color: Color(0xFF4CAF50),
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  '${item.cantidad} ${item.unidad ?? 'x'} ${item.nombre}',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ],
-                    ),
-                  )),
+                      ),
                   if (pkg.items.length > 4)
                     Text(
                       '+ ${pkg.items.length - 4} items más...',
@@ -596,7 +655,10 @@ class _ProviderDetailPageState extends State<ProviderDetailPage>
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF4CAF50),
                     borderRadius: BorderRadius.circular(8),
@@ -647,7 +709,9 @@ class _ProviderDetailPageState extends State<ProviderDetailPage>
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: qty == 1 ? Colors.red.shade50 : const Color(0xFFF4F7F9),
-                borderRadius: const BorderRadius.horizontal(left: Radius.circular(12)),
+                borderRadius: const BorderRadius.horizontal(
+                  left: Radius.circular(12),
+                ),
               ),
               child: Icon(
                 qty == 1 ? Icons.delete_outline : Icons.remove,
@@ -673,7 +737,9 @@ class _ProviderDetailPageState extends State<ProviderDetailPage>
               padding: const EdgeInsets.all(8),
               decoration: const BoxDecoration(
                 color: Color(0xFFE01D25),
-                borderRadius: BorderRadius.horizontal(right: Radius.circular(12)),
+                borderRadius: BorderRadius.horizontal(
+                  right: Radius.circular(12),
+                ),
               ),
               child: const Icon(Icons.add, size: 20, color: Colors.white),
             ),
@@ -750,6 +816,11 @@ class _ProviderDetailPageState extends State<ProviderDetailPage>
                         cartItems: cartItems,
                         allItems: allItemsForCart,
                         providerName: widget.providerName,
+                        providerUserId: _providerUserId,
+                        categoryName: widget.category,
+                        initialAddress: widget.serviceAddress,
+                        initialDate: widget.serviceDate,
+                        initialTime: widget.serviceTime,
                       ),
                     ),
                   );
@@ -767,7 +838,10 @@ class _ProviderDetailPageState extends State<ProviderDetailPage>
                     ),
                     const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.3),
                         borderRadius: BorderRadius.circular(10),

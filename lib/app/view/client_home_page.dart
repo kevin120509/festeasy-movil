@@ -1,9 +1,20 @@
-import 'package:flutter/material.dart';
+import 'dart:async';
+
+import 'package:festeasy/app/view/cart_list_page.dart';
+import 'package:festeasy/app/view/profile_page.dart';
+import 'package:festeasy/app/view/provider_detail_page.dart';
+import 'package:festeasy/app/view/request_status_page.dart';
 import 'package:festeasy/app/view/service_requirement_page.dart';
+import 'package:festeasy/services/favorite_service.dart';
+import 'package:festeasy/services/provider_database_service.dart';
+import 'package:festeasy/services/solicitud_service.dart';
+import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ClientHomePage extends StatefulWidget {
   final String userName;
-  const ClientHomePage({Key? key, this.userName = 'Usuario'}) : super(key: key);
+  const ClientHomePage({super.key, this.userName = 'Usuario'});
 
   @override
   State<ClientHomePage> createState() => _ClientHomePageState();
@@ -12,42 +23,207 @@ class ClientHomePage extends StatefulWidget {
 class _ClientHomePageState extends State<ClientHomePage> {
   int _currentIndex = 0;
   int cartCount = 0;
-  bool hasActiveRequest = true; // Simula solicitud activa
+  SolicitudData? _activeSolicitud;
+  List<SolicitudData> _cancelledSolicitudes = [];
+  Timer? _ticker;
+  RealtimeChannel? _solicitudesChannel;
+
+  // Ubicación "fake" del usuario (Mérida Centro) para cálculo de distancias
+  // En una app real, esto vendría del GPS
+  static const LatLng _userLocation = LatLng(20.9674, -89.6243);
+
+  List<ProviderData> _nearbyProviders = [];
+  bool _isLoadingProviders = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _startTicker();
+    _loadActiveSolicitud();
+    _loadCancelledSolicitudes();
+    _loadNearbyProviders();
+    _subscribeSolicitudesRealtime();
+  }
+
+  @override
+  void dispose() {
+    _ticker?.cancel();
+    _solicitudesChannel?.unsubscribe();
+    super.dispose();
+  }
+
+  void _startTicker() {
+    _ticker?.cancel();
+    _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  Future<void> _loadActiveSolicitud() async {
+    try {
+      final solicitud = await SolicitudService.instance
+          .getActiveSolicitudForCurrentUser();
+      if (!mounted) return;
+      setState(() {
+        _activeSolicitud = solicitud;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _activeSolicitud = null;
+      });
+    }
+  }
+
+  Future<void> _loadCancelledSolicitudes() async {
+    try {
+      final cancelled = await SolicitudService.instance
+          .getCancelledSolicitudes();
+      if (!mounted) return;
+      setState(() {
+        _cancelledSolicitudes = cancelled;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _cancelledSolicitudes = [];
+      });
+    }
+  }
+
+  Future<void> _loadNearbyProviders() async {
+    if (!mounted) return;
+    setState(() {
+      _isLoadingProviders = true;
+    });
+
+    try {
+      // 1. Obtener lista de favoritos
+      final favorites = await FavoriteService.instance.getFavorites();
+
+      if (favorites.isEmpty) {
+        if (!mounted) return;
+        setState(() {
+          _nearbyProviders = [];
+          _isLoadingProviders = false;
+        });
+        return;
+      }
+
+      // 2. Cargamos los proveedores favoritos directamente por sus IDs
+      // Esto asegura que traigamos todos los favoritos sin importar su categoría
+      final providers = await ProviderDatabaseService.instance
+          .getProvidersByIds(favorites);
+
+      final List<ProviderData> validProviders = [];
+
+      for (final provider in providers) {
+        if (provider.latitud != null && provider.longitud != null) {
+          final distance = const Distance().as(
+            LengthUnit.Kilometer,
+            _userLocation,
+            LatLng(provider.latitud!, provider.longitud!),
+          );
+
+          // Filtramos si está dentro del radio de cobertura
+          if (distance <= provider.radioCoberturaKm) {
+            validProviders.add(provider);
+          }
+        } else {
+          // Si es favorito pero no tiene ubicación, lo agregamos de todas formas
+          // para asegurar que el usuario pueda verlo.
+          validProviders.add(provider);
+        }
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _nearbyProviders = validProviders;
+        _isLoadingProviders = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoadingProviders = false;
+      });
+    }
+  }
+
+  void _subscribeSolicitudesRealtime() {
+    final client = Supabase.instance.client;
+    final user = client.auth.currentUser;
+    if (user == null) return;
+
+    _solicitudesChannel = client
+        .channel('solicitudes:cliente:${user.id}')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'solicitudes',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'cliente_usuario_id',
+            value: user.id,
+          ),
+          callback: (_) {
+            _loadActiveSolicitud();
+            _loadCancelledSolicitudes();
+          },
+        )
+        .subscribe();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FFFF),
       body: SafeArea(
-        child: RefreshIndicator(
-          color: const Color(0xFFE01D25),
-          onRefresh: () async {
-            // Pull-to-refresh: Actualizar ubicación y proveedores
-            await Future<void>.delayed(const Duration(seconds: 1));
-          },
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeader(),
-                const SizedBox(height: 16),
-                _buildSearchBar(),
-                const SizedBox(height: 24),
-                _buildCategoriesSection(),
-                if (hasActiveRequest) ...[
-                  const SizedBox(height: 24),
-                  _buildActiveRequest(),
-                ],
-                const SizedBox(height: 24),
-                _buildProvidersSection(),
-                const SizedBox(height: 24),
-              ],
-            ),
-          ),
+        child: IndexedStack(
+          index: _currentIndex,
+          children: [
+            _buildHomeBody(),
+            const Center(child: Text('Búsqueda (Próximamente)')),
+            const CartListPage(),
+            const ProfilePage(),
+          ],
         ),
       ),
       bottomNavigationBar: _buildBottomNavBar(),
+    );
+  }
+
+  Widget _buildHomeBody() {
+    return RefreshIndicator(
+      color: const Color(0xFFE01D25),
+      onRefresh: () async {
+        _loadActiveSolicitud();
+        _loadCancelledSolicitudes();
+        _loadNearbyProviders();
+      },
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildHeader(),
+            const SizedBox(height: 16),
+            _buildSearchBar(),
+            const SizedBox(height: 24),
+            _buildCategoriesSection(),
+            if (_activeSolicitud != null) ...[
+              const SizedBox(height: 24),
+              _buildActiveRequest(_activeSolicitud!),
+            ],
+            if (_cancelledSolicitudes.isNotEmpty) ...[
+              const SizedBox(height: 24),
+              _buildCancelledRequestsSection(),
+            ],
+            const SizedBox(height: 24),
+            _buildProvidersSection(),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
     );
   }
 
@@ -69,8 +245,8 @@ class _ClientHomePageState extends State<ClientHomePage> {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Row(
-                  children: const [
+                const Row(
+                  children: [
                     Icon(Icons.location_on, color: Color(0xFFE01D25), size: 16),
                     SizedBox(width: 4),
                     Flexible(
@@ -108,8 +284,8 @@ class _ClientHomePageState extends State<ClientHomePage> {
             color: const Color(0xFFF4F7F9),
             borderRadius: BorderRadius.circular(15),
           ),
-          child: Row(
-            children: const [
+          child: const Row(
+            children: [
               Icon(Icons.search, color: Color(0xFFE01D25)),
               SizedBox(width: 10),
               Text(
@@ -180,11 +356,18 @@ class _ClientHomePageState extends State<ClientHomePage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(cat['icon'] as IconData, color: const Color(0xFFE01D25), size: 32),
+                      Icon(
+                        cat['icon'] as IconData,
+                        color: const Color(0xFFE01D25),
+                        size: 32,
+                      ),
                       const SizedBox(height: 6),
                       Text(
                         cat['name'] as String,
-                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
                         textAlign: TextAlign.center,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -200,78 +383,307 @@ class _ClientHomePageState extends State<ClientHomePage> {
     );
   }
 
-  Widget _buildActiveRequest() {
+  Widget _buildActiveRequest(SolicitudData solicitud) {
+    final nowUtc = DateTime.now().toUtc();
+    Duration remaining = Duration.zero;
+    if (solicitud.estado == 'pendiente_aprobacion') {
+      final deadline = solicitud.creadoEn.add(const Duration(hours: 24));
+      remaining = deadline.difference(nowUtc);
+    } else if (solicitud.estado == 'esperando_anticipo' &&
+        solicitud.expiracionAnticipo != null) {
+      remaining = solicitud.expiracionAnticipo!.difference(nowUtc);
+    }
+
+    final safe = remaining.isNegative ? Duration.zero : remaining;
+    final hours = safe.inHours.toString().padLeft(2, '0');
+    final minutes = (safe.inMinutes % 60).toString().padLeft(2, '0');
+    final seconds = (safe.inSeconds % 60).toString().padLeft(2, '0');
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE01D25), width: 2),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Tu solicitud de Mobiliario está pendiente',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: const [
-                Icon(Icons.timer, color: Color(0xFFE01D25), size: 18),
-                SizedBox(width: 6),
-                Text(
-                  'Faltan: 14:22:05',
-                  style: TextStyle(color: Colors.grey, fontSize: 14),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Align(
-              alignment: Alignment.centerRight,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFE01D25),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                ),
-                onPressed: () {
-                  // Ver detalles de la solicitud activa
-                },
-                child: const Text('Ver detalles', style: TextStyle(color: Colors.white)),
+      child: GestureDetector(
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (context) => RequestStatusPage(
+                solicitudId: solicitud.id,
               ),
             ),
-          ],
+          );
+        },
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFFE01D25), Color(0xFFFF5F6D)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFE01D25).withOpacity(0.3),
+                blurRadius: 12,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              // Icono de reloj animado
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.hourglass_top_rounded,
+                  color: Colors.white,
+                  size: 30,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Esperando respuesta',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      solicitud.tituloEvento ?? 'Solicitud pendiente',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 14,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              // Contador
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      '$hours:$minutes:$seconds',
+                      style: const TextStyle(
+                        color: Color(0xFFE01D25),
+                        fontWeight: FontWeight.w900,
+                        fontSize: 18,
+                        fontFamily: 'monospace',
+                      ),
+                    ),
+                    const Text(
+                      'restante',
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
+  Widget _buildCancelledRequestsSection() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Solicitudes Canceladas',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+              color: Color(0xFF010302),
+            ),
+          ),
+          const SizedBox(height: 12),
+          ..._cancelledSolicitudes.map(
+            (solicitud) => _buildCancelledRequestCard(solicitud),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCancelledRequestCard(SolicitudData solicitud) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade200,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.cancel_outlined,
+              color: Colors.grey,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  solicitud.tituloEvento ?? 'Solicitud cancelada',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Cancelada • \$${solicitud.montoTotal.toStringAsFixed(0)}',
+                  style: TextStyle(
+                    color: Colors.grey.shade600,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) =>
+                          RequestStatusPage(solicitudId: solicitud.id),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.visibility, color: Colors.grey),
+                tooltip: 'Ver detalles',
+              ),
+              IconButton(
+                onPressed: () => _deleteCancelledSolicitud(solicitud.id),
+                icon: const Icon(Icons.delete_outline, color: Colors.red),
+                tooltip: 'Eliminar',
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteCancelledSolicitud(String solicitudId) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Eliminar solicitud'),
+        content: const Text('¿Eliminar esta solicitud cancelada?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text(
+              'Eliminar',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      await SolicitudService.instance.deleteSolicitud(solicitudId);
+      _loadCancelledSolicitudes();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Solicitud eliminada')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    }
+  }
+
   Widget _buildProvidersSection() {
-    final providers = [
-      {
-        'name': 'Eventos Pro',
-        'rating': 4.8,
-        'distance': '2.5 km',
-        'isPlus': true,
-      },
-      {
-        'name': 'Fiesta Total',
-        'rating': 4.5,
-        'distance': '3.2 km',
-        'isPlus': false,
-      },
-      {
-        'name': 'Decoración MX',
-        'rating': 4.9,
-        'distance': '1.1 km',
-        'isPlus': true,
-      },
-    ];
+    if (_isLoadingProviders) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE01D25)),
+          ),
+        ),
+      );
+    }
+
+    if (_nearbyProviders.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 20),
+        child: Column(
+          children: [
+            Text(
+              'No tienes proveedores favoritos cerca',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: Color(0xFF010302),
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Explora las categorías o usa el buscador para encontrar proveedores y márcalos con ❤ para verlos aquí.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey),
+            ),
+          ],
+        ),
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -279,7 +691,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 20),
           child: Text(
-            'Proveedores cerca de ti',
+            'Tus Favoritos Cerca',
             style: TextStyle(
               color: Color(0xFF010302),
               fontWeight: FontWeight.bold,
@@ -293,89 +705,157 @@ class _ClientHomePageState extends State<ClientHomePage> {
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            itemCount: providers.length,
+            itemCount: _nearbyProviders.length,
             separatorBuilder: (_, __) => const SizedBox(width: 16),
             itemBuilder: (context, index) {
-              final prov = providers[index];
-              return Container(
-                width: 160,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Stack(
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        ClipRRect(
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                          child: Container(
-                            height: 70,
-                            width: double.infinity,
-                            color: const Color(0xFFF4F7F9),
-                            child: const Icon(Icons.storefront, size: 40, color: Colors.grey),
+              final provider = _nearbyProviders[index];
+
+              // Cálculo de distancia para mostrar
+              String distanceText = 'Desconocida';
+              if (provider.latitud != null && provider.longitud != null) {
+                final distance = const Distance().as(
+                  LengthUnit.Kilometer,
+                  _userLocation,
+                  LatLng(provider.latitud!, provider.longitud!),
+                );
+                distanceText = '${distance.toStringAsFixed(1)} km';
+              }
+
+              return GestureDetector(
+                onTap: () {
+                  Navigator.of(context)
+                      .push(
+                        MaterialPageRoute<void>(
+                          builder: (context) => ProviderDetailPage(
+                            providerId: provider.id,
+                            perfilId: provider.perfilId,
+                            usuarioId: provider.usuarioId,
+                            providerName: provider.nombreNegocio,
+                            category: provider.categoria,
+                            rating: provider.rating ?? 0.0,
+                            reviews: provider.reviewCount ?? 0,
+                            address: provider.direccion,
+                            phone: provider.telefono,
+                            thumbnail: provider.avatarUrl,
+                            descripcion: provider.descripcion,
                           ),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.all(10),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                prov['name'] as String,
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  const Icon(Icons.star, color: Colors.amber, size: 16),
-                                  const SizedBox(width: 2),
-                                  Text(
-                                    '${prov['rating']}',
-                                    style: const TextStyle(fontSize: 13),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Text(
-                                    'A ${prov['distance']}',
-                                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                                  ),
-                                ],
-                              ),
-                            ],
+                      )
+                      .then(
+                        (_) => _loadNearbyProviders(),
+                      ); // Recargar al volver
+                },
+                child: Container(
+                  width: 160,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Stack(
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ClipRRect(
+                            borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(16),
+                            ),
+                            child: Container(
+                              height: 70,
+                              width: double.infinity,
+                              color: const Color(0xFFF4F7F9),
+                              child: provider.avatarUrl != null
+                                  ? Image.network(
+                                      provider.avatarUrl!,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => const Icon(
+                                        Icons.storefront,
+                                        size: 40,
+                                        color: Colors.grey,
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons.storefront,
+                                      size: 40,
+                                      color: Colors.grey,
+                                    ),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    if (prov['isPlus'] == true)
+                          Padding(
+                            padding: const EdgeInsets.all(10),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  provider.nombreNegocio,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.star,
+                                      color: Colors.amber,
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 2),
+                                    Text(
+                                      '${provider.rating ?? 0.0}',
+                                      style: const TextStyle(fontSize: 13),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Flexible(
+                                      child: Text(
+                                        distanceText,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                       Positioned(
                         top: 8,
                         right: 8,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFE01D25),
-                            borderRadius: BorderRadius.circular(8),
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 4,
+                              ),
+                            ],
                           ),
-                          child: const Text(
-                            'Plus',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 11,
-                            ),
+                          child: const Icon(
+                            Icons.favorite,
+                            color: Color(0xFFE01D25),
+                            size: 16,
                           ),
                         ),
                       ),
-                  ],
+                    ],
+                  ),
                 ),
               );
             },
@@ -442,9 +922,27 @@ class _ClientHomePageState extends State<ClientHomePage> {
                       ),
                     ),
                   ),
+                // Indicador de solicitud pendiente
+                if (_activeSolicitud != null)
+                  Positioned(
+                    right: -8,
+                    top: -6,
+                    child: Container(
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4CAF50),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: const Color(0xFFF8FFFF),
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
-            label: 'Carrito',
+            label: _activeSolicitud != null ? 'En espera' : 'Carrito',
           ),
           const BottomNavigationBarItem(
             icon: Icon(Icons.person),

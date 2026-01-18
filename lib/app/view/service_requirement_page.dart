@@ -75,7 +75,9 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Servicio de ubicación no disponible. Reinicia la app (full restart) y verifica la instalación del plugin.'),
+            content: Text(
+              'Servicio de ubicación no disponible. Reinicia la app (full restart) y verifica la instalación del plugin.',
+            ),
           ),
         );
       }
@@ -84,7 +86,9 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
       debugPrint('Error comprobando servicio de ubicación: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error comprobando servicio de ubicación: $e')),
+          SnackBar(
+            content: Text('Error comprobando servicio de ubicación: $e'),
+          ),
         );
       }
       return;
@@ -92,7 +96,9 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
     if (!serviceEnabled) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Los servicios de ubicación están desactivados.')),
+          const SnackBar(
+            content: Text('Los servicios de ubicación están desactivados.'),
+          ),
         );
       }
       return;
@@ -114,7 +120,11 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
     if (permission == LocationPermission.deniedForever) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Los permisos de ubicación están denegados permanentemente.')),
+          const SnackBar(
+            content: Text(
+              'Los permisos de ubicación están denegados permanentemente.',
+            ),
+          ),
         );
       }
       return;
@@ -132,7 +142,9 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => Center(child: CircularProgressIndicator(color: const Color(0xFFE01D25))),
+      builder: (context) => Center(
+        child: CircularProgressIndicator(color: const Color(0xFFE01D25)),
+      ),
     );
 
     try {
@@ -142,9 +154,12 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
         distanceFilter: 100,
       );
 
-      final position = await Geolocator.getCurrentPosition(
-        locationSettings: locationSettings,
-      ).timeout(const Duration(seconds: 10)); // Timeout de 10s para evitar hangs
+      final position =
+          await Geolocator.getCurrentPosition(
+            locationSettings: locationSettings,
+          ).timeout(
+            const Duration(seconds: 10),
+          ); // Timeout de 10s para evitar hangs
 
       if (!mounted) {
         Navigator.of(context).pop();
@@ -155,7 +170,8 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
         selectedLatitude = position.latitude;
         selectedLongitude = position.longitude;
         // Mostrar coords inmediatamente como feedback
-        addressController.text = '${selectedLatitude.toStringAsFixed(6)}, ${selectedLongitude.toStringAsFixed(6)}';
+        addressController.text =
+            '${selectedLatitude.toStringAsFixed(6)}, ${selectedLongitude.toStringAsFixed(6)}';
       });
 
       // Intentar mover el mapa tan pronto esté listo (reintentos)
@@ -177,11 +193,16 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
           final place = placemarks.first;
           // Construir dirección legible mejorada
           List<String> addressParts = [];
-          if (place.street?.isNotEmpty ?? false) addressParts.add(place.street!);
-          if (place.subLocality?.isNotEmpty ?? false) addressParts.add(place.subLocality!);
-          if (place.locality?.isNotEmpty ?? false) addressParts.add(place.locality!);
-          if (place.administrativeArea?.isNotEmpty ?? false) addressParts.add(place.administrativeArea!);
-          if (place.country?.isNotEmpty ?? false) addressParts.add(place.country!);
+          if (place.street?.isNotEmpty ?? false)
+            addressParts.add(place.street!);
+          if (place.subLocality?.isNotEmpty ?? false)
+            addressParts.add(place.subLocality!);
+          if (place.locality?.isNotEmpty ?? false)
+            addressParts.add(place.locality!);
+          if (place.administrativeArea?.isNotEmpty ?? false)
+            addressParts.add(place.administrativeArea!);
+          if (place.country?.isNotEmpty ?? false)
+            addressParts.add(place.country!);
 
           String address = addressParts.join(', ');
 
@@ -194,21 +215,23 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
             );
           }
         } else {
-            // Si no hay placemarks, usaremos las coordenadas como fallback
-            final coords = '${selectedLatitude.toStringAsFixed(6)}, ${selectedLongitude.toStringAsFixed(6)}';
-            setState(() {
-              addressController.text = coords;
-            });
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Ubicación establecida: $coords')),
-              );
-            }
+          // Si no hay placemarks, usaremos las coordenadas como fallback
+          final coords =
+              '${selectedLatitude.toStringAsFixed(6)}, ${selectedLongitude.toStringAsFixed(6)}';
+          setState(() {
+            addressController.text = coords;
+          });
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Ubicación establecida: $coords')),
+            );
+          }
         }
       } catch (e) {
         debugPrint('Error getting address: $e');
         // Fallback a coordenadas si falla el geocoding
-        final coords = '${selectedLatitude.toStringAsFixed(6)}, ${selectedLongitude.toStringAsFixed(6)}';
+        final coords =
+            '${selectedLatitude.toStringAsFixed(6)}, ${selectedLongitude.toStringAsFixed(6)}';
         setState(() {
           addressController.text = coords;
         });
@@ -230,7 +253,11 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Se agotó el tiempo de espera para obtener la ubicación.')),
+          const SnackBar(
+            content: Text(
+              'Se agotó el tiempo de espera para obtener la ubicación.',
+            ),
+          ),
         );
       }
       return;
@@ -247,6 +274,7 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
       return;
     }
   }
+
   @override
   void initState() {
     super.initState();
@@ -529,7 +557,8 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
                   ),
                   children: [
                     TileLayer(
-                      urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      urlTemplate:
+                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                       userAgentPackageName: 'com.festeasy.app',
                       maxNativeZoom: 18,
                       tileBuilder: (context, tileWidget, tile) => tileWidget,
@@ -563,7 +592,10 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
                       );
                     }
                   },
-                  child: const Icon(Icons.my_location, color: Color(0xFFE01D25)),
+                  child: const Icon(
+                    Icons.my_location,
+                    color: Color(0xFFE01D25),
+                  ),
                 ),
               ),
             ],
@@ -706,6 +738,9 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
           builder: (context) => ProvidersMapPage(
             categoryName: widget.categoryName,
             categoryId: widget.categoryId,
+            serviceAddress: addressController.text,
+            serviceDate: selectedDate,
+            serviceTime: selectedTime,
           ),
         ),
       );

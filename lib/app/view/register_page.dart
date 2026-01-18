@@ -38,7 +38,10 @@ class _RegisterPageState extends State<RegisterPage> {
     }
 
     if (passwordController.text.length < 6) {
-      _showSnackBar('La contraseña debe tener al menos 6 caracteres', Colors.orange);
+      _showSnackBar(
+        'La contraseña debe tener al menos 6 caracteres',
+        Colors.orange,
+      );
       return;
     }
 
@@ -73,7 +76,10 @@ class _RegisterPageState extends State<RegisterPage> {
         );
       } else if (response.user == null && response.session == null) {
         // Si no hay usuario ni sesión, mostrar el mensaje de error de Supabase
-        _showSnackBar('No se pudo crear la cuenta. Revisa tus datos.', Colors.red);
+        _showSnackBar(
+          'No se pudo crear la cuenta. Revisa tus datos.',
+          Colors.red,
+        );
       }
     } on AuthException catch (e) {
       if (!mounted) return;
@@ -159,7 +165,8 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 child: const Center(
                   child: Icon(
-                    Icons.emoji_emotions, // Cambia por un asset de globo si tienes uno
+                    Icons
+                        .emoji_emotions, // Cambia por un asset de globo si tienes uno
                     color: Colors.white,
                     size: 60,
                   ),
@@ -187,7 +194,10 @@ class _RegisterPageState extends State<RegisterPage> {
               // Campo Nombre
               Align(
                 alignment: Alignment.centerLeft,
-                child: const Text('Nombre', style: TextStyle(fontWeight: FontWeight.w600)),
+                child: const Text(
+                  'Nombre',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
               ),
               const SizedBox(height: 6),
               TextField(
@@ -196,7 +206,10 @@ class _RegisterPageState extends State<RegisterPage> {
                   filled: true,
                   fillColor: Colors.white,
                   hintText: 'Tu nombre completo',
-                  prefixIcon: const Icon(Icons.person_outline, color: Colors.red),
+                  prefixIcon: const Icon(
+                    Icons.person_outline,
+                    color: Colors.red,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide.none,
@@ -207,7 +220,10 @@ class _RegisterPageState extends State<RegisterPage> {
               // Campo Correo
               Align(
                 alignment: Alignment.centerLeft,
-                child: const Text('Correo', style: TextStyle(fontWeight: FontWeight.w600)),
+                child: const Text(
+                  'Correo',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
               ),
               const SizedBox(height: 6),
               TextField(
@@ -228,7 +244,10 @@ class _RegisterPageState extends State<RegisterPage> {
               // Campo Celular
               Align(
                 alignment: Alignment.centerLeft,
-                child: const Text('Celular', style: TextStyle(fontWeight: FontWeight.w600)),
+                child: const Text(
+                  'Celular',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
               ),
               const SizedBox(height: 6),
               TextField(
@@ -238,7 +257,10 @@ class _RegisterPageState extends State<RegisterPage> {
                   filled: true,
                   fillColor: Colors.white,
                   hintText: '300 000 0000',
-                  prefixIcon: const Icon(Icons.phone_android, color: Colors.red),
+                  prefixIcon: const Icon(
+                    Icons.phone_android,
+                    color: Colors.red,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide.none,
@@ -249,7 +271,10 @@ class _RegisterPageState extends State<RegisterPage> {
               // Campo Contraseña
               Align(
                 alignment: Alignment.centerLeft,
-                child: const Text('Contraseña', style: TextStyle(fontWeight: FontWeight.w600)),
+                child: const Text(
+                  'Contraseña',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
               ),
               const SizedBox(height: 6),
               TextField(
@@ -309,7 +334,9 @@ class _RegisterPageState extends State<RegisterPage> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            TextSpan(text: ' y la política de privacidad de FestEasy.'),
+                            TextSpan(
+                              text: ' y la política de privacidad de FestEasy.',
+                            ),
                           ],
                         ),
                       ),

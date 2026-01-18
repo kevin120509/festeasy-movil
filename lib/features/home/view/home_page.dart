@@ -31,7 +31,8 @@ class HomePage extends StatelessWidget {
                 ),
                 child: const Center(
                   child: Icon(
-                    Icons.emoji_emotions, // Cambia por un asset de globo si tienes uno
+                    Icons
+                        .emoji_emotions, // Cambia por un asset de globo si tienes uno
                     color: Colors.white,
                     size: 80,
                   ),
@@ -153,13 +154,13 @@ class _Header extends StatelessWidget {
           ),
           const Spacer(),
           TextButton(
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (context) => LoginPage(),
-                  ),
-                );
-              },
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (context) => LoginPage(),
+                ),
+              );
+            },
             child: const Text(
               'Iniciar Sesión',
               style: TextStyle(
