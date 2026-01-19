@@ -3,6 +3,13 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@android:color/white" />
 
-    <!-- You can insert your own image assets here -->
-    <item android:gravity="center" android:drawable="@drawable/ic_launch_image" />
+    <!-- Splash image centered -->
+    <item
+        android:width="200dp"
+        android:height="200dp"
+        android:gravity="center">
+        <bitmap
+            android:gravity="center"
+            android:src="@drawable/splash_image" />
+    </item>
 </layer-list>

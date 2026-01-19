@@ -36,7 +36,20 @@ dev_dependencies:
   mocktail: ^1.0.4
   retrofit_generator: ^10.2.1
   very_good_analysis: ^10.0.0
+  flutter_launcher_icons: ^0.14.4
 
 flutter:
   generate: true
   uses-material-design: true
+  assets:
+    - assets/icons/app_icon.jpeg
+
+# Configuration for flutter_launcher_icons
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icons/app_icon.jpeg"
+  min_sdk_android: 21
+  adaptive_icon_background: "#ffffff"
+  adaptive_icon_foreground: "assets/icons/app_icon.jpeg"
+  remove_alpha_ios: true
