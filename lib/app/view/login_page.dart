@@ -135,42 +135,20 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Logo y título
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.red.withOpacity(0.3),
-                          blurRadius: 20,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: Center(
-                      child: Icon(
-                        Icons
-                            .emoji_emotions, // Cambia por un asset de globo si tienes uno
-                        color: Colors.white,
-                        size: 60,
-                      ),
-                    ),
+                  // Logo de la app
+                  Image.asset(
+                    'assets/icons/logo.jpeg',
+                    width: 220,
+                    height: 110,
+                    fit: BoxFit.contain,
                   ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'FestEasy',
-                    style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   const Text(
                     'Tu fiesta fácil y a un click de distancia',
-                    style: TextStyle(fontSize: 18, color: Colors.grey),
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 32),
                   // Campo correo
                   TextField(
                     controller: emailController,

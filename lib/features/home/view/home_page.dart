@@ -15,43 +15,18 @@ class HomePage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const SizedBox(height: 80),
-              Container(
-                width: 140,
+              // Logo de la app
+              Image.asset(
+                'assets/icons/logo.jpeg',
+                width: 280,
                 height: 140,
-                decoration: BoxDecoration(
-                  color: Colors.red,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.red.withOpacity(0.15),
-                      blurRadius: 32,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: const Center(
-                  child: Icon(
-                    Icons
-                        .emoji_emotions, // Cambia por un asset de globo si tienes uno
-                    color: Colors.white,
-                    size: 80,
-                  ),
-                ),
+                fit: BoxFit.contain,
               ),
-              const SizedBox(height: 32),
-              const Text(
-                'FestEasy',
-                style: TextStyle(
-                  fontSize: 40,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 24),
               const Text(
                 'Tu fiesta fácil y a un click de distancia',
                 style: TextStyle(
-                  fontSize: 20,
+                  fontSize: 18,
                   color: Color(0xFF7B7B7B),
                   fontWeight: FontWeight.w500,
                 ),

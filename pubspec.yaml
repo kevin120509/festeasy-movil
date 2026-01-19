@@ -43,6 +43,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/icons/app_icon.jpeg
+    - assets/icons/logo.jpeg
 
 # Configuration for flutter_launcher_icons
 flutter_launcher_icons:

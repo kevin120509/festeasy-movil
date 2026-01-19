@@ -148,49 +148,23 @@ class _RegisterPageState extends State<RegisterPage> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 16),
-              // Logo y título
-              Container(
-                width: 100,
+              // Logo de la app
+              Image.asset(
+                'assets/icons/logo.jpeg',
+                width: 200,
                 height: 100,
-                decoration: BoxDecoration(
-                  color: Colors.red,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.red.withOpacity(0.3),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: const Center(
-                  child: Icon(
-                    Icons
-                        .emoji_emotions, // Cambia por un asset de globo si tienes uno
-                    color: Colors.white,
-                    size: 60,
-                  ),
-                ),
+                fit: BoxFit.contain,
               ),
-              const SizedBox(height: 20),
-              const Text(
-                'FestEasy',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 8),
               const Text(
                 'Tu fiesta fácil y a un click de distancia',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 14,
                   color: Color(0xFF7B7B7B),
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 28),
+              const SizedBox(height: 24),
               // Campo Nombre
               Align(
                 alignment: Alignment.centerLeft,
