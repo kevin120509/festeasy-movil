@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 
 class ProviderResultsPage extends StatefulWidget {
-  final String categoryName;
-  final String categoryId;
 
   const ProviderResultsPage({
-    Key? key,
-    required this.categoryName,
-    required this.categoryId,
-  }) : super(key: key);
+    required this.categoryName, required this.categoryId, super.key,
+  });
+  final String categoryName;
+  final String categoryId;
 
   @override
   State<ProviderResultsPage> createState() => _ProviderResultsPageState();
@@ -26,7 +24,7 @@ class _ProviderResultsPageState extends State<ProviderResultsPage> {
       'category': 'Música y Audio',
       'rating': 4.9,
       'reviews': 120,
-      'priceLevel': '\$\$',
+      'priceLevel': r'$$',
       'priceLabel': 'Moderado',
       'isPopular': false,
       'isFavorite': false,
@@ -39,7 +37,7 @@ class _ProviderResultsPageState extends State<ProviderResultsPage> {
       'category': 'Catering',
       'rating': 4.7,
       'reviews': 85,
-      'priceLevel': '\$\$\$',
+      'priceLevel': r'$$$',
       'priceLabel': 'Moderado',
       'isPopular': false,
       'isFavorite': false,
@@ -52,7 +50,7 @@ class _ProviderResultsPageState extends State<ProviderResultsPage> {
       'category': 'Mobiliario',
       'rating': 4.5,
       'reviews': 200,
-      'priceLevel': '\$',
+      'priceLevel': r'$',
       'priceLabel': 'Económico',
       'isPopular': true,
       'isFavorite': false,
@@ -148,8 +146,8 @@ class _ProviderResultsPageState extends State<ProviderResultsPage> {
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: Colors.grey.shade200),
         ),
-        child: Row(
-          children: const [
+        child: const Row(
+          children: [
             Icon(Icons.search, color: Colors.grey),
             SizedBox(width: 10),
             Expanded(
@@ -468,7 +466,7 @@ class _ProviderResultsPageState extends State<ProviderResultsPage> {
                         provider['priceLevel'] as String,
                         style: TextStyle(
                           color: (provider['priceLevel'] as String).length == 1
-                              ? Colors.green
+                              ? const Color(0xFFE01D25)
                               : Colors.orange,
                           fontWeight: FontWeight.bold,
                           fontSize: 14,

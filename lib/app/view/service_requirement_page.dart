@@ -1,24 +1,17 @@
-import 'package:flutter/material.dart';
-import 'package:festeasy/app/view/providers_map_page.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:flutter/services.dart';
-import 'package:geocoding/geocoding.dart';
 import 'dart:async'; // Para TimeoutException
+
+import 'package:festeasy/app/view/providers_list_page.dart';
+import 'package:festeasy/service_session_data.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:latlong2/latlong.dart';
 
 /// Modelo para los datos del requerimiento de servicio.
 /// Estos datos se enviarán a la base de datos al buscar proveedores.
 class ServiceRequirementData {
-  final String categoryId;
-  final String categoryName;
-  final IconData categoryIcon;
-  String description;
-  DateTime? date;
-  TimeOfDay? time;
-  String? address;
-  double? latitude;
-  double? longitude;
 
   ServiceRequirementData({
     required this.categoryId,
@@ -30,30 +23,39 @@ class ServiceRequirementData {
     this.address,
     this.latitude,
     this.longitude,
+    this.numberOfGuests,
   });
-}
-
-class ServiceRequirementPage extends StatefulWidget {
   final String categoryId;
   final String categoryName;
   final IconData categoryIcon;
+  String description;
+  DateTime? date;
+  TimeOfDay? time;
+  String? address;
+  double? latitude;
+  double? longitude;
+  int? numberOfGuests;
+}
+
+class ServiceRequirementPage extends StatefulWidget {
 
   const ServiceRequirementPage({
-    Key? key,
-    required this.categoryId,
-    required this.categoryName,
-    required this.categoryIcon,
-  }) : super(key: key);
+    required this.categoryId, required this.categoryName, required this.categoryIcon, super.key,
+  });
+  final String categoryId;
+  final String categoryName;
+  final IconData categoryIcon;
 
   @override
   State<ServiceRequirementPage> createState() => _ServiceRequirementPageState();
 }
 
 class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
-  final TextEditingController descriptionController = TextEditingController();
   final TextEditingController addressController = TextEditingController();
+  final TextEditingController guestsController = TextEditingController();
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
+  int? numberOfGuests;
   double selectedLatitude = 20.9674; // Mérida, Yucatán por defecto
   double selectedLongitude = -89.6243;
   late final MapController _mapController;
@@ -133,23 +135,23 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
     // Feedback inmediato
     debugPrint('Intentando obtener ubicación actual...');
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Obteniendo ubicación...')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Obteniendo ubicación...')));
     }
 
     // Mostrar loading
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => Center(
-        child: CircularProgressIndicator(color: const Color(0xFFE01D25)),
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(color: Color(0xFFE01D25)),
       ),
     );
 
     try {
       // Usar LocationSettings para mayor precisión y compatibilidad
-      final LocationSettings locationSettings = LocationSettings(
+      const locationSettings = LocationSettings(
         accuracy: LocationAccuracy.high,
         distanceFilter: 100,
       );
@@ -179,7 +181,7 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
 
       // Obtener dirección (Geocoding inverso)
       try {
-        List<Placemark> placemarks = await placemarkFromCoordinates(
+        final placemarks = await placemarkFromCoordinates(
           selectedLatitude,
           selectedLongitude,
         );
@@ -192,19 +194,24 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
         if (placemarks.isNotEmpty) {
           final place = placemarks.first;
           // Construir dirección legible mejorada
-          List<String> addressParts = [];
-          if (place.street?.isNotEmpty ?? false)
+          final addressParts = <String>[];
+          if (place.street?.isNotEmpty ?? false) {
             addressParts.add(place.street!);
-          if (place.subLocality?.isNotEmpty ?? false)
+          }
+          if (place.subLocality?.isNotEmpty ?? false) {
             addressParts.add(place.subLocality!);
-          if (place.locality?.isNotEmpty ?? false)
+          }
+          if (place.locality?.isNotEmpty ?? false) {
             addressParts.add(place.locality!);
-          if (place.administrativeArea?.isNotEmpty ?? false)
+          }
+          if (place.administrativeArea?.isNotEmpty ?? false) {
             addressParts.add(place.administrativeArea!);
-          if (place.country?.isNotEmpty ?? false)
+          }
+          if (place.country?.isNotEmpty ?? false) {
             addressParts.add(place.country!);
+          }
 
-          String address = addressParts.join(', ');
+          final address = addressParts.join(', ');
 
           setState(() {
             addressController.text = address;
@@ -314,7 +321,6 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
 
   @override
   void dispose() {
-    descriptionController.dispose();
     addressController.dispose();
     if (_isMapReady) {
       _mapController.dispose();
@@ -342,12 +348,12 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
             fontSize: 18,
           ),
         ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(6),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(6),
           child: LinearProgressIndicator(
             value: 0.33,
-            backgroundColor: const Color(0xFFF4F7F9),
-            valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFE01D25)),
+            backgroundColor: Color(0xFFF4F7F9),
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE01D25)),
             minHeight: 5,
           ),
         ),
@@ -362,11 +368,11 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
               // Resumen de Categoría
               _buildCategorySummary(),
               const SizedBox(height: 24),
-              // Detalles del Requerimiento
-              _buildDescriptionField(),
-              const SizedBox(height: 24),
               // Fecha y Hora
               _buildDateTimeRow(),
+              const SizedBox(height: 24),
+              // Número de invitados
+              _buildGuestsField(),
               const SizedBox(height: 24),
               // Ubicación Exacta
               _buildLocationSection(),
@@ -400,34 +406,6 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildDescriptionField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          '¿Qué necesitas exactamente?',
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
-        ),
-        const SizedBox(height: 8),
-        TextField(
-          controller: descriptionController,
-          maxLines: 4,
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: const Color(0xFFF4F7F9),
-            hintText:
-                'Ej: Necesito 50 sillas plegables blancas y 5 mesas redondas para 10 personas...',
-            hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-          ),
-        ),
-      ],
     );
   }
 
@@ -488,6 +466,48 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
               ),
             ),
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGuestsField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Número de Invitados',
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: guestsController,
+          keyboardType: TextInputType.number,
+          onChanged: (value) {
+            setState(() {
+              numberOfGuests = int.tryParse(value);
+            });
+          },
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: const Color(0xFFF4F7F9),
+            hintText: 'Ej: 50',
+            hintStyle: const TextStyle(color: Colors.grey),
+            prefixIcon: const Icon(Icons.people, color: Color(0xFFE01D25)),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              vertical: 16,
+              horizontal: 12,
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        const Text(
+          'Ayuda a los proveedores a preparar mejor su servicio',
+          style: TextStyle(color: Colors.grey, fontSize: 12),
         ),
       ],
     );
@@ -657,9 +677,7 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
       builder: (context, child) {
         return Theme(
           data: ThemeData.light().copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFFE01D25),
-            ),
+            colorScheme: const ColorScheme.light(primary: Color(0xFFE01D25)),
           ),
           child: child!,
         );
@@ -679,9 +697,7 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
       builder: (context, child) {
         return Theme(
           data: ThemeData.light().copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFFE01D25),
-            ),
+            colorScheme: const ColorScheme.light(primary: Color(0xFFE01D25)),
           ),
           child: child!,
         );
@@ -695,27 +711,28 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
   }
 
   void _onSearchProviders() {
-    // Construir el objeto de datos para enviar a la base de datos
-    // Esto puede incluir insertar en la tabla "carrito" o crear una "solicitud"
-    // Ejemplo de datos a enviar:
-    // - cliente_usuario_id: ID del usuario logueado
-    // - fecha_servicio_deseada: selectedDate
-    // - direccion_servicio: addressController.text
-    // - latitud_servicio: selectedLatitude
-    // - longitud_servicio: selectedLongitude
-    // - descripcion: descriptionController.text
-    // - categoria_servicio_id: widget.categoryId
+    // Guardar datos en SessionData
+    final sessionData = ServiceSessionData.getInstance();
+    sessionData.initialize(
+      eventDate: selectedDate!,
+      eventTime: selectedTime!,
+      eventAddress: addressController.text,
+      eventLatitude: selectedLatitude,
+      eventLongitude: selectedLongitude,
+      category: widget.categoryId,
+      categoryName: widget.categoryName,
+      eventNumberOfGuests: numberOfGuests,
+    );
 
-    // Aquí iría la lógica para enviar a la base de datos (Supabase, API, etc.)
-    // Por ahora, mostramos una animación de "Matching"
+    // Mostrar diálogo de carga
     showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        content: Column(
+        content: const Column(
           mainAxisSize: MainAxisSize.min,
-          children: const [
+          children: [
             CircularProgressIndicator(
               valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE01D25)),
             ),
@@ -729,21 +746,18 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
       ),
     );
 
-    // Simular espera y cerrar diálogo
-    Future<void>.delayed(const Duration(seconds: 2), () {
-      Navigator.of(context).pop(); // Cerrar diálogo
-      // Navegar a la pantalla de mapa con proveedores
-      Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (context) => ProvidersMapPage(
-            categoryName: widget.categoryName,
-            categoryId: widget.categoryId,
-            serviceAddress: addressController.text,
-            serviceDate: selectedDate,
-            serviceTime: selectedTime,
+    // Cerrar diálogo y navegar a providers_list_page
+    Future<void>.delayed(const Duration(seconds: 1), () {
+      if (mounted) {
+        // Primero cerrar el diálogo
+        Navigator.of(context).pop();
+        // Luego navegar a la nueva pantalla
+        Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (context) => const ProvidersListPage(),
           ),
-        ),
-      );
+        );
+      }
     });
   }
 }

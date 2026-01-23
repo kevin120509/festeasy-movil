@@ -31,7 +31,7 @@ class ProviderDatabaseService {
           ''')
           .or('usuario_id.in.(${ids.map((e) => '"$e"').join(',')}),id.in.(${ids.map((e) => '"$e"').join(',')})');
 
-      final List<dynamic> data = response as List<dynamic>;
+      final data = response as List<dynamic>;
 
       return data
           .map(
@@ -124,7 +124,7 @@ class ProviderDatabaseService {
           ''')
           .limit(50);
 
-      final List<dynamic> data = response as List<dynamic>;
+      final data = response as List<dynamic>;
 
       return data
           .map(
@@ -177,7 +177,7 @@ class ProviderDatabaseService {
           .select('proveedor_usuario_id')
           .eq('categoria_id', categoryId);
 
-      final List<dynamic> serviciosData = serviciosResponse as List<dynamic>;
+      final serviciosData = serviciosResponse as List<dynamic>;
 
       if (serviciosData.isEmpty) {
         return [];
@@ -208,7 +208,7 @@ class ProviderDatabaseService {
           ''')
           .inFilter('usuario_id', providerIds);
 
-      final List<dynamic> data = response as List<dynamic>;
+      final data = response as List<dynamic>;
 
       return data
           .map(
@@ -245,7 +245,7 @@ class ProviderDatabaseService {
           .select('id, nombre, descripcion, icono')
           .eq('activa', true);
 
-      final List<dynamic> data = response as List<dynamic>;
+      final data = response as List<dynamic>;
 
       return data
           .map(
@@ -278,7 +278,7 @@ class ProviderDatabaseService {
           .eq('proveedor_usuario_id', proveedorId)
           .eq('estado', 'publicado');
 
-      List<dynamic> data = response as List<dynamic>;
+      var data = response as List<dynamic>;
 
       // Si no hay resultados, intentar buscar sin filtro de estado
       if (data.isEmpty) {
@@ -378,7 +378,7 @@ class ProviderDatabaseService {
           .eq('destinatario_id', proveedorUsuarioId)
           .order('creado_en', ascending: false);
 
-      final List<dynamic> data = response as List<dynamic>;
+      final data = response as List<dynamic>;
 
       return data.map((item) {
         final cliente = item['perfil_cliente'];
@@ -412,6 +412,24 @@ class ProviderDatabaseService {
 
 /// Modelo de datos para un proveedor
 class ProviderData {
+
+  ProviderData({
+    required this.id,
+    required this.nombreNegocio, this.perfilId,
+    this.usuarioId,
+    this.descripcion,
+    this.telefono,
+    this.avatarUrl,
+    this.direccion,
+    this.latitud,
+    this.longitud,
+    this.radioCoberturaKm = 20,
+    this.tipoSuscripcion = 'basico',
+    this.categoria = '',
+    this.paquetes = const [],
+    this.rating,
+    this.reviewCount,
+  });
   final String id; // usuario_id preferido, o id del perfil como fallback
   final String? perfilId; // id del perfil_proveedor
   final String? usuarioId; // usuario_id del perfil_proveedor
@@ -429,51 +447,27 @@ class ProviderData {
   double? rating;
   int? reviewCount;
 
-  ProviderData({
-    required this.id,
-    this.perfilId,
-    this.usuarioId,
-    required this.nombreNegocio,
-    this.descripcion,
-    this.telefono,
-    this.avatarUrl,
-    this.direccion,
-    this.latitud,
-    this.longitud,
-    this.radioCoberturaKm = 20,
-    this.tipoSuscripcion = 'basico',
-    this.categoria = '',
-    this.paquetes = const [],
-    this.rating,
-    this.reviewCount,
-  });
-
   bool get isPlus => tipoSuscripcion == 'plus';
 }
 
 /// Modelo de datos para un paquete
 class PaqueteData {
+
+  PaqueteData({
+    required this.id,
+    required this.nombre,
+    required this.precioBase, this.descripcion,
+    this.items = const [],
+  });
   final String id;
   final String nombre;
   final String? descripcion;
   final double precioBase;
   final List<ItemPaquete> items;
-
-  PaqueteData({
-    required this.id,
-    required this.nombre,
-    this.descripcion,
-    required this.precioBase,
-    this.items = const [],
-  });
 }
 
 /// Modelo de datos para un item de paquete
 class ItemPaquete {
-  final String id;
-  final String nombre;
-  final int cantidad;
-  final String? unidad;
 
   ItemPaquete({
     required this.id,
@@ -481,14 +475,14 @@ class ItemPaquete {
     required this.cantidad,
     this.unidad,
   });
+  final String id;
+  final String nombre;
+  final int cantidad;
+  final String? unidad;
 }
 
 /// Modelo de datos para una categoría
 class CategoryData {
-  final String id;
-  final String nombre;
-  final String? descripcion;
-  final String? icono;
 
   CategoryData({
     required this.id,
@@ -496,23 +490,25 @@ class CategoryData {
     this.descripcion,
     this.icono,
   });
+  final String id;
+  final String nombre;
+  final String? descripcion;
+  final String? icono;
 }
 
 /// Modelo de datos para una reseña
 class ResenaData {
+
+  ResenaData({
+    required this.id,
+    required this.calificacion,
+    required this.creadoEn, required this.autorNombre, this.comentario,
+    this.autorAvatar,
+  });
   final String id;
   final int calificacion;
   final String? comentario;
   final DateTime creadoEn;
   final String autorNombre;
   final String? autorAvatar;
-
-  ResenaData({
-    required this.id,
-    required this.calificacion,
-    this.comentario,
-    required this.creadoEn,
-    required this.autorNombre,
-    this.autorAvatar,
-  });
 }

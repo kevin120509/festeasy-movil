@@ -1,0 +1,85 @@
+Flujo de Usuario: El Proveedor (Vendor Journey)
+Dividiremos esto en 4 Fases Clave: Configuración, Gestión de Pedidos, Ejecución (Día del Evento) y Cierre.
+
+FASE 1: Onboarding y Configuración (El Catálogo)
+Sin esto, el usuario no tiene qué buscar.
+
+Registro/Login: El proveedor crea cuenta (correo/password).
+
+Configuración de Perfil (Vital):
+
+Sube foto de perfil/logo.
+
+Define Ubicación (Cobertura).
+
+Crea sus Paquetes/Servicios: Título, Descripción, Precio, Fotos.
+
+Nota Técnica: Aquí se define el inventario básico.
+
+Dashboard Principal: Accede a su pantalla de inicio donde ve "Solicitudes Pendientes" y "Próximos Eventos".
+
+FASE 2: Negociación (El "Sí" o "No")
+Aquí ocurre la interacción inicial.
+
+Recepción de Notificación: "¡Tienes una nueva solicitud para el 20 de Octubre!".
+
+Revisión de Detalle: Entra a la solicitud. Ve:
+
+Cliente (Nombre, Rating).
+
+Fecha y Hora.
+
+Lugar del evento.
+
+Paquete solicitado.
+
+Toma de Decisión:
+
+Acción A (Rechazar): Selecciona motivo (ej. "Fecha no disponible") -> El pedido se cierra.
+
+Acción B (Aceptar): Presiona "Aceptar Solicitud".
+
+Feedback del Sistema: "Esperando pago del anticipo por parte del cliente".
+
+FASE 3: Confirmación Pasiva
+El proveedor espera a que el dinero hable.
+
+Espera (Estado: Pendiente de Pago): El proveedor ve el pedido en una lista de "Por confirmar".
+
+Regla de Negocio: Si en 24h el cliente no paga, el pedido desaparece o cambia a "Cancelado" automáticamente.
+
+Confirmación: Recibe notificación: "¡Pago de anticipo recibido! Reserva Confirmada".
+
+El pedido se mueve a la pestaña "Próximos Eventos".
+
+Se habilita el botón de "Chat" para coordinar detalles finos con el cliente.
+
+FASE 4: Ejecución y PIN (El "Momento de la Verdad")
+Día del evento.
+
+Consulta de Evento: El proveedor abre la app, va a "Eventos de Hoy".
+
+Entrega/Montaje: Llega al lugar y entrega el servicio.
+
+Validación de Entrega:
+
+Presiona el botón "Validar Entrega / Ingresar PIN".
+
+Se abre un teclado numérico en pantalla.
+
+Pide el código al cliente e ingresa los 4 dígitos.
+
+Confirmación de Éxito:
+
+Sistema: Valida PIN.
+
+Pantalla: Muestra "¡Entrega Exitosa! Solicitando liquidación al cliente...".
+
+FASE 5: Cobro Final y Cierre
+Notificación de Liquidación:
+
+Cuando el cliente paga el resto (Link 2), el proveedor recibe: "Servicio Liquidado al 100%".
+
+Historial: El pedido pasa a la pestaña "Historial / Finalizados".
+
+Ganancias: En su sección de "Mi Cartera" o "Finanzas", ve reflejado el monto total menos la comisión de Festeasy

@@ -9,6 +9,7 @@ environment:
 
 dependencies:
   bloc: ^9.0.1
+  carousel_slider: ^5.0.0
   dio: ^5.9.0
   flutter:
     sdk: flutter
@@ -21,6 +22,7 @@ dependencies:
   geolocator: ^14.0.2
   google_fonts: ^7.0.2
   http: ^1.2.0
+  image_picker: ^1.2.1
   intl: ^0.20.2
   json_annotation: ^4.9.0
   latlong2: ^0.9.1
@@ -29,13 +31,13 @@ dependencies:
 
 dev_dependencies:
   bloc_test: ^10.0.0
-  build_runner: ^2.10.5
+  build_runner: ^2.4.0
   flutter_test:
     sdk: flutter
-  json_serializable: ^6.11.2
+  json_serializable: ^6.9.5
   mocktail: ^1.0.4
-  retrofit_generator: ^10.2.1
-  very_good_analysis: ^10.0.0
+  retrofit_generator: ^9.1.4
+  very_good_analysis: ^6.0.0
   flutter_launcher_icons: ^0.14.4
 
 flutter:

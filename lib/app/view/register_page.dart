@@ -1,10 +1,12 @@
-import 'package:flutter/material.dart';
 import 'package:festeasy/app/view/client_home_page.dart';
+import 'package:festeasy/app/view/provider_home_page.dart';
 import 'package:festeasy/services/auth_service.dart';
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class RegisterPage extends StatefulWidget {
-  const RegisterPage({Key? key}) : super(key: key);
+  const RegisterPage({super.key, this.isProvider = false});
+  final bool isProvider;
 
   @override
   State<RegisterPage> createState() => _RegisterPageState();
@@ -18,6 +20,13 @@ class _RegisterPageState extends State<RegisterPage> {
   bool showPassword = false;
   bool acceptedTerms = false;
   bool isLoading = false;
+  late bool isProvider;
+
+  @override
+  void initState() {
+    super.initState();
+    isProvider = widget.isProvider;
+  }
 
   @override
   void dispose() {
@@ -56,24 +65,48 @@ class _RegisterPageState extends State<RegisterPage> {
     });
 
     try {
-      final response = await AuthService.instance.signUpWithEmail(
-        email: emailController.text.trim(),
-        password: passwordController.text,
-        fullName: nameController.text.trim(),
-        phone: phoneController.text.trim(),
-      );
+      AuthResponse response;
+      
+      if (isProvider) {
+        // Registro como proveedor
+        response = await AuthService.instance.signUpProviderWithEmail(
+          email: emailController.text.trim(),
+          password: passwordController.text,
+          nombreNegocio: nameController.text.trim(),
+          telefono: phoneController.text.trim(),
+        );
+      } else {
+        // Registro como cliente
+        response = await AuthService.instance.signUpClientWithEmail(
+          email: emailController.text.trim(),
+          password: passwordController.text,
+          fullName: nameController.text.trim(),
+          phone: phoneController.text.trim(),
+        );
+      }
 
       if (!mounted) return;
 
       if (response.user != null) {
         _showSnackBar('¡Cuenta creada exitosamente!', Colors.green);
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute<void>(
-            builder: (context) => ClientHomePage(
-              userName: nameController.text.trim(),
+        
+        if (isProvider) {
+          // Navegar a ProviderHomePage
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute<void>(
+              builder: (context) => const ProviderHomePage(),
             ),
-          ),
-        );
+          );
+        } else {
+          // Navegar a ClientHomePage
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute<void>(
+              builder: (context) => ClientHomePage(
+                userName: nameController.text.trim(),
+              ),
+            ),
+          );
+        }
       } else if (response.user == null && response.session == null) {
         // Si no hay usuario ni sesión, mostrar el mensaje de error de Supabase
         _showSnackBar(
@@ -86,7 +119,7 @@ class _RegisterPageState extends State<RegisterPage> {
       _showSnackBar('AuthException: ${e.message}', Colors.red);
     } catch (e) {
       if (!mounted) return;
-      _showSnackBar('Error: ${e.toString()}', Colors.red);
+      _showSnackBar('Error: $e', Colors.red);
     } finally {
       if (mounted) {
         setState(() {
@@ -98,17 +131,6 @@ class _RegisterPageState extends State<RegisterPage> {
 
   bool _isValidEmail(String email) {
     return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
-  }
-
-  String _getErrorMessage(String error) {
-    if (error.contains('User already registered')) {
-      return 'Este correo ya está registrado';
-    } else if (error.contains('Invalid email')) {
-      return 'Correo electrónico inválido';
-    } else if (error.contains('Password should be at least')) {
-      return 'La contraseña es muy débil';
-    }
-    return 'Error: $error';
   }
 
   void _showSnackBar(String message, Color color) {
@@ -132,9 +154,9 @@ class _RegisterPageState extends State<RegisterPage> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         centerTitle: true,
-        title: const Text(
-          'Regístrate',
-          style: TextStyle(
+        title: Text(
+          isProvider ? 'Registra tu Negocio' : 'Regístrate',
+          style: const TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.bold,
             fontSize: 20,
@@ -143,9 +165,8 @@ class _RegisterPageState extends State<RegisterPage> {
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 16),
               // Logo de la app
@@ -165,12 +186,12 @@ class _RegisterPageState extends State<RegisterPage> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
-              // Campo Nombre
+              // Campo Nombre / Nombre del Negocio
               Align(
                 alignment: Alignment.centerLeft,
-                child: const Text(
-                  'Nombre',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+                child: Text(
+                  isProvider ? 'Nombre del Negocio' : 'Nombre',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
               ),
               const SizedBox(height: 6),
@@ -179,7 +200,8 @@ class _RegisterPageState extends State<RegisterPage> {
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: Colors.white,
-                  hintText: 'Tu nombre completo',
+                  hintText:
+                      isProvider ? 'Ej: DJ Eventos' : 'Tu nombre completo',
                   prefixIcon: const Icon(
                     Icons.person_outline,
                     color: Colors.red,
@@ -192,9 +214,9 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
               const SizedBox(height: 16),
               // Campo Correo
-              Align(
+              const Align(
                 alignment: Alignment.centerLeft,
-                child: const Text(
+                child: Text(
                   'Correo',
                   style: TextStyle(fontWeight: FontWeight.w600),
                 ),
@@ -216,9 +238,9 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
               const SizedBox(height: 16),
               // Campo Celular
-              Align(
+              const Align(
                 alignment: Alignment.centerLeft,
-                child: const Text(
+                child: Text(
                   'Celular',
                   style: TextStyle(fontWeight: FontWeight.w600),
                 ),
@@ -243,9 +265,9 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
               const SizedBox(height: 16),
               // Campo Contraseña
-              Align(
+              const Align(
                 alignment: Alignment.centerLeft,
-                child: const Text(
+                child: Text(
                   'Contraseña',
                   style: TextStyle(fontWeight: FontWeight.w600),
                 ),
@@ -295,7 +317,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.only(top: 12.0),
+                      padding: const EdgeInsets.only(top: 12),
                       child: RichText(
                         text: const TextSpan(
                           text: 'He leído y acepto los ',
@@ -343,9 +365,11 @@ class _RegisterPageState extends State<RegisterPage> {
                             strokeWidth: 2,
                           ),
                         )
-                      : const Text(
-                          'Crear mi cuenta',
-                          style: TextStyle(
+                      : Text(
+                          isProvider
+                              ? 'Registrar mi Negocio'
+                              : 'Crear mi cuenta',
+                          style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,

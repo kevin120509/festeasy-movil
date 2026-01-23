@@ -1,0 +1,214 @@
+-- ============================================
+-- CONFIGURACIÓN DE STORAGE EN SUPABASE
+-- Ejecutar en el SQL Editor de Supabase
+-- ============================================
+
+-- 1. Crear el bucket 'festeasy' para almacenar imágenes
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+    'festeasy',
+    'festeasy',
+    true,  -- Bucket público para que las URLs sean accesibles
+    5242880,  -- 5MB límite
+    ARRAY['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+)
+ON CONFLICT (id) DO UPDATE SET
+    public = true,
+    file_size_limit = 5242880;
+
+-- 2. Políticas de Storage para el bucket 'festeasy'
+
+-- Política: Cualquier usuario autenticado puede subir archivos en su carpeta
+CREATE POLICY "Usuarios autenticados pueden subir imagenes"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK (bucket_id = 'festeasy' AND auth.uid()::text = (storage.foldername(name))[1]);
+
+-- Política: Cualquiera puede ver las imágenes (bucket público)
+CREATE POLICY "Las imagenes son publicas"
+ON storage.objects FOR SELECT
+TO public
+USING (bucket_id = 'festeasy');
+
+-- Política: Los usuarios pueden actualizar sus propios archivos (reemplazar)
+CREATE POLICY "Usuarios pueden actualizar sus archivos"
+ON storage.objects FOR UPDATE
+TO authenticated
+USING (bucket_id = 'festeasy' AND auth.uid()::text = (storage.foldername(name))[1])
+WITH CHECK (bucket_id = 'festeasy' AND auth.uid()::text = (storage.foldername(name))[1]);
+
+-- Política: Los usuarios solo pueden eliminar sus propios archivos
+CREATE POLICY "Usuarios pueden eliminar sus archivos"
+ON storage.objects FOR DELETE
+TO authenticated
+USING (bucket_id = 'festeasy' AND auth.uid()::text = (storage.foldername(name))[1]);
+
+-- ============================================
+-- POLÍTICAS RLS PARA TABLAS PRINCIPALES
+-- ============================================
+
+-- Habilitar RLS en las tablas principales
+ALTER TABLE public.solicitudes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.paquetes_proveedor ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.perfil_proveedor ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.perfil_cliente ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.cotizaciones ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.items_carrito ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.carrito ENABLE ROW LEVEL SECURITY;
+
+-- ============================================
+-- POLÍTICAS PARA SOLICITUDES
+-- ============================================
+
+-- Clientes pueden ver sus propias solicitudes
+CREATE POLICY "Clientes ven sus solicitudes"
+ON public.solicitudes FOR SELECT
+TO authenticated
+USING (cliente_usuario_id = auth.uid());
+
+-- Proveedores pueden ver solicitudes dirigidas a ellos
+CREATE POLICY "Proveedores ven solicitudes recibidas"
+ON public.solicitudes FOR SELECT
+TO authenticated
+USING (proveedor_usuario_id = auth.uid());
+
+-- Clientes pueden crear solicitudes
+CREATE POLICY "Clientes crean solicitudes"
+ON public.solicitudes FOR INSERT
+TO authenticated
+WITH CHECK (cliente_usuario_id = auth.uid());
+
+-- Proveedores pueden actualizar estado de solicitudes
+CREATE POLICY "Proveedores actualizan solicitudes"
+ON public.solicitudes FOR UPDATE
+TO authenticated
+USING (proveedor_usuario_id = auth.uid());
+
+-- ============================================
+-- POLÍTICAS PARA PAQUETES DE PROVEEDOR
+-- ============================================
+
+-- Cualquiera puede ver paquetes publicados
+CREATE POLICY "Paquetes publicados son publicos"
+ON public.paquetes_proveedor FOR SELECT
+TO public
+USING (estado = 'publicado');
+
+-- Proveedores pueden ver todos sus paquetes
+CREATE POLICY "Proveedores ven sus paquetes"
+ON public.paquetes_proveedor FOR SELECT
+TO authenticated
+USING (proveedor_usuario_id = auth.uid());
+
+-- Proveedores pueden crear paquetes
+CREATE POLICY "Proveedores crean paquetes"
+ON public.paquetes_proveedor FOR INSERT
+TO authenticated
+WITH CHECK (proveedor_usuario_id = auth.uid());
+
+-- Proveedores pueden actualizar sus paquetes
+CREATE POLICY "Proveedores actualizan paquetes"
+ON public.paquetes_proveedor FOR UPDATE
+TO authenticated
+USING (proveedor_usuario_id = auth.uid());
+
+-- Proveedores pueden eliminar sus paquetes
+CREATE POLICY "Proveedores eliminan paquetes"
+ON public.paquetes_proveedor FOR DELETE
+TO authenticated
+USING (proveedor_usuario_id = auth.uid());
+
+-- ============================================
+-- POLÍTICAS PARA PERFILES
+-- ============================================
+
+-- Perfiles de proveedores son públicos (para el marketplace)
+CREATE POLICY "Perfiles proveedores son publicos"
+ON public.perfil_proveedor FOR SELECT
+TO public
+USING (true);
+
+-- Proveedores pueden actualizar su propio perfil
+CREATE POLICY "Proveedores actualizan su perfil"
+ON public.perfil_proveedor FOR UPDATE
+TO authenticated
+USING (usuario_id = auth.uid());
+
+-- Perfiles de clientes son visibles por ellos mismos
+CREATE POLICY "Clientes ven su perfil"
+ON public.perfil_cliente FOR SELECT
+TO authenticated
+USING (usuario_id = auth.uid());
+
+-- Clientes pueden actualizar su perfil
+CREATE POLICY "Clientes actualizan su perfil"
+ON public.perfil_cliente FOR UPDATE
+TO authenticated
+USING (usuario_id = auth.uid());
+
+-- ============================================
+-- POLÍTICAS PARA COTIZACIONES
+-- ============================================
+
+-- Proveedores pueden crear cotizaciones
+CREATE POLICY "Proveedores crean cotizaciones"
+ON public.cotizaciones FOR INSERT
+TO authenticated
+WITH CHECK (proveedor_usuario_id = auth.uid());
+
+-- Proveedores y clientes pueden ver cotizaciones relacionadas
+CREATE POLICY "Ver cotizaciones propias"
+ON public.cotizaciones FOR SELECT
+TO authenticated
+USING (
+    proveedor_usuario_id = auth.uid() 
+    OR 
+    solicitud_id IN (SELECT id FROM public.solicitudes WHERE cliente_usuario_id = auth.uid())
+);
+
+-- ============================================
+-- POLÍTICAS PARA CARRITO
+-- ============================================
+
+-- Clientes pueden gestionar su carrito
+CREATE POLICY "Clientes gestionan carrito"
+ON public.carrito FOR ALL
+TO authenticated
+USING (cliente_usuario_id = auth.uid())
+WITH CHECK (cliente_usuario_id = auth.uid());
+
+-- Items del carrito
+CREATE POLICY "Clientes gestionan items carrito"
+ON public.items_carrito FOR ALL
+TO authenticated
+USING (
+    carrito_id IN (SELECT id FROM public.carrito WHERE cliente_usuario_id = auth.uid())
+)
+WITH CHECK (
+    carrito_id IN (SELECT id FROM public.carrito WHERE cliente_usuario_id = auth.uid())
+);
+
+-- ============================================
+-- CATEGORÍAS DE SERVICIO (Públicas, solo lectura)
+-- ============================================
+ALTER TABLE public.categorias_servicio ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Categorias son publicas"
+ON public.categorias_servicio FOR SELECT
+TO public
+USING (true);
+
+-- ============================================
+-- INSERTAR CATEGORÍAS DE SERVICIO INICIALES
+-- ============================================
+INSERT INTO public.categorias_servicio (nombre, descripcion, icono, activa) VALUES
+('DJ / Sonido', 'Servicios de DJ y equipo de sonido profesional', 'music_note', true),
+('Catering', 'Servicios de banquetes y comida para eventos', 'restaurant', true),
+('Fotografía', 'Fotografía profesional para eventos', 'photo_camera', true),
+('Decoración', 'Decoración y ambientación de eventos', 'palette', true),
+('Iluminación', 'Servicios de iluminación profesional', 'lightbulb', true),
+('Pastelería', 'Pasteles y repostería para eventos', 'cake', true),
+('Salones', 'Salones y espacios para eventos', 'meeting_room', true),
+('Animación', 'Animación y entretenimiento', 'celebration', true),
+('Transporte', 'Servicios de transporte para eventos', 'directions_car', true)
+ON CONFLICT DO NOTHING;

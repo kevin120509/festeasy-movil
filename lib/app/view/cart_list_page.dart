@@ -1,3 +1,4 @@
+import 'package:festeasy/app/view/cart_page.dart';
 import 'package:festeasy/app/view/request_status_page.dart';
 import 'package:festeasy/services/cart_service.dart';
 import 'package:festeasy/services/solicitud_service.dart';
@@ -10,15 +11,39 @@ class CartListPage extends StatefulWidget {
   State<CartListPage> createState() => _CartListPageState();
 }
 
-class _CartListPageState extends State<CartListPage> {
+class _CartListPageState extends State<CartListPage> with WidgetsBindingObserver {
   List<CartData> _carts = [];
   SolicitudData? _activeSolicitud;
   bool _isLoading = true;
+  DateTime _lastLoadTime = DateTime.now();
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadData();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Recargar cuando la app vuelve al frente
+      _autoReloadIfNeeded();
+    }
+  }
+
+  void _autoReloadIfNeeded() {
+    final now = DateTime.now();
+    final elapsed = now.difference(_lastLoadTime).inSeconds;
+    if (elapsed > 2) {
+      _loadData();
+    }
   }
 
   Future<void> _loadData() async {
@@ -34,6 +59,7 @@ class _CartListPageState extends State<CartListPage> {
           _activeSolicitud = activeSolicitud;
           _carts = carts;
           _isLoading = false;
+          _lastLoadTime = DateTime.now();
         });
       }
     } catch (e) {
@@ -47,6 +73,13 @@ class _CartListPageState extends State<CartListPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Auto-reload si han pasado más de 2 segundos
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _autoReloadIfNeeded();
+      }
+    });
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FFFF),
       appBar: AppBar(
@@ -60,6 +93,12 @@ class _CartListPageState extends State<CartListPage> {
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Color(0xFF010302)),
+            onPressed: _loadData,
+          ),
+        ],
       ),
       body: _isLoading
           ? const Center(
@@ -113,13 +152,51 @@ class _CartListPageState extends State<CartListPage> {
                       'Actualizado: ${cart.actualizadoEn.toLocal().toString().split('.')[0]}',
                     ),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: () {
-                      // TODO: Navegar al detalle del carrito
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Detalle de carrito próximamente'),
-                        ),
-                      );
+                    onTap: () async {
+                      // Cargar items del carrito y navegar a CartPage
+                      try {
+                        final cartData = await CartService.instance
+                            .getCartItemsWithProvider(cart.id);
+                        
+                        if (cartData == null || (cartData['allItems'] as List).isEmpty) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('El carrito está vacío'),
+                              ),
+                            );
+                          }
+                          return;
+                        }
+
+                        if (mounted) {
+                          await Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (context) => CartPage(
+                                cartItems: cartData['cartItems'] as Map<String, int>,
+                                allItems: cartData['allItems'] as List<Map<String, dynamic>>,
+                                providerName: cartData['providerName'] as String? ?? 'Proveedor',
+                                providerUserId: cartData['providerUserId'] as String,
+                                categoryName: 'Servicio',
+                                initialAddress: cart.direccionServicio,
+                                initialDate: cart.fechaServicioDeseada,
+                                carritoId: cart.id,
+                              ),
+                            ),
+                          );
+                          
+                          // Recargar carritos al volver
+                          _loadData();
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Error al cargar carrito: $e'),
+                            ),
+                          );
+                        }
+                      }
                     },
                   ),
                 );
@@ -131,7 +208,7 @@ class _CartListPageState extends State<CartListPage> {
   Widget _buildActiveSolicitudView() {
     final solicitud = _activeSolicitud!;
     final nowUtc = DateTime.now().toUtc();
-    Duration remaining = Duration.zero;
+    var remaining = Duration.zero;
 
     if (solicitud.estado == 'pendiente_aprobacion') {
       final deadline = solicitud.creadoEn.add(const Duration(hours: 24));

@@ -13,8 +13,8 @@ import 'package:latlong2/latlong.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ClientHomePage extends StatefulWidget {
-  final String userName;
   const ClientHomePage({super.key, this.userName = 'Usuario'});
+  final String userName;
 
   @override
   State<ClientHomePage> createState() => _ClientHomePageState();
@@ -115,7 +115,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
       final providers = await ProviderDatabaseService.instance
           .getProvidersByIds(favorites);
 
-      final List<ProviderData> validProviders = [];
+      final validProviders = <ProviderData>[];
 
       for (final provider in providers) {
         if (provider.latitud != null && provider.longitud != null) {
@@ -300,13 +300,26 @@ class _ClientHomePageState extends State<ClientHomePage> {
   }
 
   Widget _buildCategoriesSection() {
-    // Categorías que coinciden con la base de datos
+    // Categorías con sus UUIDs de la BD (base.sql)
+    // Estos deben coincidir con los IDs en la tabla categorias_servicio
     final categories = [
-      {'name': 'Música y Sonido', 'icon': Icons.music_note_outlined},
-      {'name': 'Decoración', 'icon': Icons.celebration_outlined},
-      {'name': 'Catering', 'icon': Icons.restaurant_outlined},
-      {'name': 'Fotografía y Video', 'icon': Icons.camera_alt_outlined},
-      {'name': 'Alquiler de Mobiliario', 'icon': Icons.chair_outlined},
+      {
+        'name': 'Música y Sonido',
+        'icon': Icons.music_note_outlined,
+        'id': null, // Se cargarán dinámicamente
+      },
+      {'name': 'Decoración', 'icon': Icons.celebration_outlined, 'id': null},
+      {'name': 'Catering', 'icon': Icons.restaurant_outlined, 'id': null},
+      {
+        'name': 'Fotografía y Video',
+        'icon': Icons.camera_alt_outlined,
+        'id': null,
+      },
+      {
+        'name': 'Alquiler de Mobiliario',
+        'icon': Icons.chair_outlined,
+        'id': null,
+      },
     ];
 
     return Padding(
@@ -337,12 +350,14 @@ class _ClientHomePageState extends State<ClientHomePage> {
               final cat = categories[index];
               return GestureDetector(
                 onTap: () {
+                  // Usar el nombre de la categoría como identificador
+                  // En una implementación real, buscarías el UUID en la BD
                   Navigator.of(context).push(
                     MaterialPageRoute<void>(
                       builder: (context) => ServiceRequirementPage(
-                        categoryId: index.toString(),
-                        categoryName: cat['name'] as String,
-                        categoryIcon: cat['icon'] as IconData,
+                        categoryId: cat['name']! as String,
+                        categoryName: cat['name']! as String,
+                        categoryIcon: cat['icon']! as IconData,
                       ),
                     ),
                   );
@@ -357,13 +372,13 @@ class _ClientHomePageState extends State<ClientHomePage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(
-                        cat['icon'] as IconData,
+                        cat['icon']! as IconData,
                         color: const Color(0xFFE01D25),
                         size: 32,
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        cat['name'] as String,
+                        cat['name']! as String,
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 13,
@@ -385,7 +400,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
 
   Widget _buildActiveRequest(SolicitudData solicitud) {
     final nowUtc = DateTime.now().toUtc();
-    Duration remaining = Duration.zero;
+    var remaining = Duration.zero;
     if (solicitud.estado == 'pendiente_aprobacion') {
       final deadline = solicitud.creadoEn.add(const Duration(hours: 24));
       remaining = deadline.difference(nowUtc);
@@ -405,9 +420,8 @@ class _ClientHomePageState extends State<ClientHomePage> {
         onTap: () {
           Navigator.of(context).push(
             MaterialPageRoute<void>(
-              builder: (context) => RequestStatusPage(
-                solicitudId: solicitud.id,
-              ),
+              builder: (context) =>
+                  RequestStatusPage(solicitudId: solicitud.id),
             ),
           );
         },
@@ -493,10 +507,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
                     ),
                     const Text(
                       'restante',
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 10,
-                      ),
+                      style: TextStyle(color: Colors.grey, fontSize: 10),
                     ),
                   ],
                 ),
@@ -524,7 +535,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
           ),
           const SizedBox(height: 12),
           ..._cancelledSolicitudes.map(
-            (solicitud) => _buildCancelledRequestCard(solicitud),
+            _buildCancelledRequestCard,
           ),
         ],
       ),
@@ -572,10 +583,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
                 const SizedBox(height: 4),
                 Text(
                   'Cancelada • \$${solicitud.montoTotal.toStringAsFixed(0)}',
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 13,
-                  ),
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
                 ),
               ],
             ),
@@ -636,15 +644,15 @@ class _ClientHomePageState extends State<ClientHomePage> {
       await SolicitudService.instance.deleteSolicitud(solicitudId);
       _loadCancelledSolicitudes();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Solicitud eliminada')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Solicitud eliminada')));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
@@ -711,7 +719,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
               final provider = _nearbyProviders[index];
 
               // Cálculo de distancia para mostrar
-              String distanceText = 'Desconocida';
+              var distanceText = 'Desconocida';
               if (provider.latitud != null && provider.longitud != null) {
                 final distance = const Distance().as(
                   LengthUnit.Kilometer,

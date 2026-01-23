@@ -1,0 +1,57 @@
+User Flow: El Cliente (Client Journey)
+Dividiremos la experiencia en 4 Módulos: Onboarding (El Filtro), Discovery (El Buscador), Gestión (Mis Eventos) y Perfil.
+
+FASE 1: Acceso y Contexto (El "Gatekeeper")
+Registro/Login: Credenciales o Social Login (Google/Facebook).
+(mantenerlo como está)
+
+
+FASE 2: El Hub (Home & Discovery)
+Pantalla Home (El Hub):
+
+Barra de Búsqueda: "¿Qué buscas? (ej. DJ, Tacos, Sillas)".
+
+Accesos Rápidos (Categorías): Iconos grandes (Mntener las categorías que ya están).
+
+Secciones Dinámicas: "Los mejor calificados en [Tu Ciudad]", "Ofertas de temporada".
+
+Fase 3:
+
+Al tocar una categoría
+solicitud de Ubicación (CRÍTICO):
+
+Prompt: "Para mostrarte los mejores servicios cerca de ti, necesitamos saber dónde será tu fiesta."
+
+Opción A: Usar GPS actual.
+
+Opción B: Ingresar código postal o seleccionar en mapa manualmente.
+
+Resultado: La app guarda las coordenadas user_lat y user_long.
+
+se muestran los proveedores.
+
+Filtros (Tu requerimiento): 
+
+Precio: Rango ($ - $$$).
+
+Reputación: 4 estrellas o más.
+
+Distancia: < 5km, < 10km.
+
+Detalle del Proveedor:
+
+Fotos, Descripción, Paquetes, Reseñas de otros usuarios.
+
+El cliente debe poder ver los detalles de cada paquete de un proveedor. Botón de acción: "Solicitar Disponibilidad".
+
+FASE 3: El Ciclo de Compra (El "Spoke" Transaccional)
+Solicitud -> Negociación -> Pago Anticipo.. Mis Eventos:. * Muestra tarjetas: "Cumpleaños Papá - Pendiente de Pago", "Boda - Confirmado". * Aquí es donde vive el PIN de Seguridad.
+
+FASE 4: Perfil y Ajustes
+Mi Cuenta:
+
+Historial de pagos.
+
+Direcciones guardadas (Casa, Salón de fiestas).
+
+Ayuda / Soporte.

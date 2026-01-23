@@ -1,9 +1,22 @@
-import 'package:flutter/material.dart';
 import 'package:festeasy/app/view/cart_page.dart';
 import 'package:festeasy/services/favorite_service.dart';
 import 'package:festeasy/services/provider_database_service.dart';
+import 'package:flutter/material.dart';
 
 class ProviderDetailPage extends StatefulWidget {
+
+  const ProviderDetailPage({
+    required this.providerId, required this.providerName, required this.category, required this.rating, required this.reviews, super.key,
+    this.perfilId,
+    this.usuarioId,
+    this.address,
+    this.phone,
+    this.thumbnail,
+    this.descripcion,
+    this.serviceAddress,
+    this.serviceDate,
+    this.serviceTime,
+  });
   final String providerId;
   final String? perfilId;
   final String? usuarioId;
@@ -18,24 +31,6 @@ class ProviderDetailPage extends StatefulWidget {
   final String? serviceAddress;
   final DateTime? serviceDate;
   final TimeOfDay? serviceTime;
-
-  const ProviderDetailPage({
-    Key? key,
-    required this.providerId,
-    this.perfilId,
-    this.usuarioId,
-    required this.providerName,
-    required this.category,
-    required this.rating,
-    required this.reviews,
-    this.address,
-    this.phone,
-    this.thumbnail,
-    this.descripcion,
-    this.serviceAddress,
-    this.serviceDate,
-    this.serviceTime,
-  }) : super(key: key);
 
   @override
   State<ProviderDetailPage> createState() => _ProviderDetailPageState();
@@ -262,9 +257,9 @@ class _ProviderDetailPageState extends State<ProviderDetailPage>
             ? Image.network(
                 widget.thumbnail!,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
-                  color: const Color(0xFFF4F7F9),
-                  child: const Center(
+                errorBuilder: (_, __, ___) => const ColoredBox(
+                  color: Color(0xFFF4F7F9),
+                  child: Center(
                     child: Icon(Icons.storefront, size: 80, color: Colors.grey),
                   ),
                 ),
@@ -471,7 +466,7 @@ class _ProviderDetailPageState extends State<ProviderDetailPage>
             ],
           ),
           const SizedBox(height: 14),
-          ...paquetesDB.map((pkg) => _buildPackageCardDB(pkg)),
+          ...paquetesDB.map(_buildPackageCardDB),
         ],
       ),
     );
@@ -663,13 +658,13 @@ class _ProviderDetailPageState extends State<ProviderDetailPage>
                     color: const Color(0xFF4CAF50),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Row(
+                  child: const Row(
                     children: [
-                      const Icon(Icons.check, color: Colors.white, size: 14),
-                      const SizedBox(width: 4),
+                      Icon(Icons.check, color: Colors.white, size: 14),
+                      SizedBox(width: 4),
                       Text(
                         'En carrito',
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w600,
                           fontSize: 12,

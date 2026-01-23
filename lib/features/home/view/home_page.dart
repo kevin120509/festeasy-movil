@@ -1,6 +1,7 @@
 import 'package:festeasy/app/theme.dart';
-import 'package:flutter/material.dart';
 import 'package:festeasy/app/view/login_page.dart';
+import 'package:festeasy/app/view/register_page.dart';
+import 'package:flutter/material.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -34,7 +35,7 @@ class HomePage extends StatelessWidget {
               ),
               const Spacer(),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Column(
                   children: [
                     SizedBox(
@@ -51,7 +52,7 @@ class HomePage extends StatelessWidget {
                         onPressed: () {
                           Navigator.of(context).push(
                             MaterialPageRoute<void>(
-                              builder: (context) => LoginPage(),
+                              builder: (context) => const LoginPage(),
                             ),
                           );
                         },
@@ -79,7 +80,8 @@ class HomePage extends StatelessWidget {
                         onPressed: () {
                           Navigator.of(context).push(
                             MaterialPageRoute<void>(
-                              builder: (context) => LoginPage(),
+                              builder: (context) =>
+                                  const RegisterPage(isProvider: true),
                             ),
                           );
                         },
@@ -132,7 +134,7 @@ class _Header extends StatelessWidget {
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute<void>(
-                  builder: (context) => LoginPage(),
+                  builder: (context) => const LoginPage(),
                 ),
               );
             },
@@ -242,7 +244,7 @@ class _CategoriesSection extends StatelessWidget {
                     onTap: () {
                       Navigator.of(context).push(
                         MaterialPageRoute<void>(
-                          builder: (context) => LoginPage(),
+                          builder: (context) => const LoginPage(),
                         ),
                       );
                     },
@@ -299,7 +301,7 @@ class _ProviderBanner extends StatelessWidget {
               onPressed: () {
                 Navigator.of(context).push(
                   MaterialPageRoute<void>(
-                    builder: (context) => LoginPage(),
+                    builder: (context) => const LoginPage(),
                   ),
                 );
               },

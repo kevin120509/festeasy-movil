@@ -1,11 +1,12 @@
-import 'package:flutter/material.dart';
-import 'package:festeasy/app/view/register_page.dart';
 import 'package:festeasy/app/view/client_home_page.dart';
+import 'package:festeasy/app/view/provider_home_page.dart';
+import 'package:festeasy/app/view/register_page.dart';
 import 'package:festeasy/services/auth_service.dart';
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({Key? key}) : super(key: key);
+  const LoginPage({super.key});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -42,17 +43,36 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       if (response.user != null) {
-        // Obtener el perfil del usuario para mostrar su nombre
-        final profile = await AuthService.instance.getClientProfile();
-        final String userName =
-            (profile?['nombre_completo'] as String?) ??
-            emailController.text.split('@').first;
+        // Detectar el rol del usuario
+        final role = await AuthService.instance.getUserRole();
 
-        if (mounted) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute<void>(
-              builder: (context) => ClientHomePage(userName: userName),
-            ),
+        if (role == 'provider') {
+          // Navegar a dashboard del proveedor
+          if (mounted) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute<void>(
+                builder: (context) => const ProviderHomePage(),
+              ),
+            );
+          }
+        } else if (role == 'client') {
+          // Obtener el nombre del cliente para mostrar en el dashboard
+          final profile = await AuthService.instance.getClientProfile();
+          final userName =
+              (profile?['nombre_completo'] as String?) ??
+              emailController.text.split('@').first;
+
+          if (mounted) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute<void>(
+                builder: (context) => ClientHomePage(userName: userName),
+              ),
+            );
+          }
+        } else {
+          // Si no tiene perfil, mostrar error
+          _showErrorSnackBar(
+            'No se encontró tu perfil. Por favor, completa tu registro.',
           );
         }
       }
@@ -129,7 +149,7 @@ class _LoginPageState extends State<LoginPage> {
       body: Center(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Form(
               key: _formKey,
               child: Column(
@@ -272,7 +292,7 @@ class _LoginPageState extends State<LoginPage> {
                     children: [
                       Expanded(child: Divider(color: Colors.grey.shade300)),
                       const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8.0),
+                        padding: EdgeInsets.symmetric(horizontal: 8),
                         child: Text(
                           'O CONTINÚA CON',
                           style: TextStyle(color: Colors.grey),

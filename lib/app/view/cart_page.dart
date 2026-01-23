@@ -1,9 +1,18 @@
-import 'package:flutter/material.dart';
 import 'package:festeasy/app/view/request_status_page.dart';
+import 'package:festeasy/services/cart_service.dart';
 import 'package:festeasy/services/solicitud_service.dart';
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CartPage extends StatefulWidget {
+
+  const CartPage({
+    required this.cartItems, required this.allItems, required this.providerName, required this.providerUserId, required this.categoryName, super.key,
+    this.initialAddress,
+    this.initialDate,
+    this.initialTime,
+    this.carritoId,
+  });
   final Map<String, int> cartItems;
   final List<Map<String, dynamic>> allItems;
   final String providerName;
@@ -12,18 +21,7 @@ class CartPage extends StatefulWidget {
   final String? initialAddress;
   final DateTime? initialDate;
   final TimeOfDay? initialTime;
-
-  const CartPage({
-    super.key,
-    required this.cartItems,
-    required this.allItems,
-    required this.providerName,
-    required this.providerUserId,
-    required this.categoryName,
-    this.initialAddress,
-    this.initialDate,
-    this.initialTime,
-  });
+  final String? carritoId;
 
   @override
   State<CartPage> createState() => _CartPageState();
@@ -432,10 +430,10 @@ class _CartPageState extends State<CartPage> {
         const SizedBox(height: 12),
         Row(
           children: paymentMethods.map((m) {
-            final id = m['id'] as String;
-            final label = m['label'] as String;
-            final sub = m['sublabel'] as String;
-            final icon = m['icon'] as IconData;
+            final id = m['id']! as String;
+            final label = m['label']! as String;
+            final sub = m['sublabel']! as String;
+            final icon = m['icon']! as IconData;
             final selected = id == selectedPaymentMethod;
             return Expanded(
               child: GestureDetector(
@@ -746,6 +744,7 @@ class _CartPageState extends State<CartPage> {
         selectedTime.minute,
       );
 
+      // Crear solicitud única para este proveedor (mantener compatibilidad)
       final solicitud = await SolicitudService.instance.createSolicitud(
         providerUserId: widget.providerUserId,
         address: address,
@@ -757,6 +756,15 @@ class _CartPageState extends State<CartPage> {
       );
 
       if (!mounted) return;
+
+      // Marcar el carrito como convertido
+      if (widget.carritoId != null) {
+        try {
+          await CartService.instance.convertCart(widget.carritoId!);
+        } catch (_) {
+          // Ignorar error al marcar carrito
+        }
+      }
 
       // Volver al ClientHomePage (hacer pop de CartPage y las pantallas intermedias)
       // Contamos las rutas: CartPage -> ProviderDetailPage -> ClientHomePage

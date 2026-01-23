@@ -3,6 +3,14 @@ import 'package:festeasy/services/solicitud_service.dart';
 import 'package:flutter/material.dart';
 
 class CheckoutPage extends StatefulWidget {
+
+  const CheckoutPage({
+    required this.cartItems, required this.allItems, required this.providerName, required this.providerUserId, required this.categoryName, required this.subtotal, required this.serviceFee, required this.taxes, required this.total, super.key,
+    this.initialDate,
+    this.initialTime,
+    this.initialAddress,
+    this.initialPaymentMethod,
+  });
   final Map<String, int> cartItems;
   final List<Map<String, dynamic>> allItems;
   final String providerName;
@@ -16,23 +24,6 @@ class CheckoutPage extends StatefulWidget {
   final TimeOfDay? initialTime;
   final String? initialAddress;
   final String? initialPaymentMethod;
-
-  const CheckoutPage({
-    Key? key,
-    required this.cartItems,
-    required this.allItems,
-    required this.providerName,
-    required this.providerUserId,
-    required this.categoryName,
-    required this.subtotal,
-    required this.serviceFee,
-    required this.taxes,
-    required this.total,
-    this.initialDate,
-    this.initialTime,
-    this.initialAddress,
-    this.initialPaymentMethod,
-  }) : super(key: key);
 
   @override
   State<CheckoutPage> createState() => _CheckoutPageState();
@@ -314,10 +305,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            Text(
               'Método de Pago',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
@@ -326,7 +317,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
               ),
             ),
             Row(
-              children: const [
+              children: [
                 Icon(Icons.lock, color: Color(0xFFE01D25), size: 16),
                 SizedBox(width: 4),
                 Text(
@@ -348,7 +339,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
               child: GestureDetector(
                 onTap: () {
                   setState(() {
-                    selectedPaymentMethod = method['id'] as String;
+                    selectedPaymentMethod = method['id']! as String;
                   });
                 },
                 child: Container(
@@ -372,7 +363,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                       Stack(
                         children: [
                           Icon(
-                            method['icon'] as IconData,
+                            method['icon']! as IconData,
                             color: isSelected
                                 ? const Color(0xFFE01D25)
                                 : Colors.grey,
@@ -392,7 +383,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        method['label'] as String,
+                        method['label']! as String,
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 13,
@@ -402,7 +393,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         ),
                       ),
                       Text(
-                        method['sublabel'] as String,
+                        method['sublabel']! as String,
                         style: const TextStyle(
                           color: Colors.grey,
                           fontSize: 11,
@@ -463,9 +454,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                 item['name'] as String,
                                 style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 16),
                               ),
-                              Text(
+                              const Text(
                                 'Servicio Básico',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: Colors.grey,
                                   fontSize: 12,
                                 ),

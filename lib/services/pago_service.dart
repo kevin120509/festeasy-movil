@@ -1,6 +1,16 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class PagoData {
+
+  PagoData({
+    required this.id,
+    required this.clienteUsuarioId, required this.proveedorUsuarioId, required this.monto, required this.metodoPago, required this.estado, required this.creadoEn, required this.actualizadoEn, this.cotizacionId,
+    this.comprobanteUrl,
+    this.motivoRechazo,
+    this.solicitudId,
+    this.idTransaccionExterna,
+    this.tipoPago,
+  });
   final String id;
   final String? cotizacionId;
   final String clienteUsuarioId;
@@ -15,23 +25,6 @@ class PagoData {
   final String? tipoPago; // 'anticipo' | 'liquidacion'
   final DateTime creadoEn;
   final DateTime actualizadoEn;
-
-  PagoData({
-    required this.id,
-    this.cotizacionId,
-    required this.clienteUsuarioId,
-    required this.proveedorUsuarioId,
-    required this.monto,
-    required this.metodoPago,
-    required this.estado,
-    this.comprobanteUrl,
-    this.motivoRechazo,
-    this.solicitudId,
-    this.idTransaccionExterna,
-    this.tipoPago,
-    required this.creadoEn,
-    required this.actualizadoEn,
-  });
 
   static DateTime _parseDate(String value) => DateTime.parse(value).toUtc();
 
@@ -68,10 +61,7 @@ class PagoService {
   }
 
   Future<PagoData> createPago({
-    String? cotizacionId,
-    required String proveedorUsuarioId,
-    required double monto,
-    required String metodoPago,
+    required String proveedorUsuarioId, required double monto, required String metodoPago, String? cotizacionId,
     String? solicitudId,
     String? tipoPago,
   }) async {

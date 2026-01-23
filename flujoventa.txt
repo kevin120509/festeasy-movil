@@ -1,0 +1,96 @@
+Diagrama de Flujo Lógico: "Ciclo de Vida del Servicio Festeasy"
+Este flujo asume una transacción entre 1 Usuario (Cliente) y 1 Proveedor (Ej. Renta de Sillas).
+
+FASE 1: Solicitud y Negociación (Pre-Venta)
+[Usuario] Búsqueda y Selección:
+
+El usuario encuentra el servicio deseado.
+
+Da clic en el botón "Solicitar Disponibilidad" (No es compra directa aún).
+
+Input: Fecha, Hora, Ubicación, Cantidad.
+
+Estado del Pedido: PENDIENTE_APROBACION
+
+[Proveedor] Notificación y Decisión:
+
+El proveedor recibe una notificación: "Nueva solicitud para el [Fecha]".
+
+Revisa su inventario/agenda.
+
+Acción A (Rechazar): Se notifica al usuario. Fin del flujo.
+
+Acción B (Aceptar): El proveedor confirma que puede atender el evento.
+
+Estado del Pedido: APROBADO_POR_PROVEEDOR
+
+FASE 2: La Reserva (El Compromiso)
+[Sistema] Generación de Link de Pago 1 (Anticipo):
+
+Al momento que el proveedor acepta, el sistema (Backend) conecta con Stripe/MercadoPago y genera un Link de Pago por el % de anticipo definido (ej. 30%).
+
+Se notifica al Usuario: "Tu proveedor está libre. Paga el anticipo para apartar la fecha. Tienes 24h".
+
+[Usuario] Pago del Anticipo:
+
+Usuario da clic en "Pagar Anticipo" -> Redirección a Web de Pagos.
+
+Realiza el pago exitoso.
+
+Regresa a la App.
+
+[Sistema] Confirmación y Generación de PIN:
+
+El sistema detecta el pago.
+
+Estado del Pedido: RESERVADO_CONFIRMADO
+
+Acción Crítica: El sistema genera un PIN DE SEGURIDAD (4 dígitos) y se lo muestra únicamente al Usuario en su pantalla de "Mis Eventos".
+
+Nota: El Proveedor NO ve este PIN, solo ve un campo vacío para ingresarlo.
+
+FASE 3: El Evento y Validación (El "Candado")
+[Proveedor] Entrega del Servicio:
+
+Llega el día del evento. El proveedor llega al lugar y monta el equipo.
+
+El proveedor solicita al cliente: "Ya quedó listo, ¿me ayudas con tu código PIN para confirmar?".
+
+[Interacción Física] Intercambio de PIN:
+
+El usuario revisa que las sillas/equipo estén bien.
+
+El usuario dicta el PIN al proveedor.
+
+[Proveedor] Validación en App:
+
+El proveedor abre su App Festeasy, selecciona el pedido y escribe el PIN.
+
+El sistema valida:
+
+Si es incorrecto -> Error.
+
+Si es correcto -> Estado del Pedido: ENTREGADO_EN_SITIO
+
+FASE 4: Liquidación y Cierre (Post-Servicio)
+[Sistema] Generación de Link de Pago 2 (Liquidación):
+
+Inmediatamente después de validar el PIN, el sistema habilita el cobro restante.
+
+Opción A (Pago Digital - Recomendada): Se le envía un Whatsapp/Notificación al usuario con el Link de Pago 2 por el restante (70%).
+
+Opción B (Pago Efectivo - Fallback): Si el modelo de negocio lo permite, el usuario paga en efectivo ahí mismo y el proveedor marca "Pago Recibido". (Asumiremos Opción A para tu flujo digital).
+
+[Usuario] Pago Final:
+
+El usuario paga el restante mediante el link.
+
+Estado del Pedido: FINALIZADO_PAGADO
+
+[Sistema] Reputación:
+
+24 horas después del evento, se habilita la opción de Reseña.
+
+Usuario califica (1-5 estrellas) y comenta.
+
+Fin del flujo.

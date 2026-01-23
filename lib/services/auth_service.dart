@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Servicio de autenticación para manejar login, registro y sesión de usuarios.
@@ -24,6 +25,7 @@ class AuthService {
         email: email,
         password: password,
       );
+
       return response;
     } on AuthException catch (e) {
       throw AuthException(e.message);
@@ -32,8 +34,8 @@ class AuthService {
     }
   }
 
-  /// Registrar un nuevo usuario con correo y contraseña
-  Future<AuthResponse> signUpWithEmail({
+  /// Registrar un nuevo usuario como cliente
+  Future<AuthResponse> signUpClientWithEmail({
     required String email,
     required String password,
     required String fullName,
@@ -43,23 +45,12 @@ class AuthService {
       final response = await _client.auth.signUp(
         email: email,
         password: password,
-        data: {
-          'full_name': fullName,
-          'phone': phone,
-        },
+        data: {'full_name': fullName, 'phone': phone},
       );
 
-      // Si el registro es exitoso, crear el usuario en la tabla users y el perfil del cliente
+      // Si el registro es exitoso, crear el perfil del cliente
+      // Nota: Supabase Auth ya crea automáticamente el usuario en auth.users
       if (response.user != null) {
-        // Insertar en tabla users
-        await _client.from('users').insert({
-          'id': response.user!.id,
-          'correo_electronico': email,
-          'contrasena': password, // ¡No guardar en texto plano en producción!
-          'rol': 'client',
-          'estado': 'active',
-        });
-
         await _createClientProfile(
           userId: response.user!.id,
           fullName: fullName,
@@ -71,8 +62,54 @@ class AuthService {
     } on AuthException catch (e) {
       throw AuthException(e.message);
     } catch (e) {
-      throw Exception('Error al registrar usuario: $e');
+      throw Exception('Error al registrar cliente: $e');
     }
+  }
+
+  /// Registrar un nuevo usuario como proveedor
+  Future<AuthResponse> signUpProviderWithEmail({
+    required String email,
+    required String password,
+    required String nombreNegocio,
+    String? telefono,
+  }) async {
+    try {
+      final response = await _client.auth.signUp(
+        email: email,
+        password: password,
+        data: {'full_name': nombreNegocio, 'phone': telefono},
+      );
+
+      // Si el registro es exitoso, crear el perfil del proveedor
+      if (response.user != null) {
+        await _createProviderProfile(
+          userId: response.user!.id,
+          nombreNegocio: nombreNegocio,
+          telefono: telefono,
+        );
+      }
+
+      return response;
+    } on AuthException catch (e) {
+      throw AuthException(e.message);
+    } catch (e) {
+      throw Exception('Error al registrar proveedor: $e');
+    }
+  }
+
+  /// Registrar un nuevo usuario con correo y contraseña (DEPRECATED - usar signUpClientWithEmail)
+  Future<AuthResponse> signUpWithEmail({
+    required String email,
+    required String password,
+    required String fullName,
+    String? phone,
+  }) async {
+    return signUpClientWithEmail(
+      email: email,
+      password: password,
+      fullName: fullName,
+      phone: phone,
+    );
   }
 
   /// Crear perfil del cliente en la tabla perfil_cliente
@@ -82,10 +119,60 @@ class AuthService {
     String? phone,
   }) async {
     try {
+      // Verificar si ya existe el perfil
+      final existing = await _client
+          .from('perfil_cliente')
+          .select('id')
+          .eq('usuario_id', userId)
+          .maybeSingle();
+
+      if (existing != null) {
+        debugPrint('✅ Perfil de cliente ya existe para usuario: $userId');
+        return;
+      }
+
       await _client.from('perfil_cliente').insert({
         'usuario_id': userId,
         'nombre_completo': fullName,
         'telefono': phone,
+      });
+      debugPrint('✅ Perfil de cliente creado para usuario: $userId');
+    } catch (e) {
+      debugPrint('❌ Error creando perfil de cliente: $e');
+      // Reintentar una vez más
+      try {
+        await _client.from('perfil_cliente').upsert({
+          'usuario_id': userId,
+          'nombre_completo': fullName,
+          'telefono': phone,
+        }, onConflict: 'usuario_id');
+        debugPrint('✅ Perfil de cliente creado (upsert) para usuario: $userId');
+      } catch (e2) {
+        debugPrint('❌ Error en reintento de crear perfil: $e2');
+      }
+    }
+  }
+
+  /// Asegurar que existe el perfil del cliente actual
+  /// Útil para crear el perfil si no existe (usuarios antiguos)
+  Future<void> ensureClientProfileExists() async {
+    // Deshabilitado - no crear perfiles automáticamente
+    return;
+  }
+
+  /// Crear perfil del proveedor en la tabla perfil_proveedor
+  Future<void> _createProviderProfile({
+    required String userId,
+    required String nombreNegocio,
+    String? telefono,
+  }) async {
+    try {
+      await _client.from('perfil_proveedor').insert({
+        'usuario_id': userId,
+        'nombre_negocio': nombreNegocio,
+        'telefono': telefono,
+        'tipo_suscripcion_actual': 'basico',
+        'estado': 'active',
       });
     } catch (e) {
       // Si falla la creación del perfil, lo ignoramos por ahora
@@ -104,6 +191,45 @@ class AuthService {
           .eq('usuario_id', currentUser!.id)
           .maybeSingle();
       return response;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Obtener el perfil del proveedor actual
+  Future<Map<String, dynamic>?> getProviderProfile() async {
+    if (currentUser == null) return null;
+
+    try {
+      final response = await _client
+          .from('perfil_proveedor')
+          .select()
+          .eq('usuario_id', currentUser!.id)
+          .maybeSingle();
+      return response;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Detectar el rol del usuario actual (client, provider, o null)
+  Future<String?> getUserRole() async {
+    if (currentUser == null) return null;
+
+    try {
+      // Primero intenta obtener cliente
+      final clientProfile = await getClientProfile();
+      if (clientProfile != null) {
+        return 'client';
+      }
+
+      // Luego intenta obtener proveedor
+      final providerProfile = await getProviderProfile();
+      if (providerProfile != null) {
+        return 'provider';
+      }
+
+      return null;
     } catch (e) {
       return null;
     }

@@ -6,12 +6,9 @@ import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class RequestStatusPage extends StatefulWidget {
-  final String solicitudId;
 
-  const RequestStatusPage({
-    super.key,
-    required this.solicitudId,
-  });
+  const RequestStatusPage({required this.solicitudId, super.key});
+  final String solicitudId;
 
   @override
   State<RequestStatusPage> createState() => _RequestStatusPageState();
@@ -25,6 +22,7 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
   bool _isLoading = true;
   bool _isCancelling = false;
   bool _isDeleting = false;
+  bool _isPayingAnticipo = false;
 
   Timer? _ticker;
   RealtimeChannel? _channel;
@@ -62,6 +60,12 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
       );
 
       if (solicitud != null) {
+        // Fallback: el servicio ya intenta resolver el nombre del proveedor.
+        final resolvedName = solicitud.providerName;
+        if (resolvedName != null && resolvedName.trim().isNotEmpty) {
+          _providerName = resolvedName.trim();
+        }
+
         final client = Supabase.instance.client;
 
         // Cargar items de la solicitud
@@ -78,16 +82,26 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
         // Obtener nombre del proveedor desde su perfil
         if (solicitud.proveedorUsuarioId.isNotEmpty) {
           try {
-            final perfil = await client
+            // Primero intentar buscar por usuario_id
+            var perfil = await client
                 .from('perfil_proveedor')
-                .select('nombre_negocio, foto_url')
-                .or(
-                  'usuario_id.eq.${solicitud.proveedorUsuarioId},id.eq.${solicitud.proveedorUsuarioId}',
-                )
+                .select('nombre_negocio, avatar_url')
+                .eq('usuario_id', solicitud.proveedorUsuarioId)
                 .maybeSingle();
+
+            // Si no se encuentra, intentar buscar por id del perfil
+            perfil ??= await client
+                  .from('perfil_proveedor')
+                  .select('nombre_negocio, avatar_url')
+                  .eq('id', solicitud.proveedorUsuarioId)
+                  .maybeSingle();
+
             if (perfil != null) {
-              _providerName = perfil['nombre_negocio'] as String?;
-              _providerPhotoUrl = perfil['foto_url'] as String?;
+              final nombre = perfil['nombre_negocio'] as String?;
+              if (nombre != null && nombre.trim().isNotEmpty) {
+                _providerName = nombre.trim();
+              }
+              _providerPhotoUrl = perfil['avatar_url'] as String?;
             }
           } catch (_) {
             // ignorar fallos al obtener el perfil
@@ -235,18 +249,55 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
       await SolicitudService.instance.deleteSolicitud(widget.solicitudId);
       if (!mounted) return;
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Solicitud eliminada')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Solicitud eliminada')));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No se pudo eliminar: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('No se pudo eliminar: $e')));
     } finally {
       if (!mounted) return;
       setState(() {
         _isDeleting = false;
+      });
+    }
+  }
+
+  Future<void> _payAnticipo() async {
+    if (_isPayingAnticipo) return;
+
+    setState(() {
+      _isPayingAnticipo = true;
+    });
+
+    try {
+      // Simular pago del anticipo - actualizar estado a "reservado"
+      final anticipoAmount = (_solicitud?.montoTotal ?? 0) * 0.5;
+      await SolicitudService.instance.updateSolicitud(widget.solicitudId, {
+        'estado': 'reservado',
+        'monto_anticipo': anticipoAmount,
+      });
+
+      if (!mounted) return;
+      await _load();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('¡Anticipo pagado! Tu reserva está confirmada.'),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error al procesar pago: $e')));
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _isPayingAnticipo = false;
       });
     }
   }
@@ -271,7 +322,7 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
           style: TextStyle(
             color: Color(0xFF010302),
             fontWeight: FontWeight.bold,
-            fontSize: 18,
+            fontSize: 16,
           ),
         ),
       ),
@@ -281,255 +332,354 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
                 valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE01D25)),
               ),
             )
-          : SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 20),
-                  _buildProviderCard(solicitud),
-                  const SizedBox(height: 24),
-                  // Contador
-                  Center(
-                    child: Column(
-                      children: [
-                        Text(
-                          _formatHHMMSS(remaining),
-                          style: const TextStyle(
-                            color: Color(0xFFE01D25),
-                            fontWeight: FontWeight.w900,
-                            fontSize: 56,
-                            height: 1,
-                            letterSpacing: 2,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            _TimeLabel('HRS'),
-                            SizedBox(width: 40),
-                            _TimeLabel('MIN'),
-                            SizedBox(width: 40),
-                            _TimeLabel('SEC'),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          (solicitud?.estado ?? 'pendiente_aprobacion') ==
-                                  'pendiente_aprobacion'
-                              ? 'Esperando respuesta del proveedor...'
-                              : 'Estado: ${solicitud?.estado?.replaceAll('_', ' ') ?? ''}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                            color: Color(0xFF010302),
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  // Detalles del evento
-                  _buildSectionTitle('Detalles del evento'),
-                  const SizedBox(height: 12),
-                  _buildInfoCard([
-                    _buildInfoRow(
-                      Icons.event,
-                      'Evento',
-                      solicitud?.tituloEvento ?? 'Sin título',
-                    ),
-                    _buildInfoRow(
-                      Icons.calendar_today,
-                      'Fecha',
-                      solicitud != null
-                          ? DateFormat(
-                              'dd/MM/yyyy',
-                            ).format(solicitud.fechaServicio)
-                          : '-',
-                    ),
-                    _buildInfoRow(
-                      Icons.location_on,
-                      'Dirección',
-                      solicitud?.direccionServicio.isNotEmpty == true
-                          ? solicitud!.direccionServicio
-                          : 'No especificada',
-                    ),
-                  ]),
-                  const SizedBox(height: 20),
-                  // Items solicitados
-                  _buildSectionTitle('Servicios solicitados'),
-                  const SizedBox(height: 12),
-                  if (_items.isEmpty)
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Text(
-                        'No hay items registrados',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    )
-                  else
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Column(
-                        children: _items.asMap().entries.map((entry) {
-                          final item = entry.value;
-                          final nombre =
-                              item['nombre_paquete_snapshot'] as String? ?? '';
-                          final cantidad = item['cantidad'] as int? ?? 0;
-                          final precio =
-                              (item['precio_unitario'] as num?)?.toDouble() ??
-                              0;
-                          return Container(
-                            padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(
-                              border: entry.key < _items.length - 1
-                                  ? Border(
-                                      bottom: BorderSide(
-                                        color: Colors.grey.shade200,
-                                      ),
-                                    )
-                                  : null,
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 40,
-                                  height: 40,
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFFFE5E7),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      'x$cantidad',
-                                      style: const TextStyle(
-                                        color: Color(0xFFE01D25),
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    nombre,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                                Text(
-                                  '\$${(precio * cantidad).toStringAsFixed(2)}',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFFE01D25),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                  const SizedBox(height: 20),
-                  // Resumen de costos
-                  _buildSectionTitle('Resumen'),
-                  const SizedBox(height: 12),
-                  _buildInfoCard([
-                    _buildCostRow('Total', solicitud?.montoTotal ?? 0),
-                    _buildCostRow(
-                      'Anticipo (50%)',
-                      solicitud?.montoAnticipo ?? 0,
-                    ),
-                    _buildCostRow(
-                      'Liquidación',
-                      solicitud?.montoLiquidacion ?? 0,
-                    ),
-                  ]),
-                  const SizedBox(height: 30),
-                  // Botón Regresar
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFE01D25),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        elevation: 0,
-                      ),
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                      child: const Text(
-                        'Regresar',
-                        style: TextStyle(
+          : RefreshIndicator(
+              onRefresh: _load,
+              color: const Color(0xFFE01D25),
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 10),
+                    Center(
+                      child: Text(
+                        (_providerName != null &&
+                                _providerName!.trim().isNotEmpty)
+                            ? _providerName!.trim()
+                            : 'Proveedor',
+                        style: const TextStyle(
+                          color: Color(0xFFE01D25),
                           fontWeight: FontWeight.w700,
-                          fontSize: 18,
+                          fontSize: 14,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  // Botón según estado
-                  if (solicitud?.estado == 'cancelada')
+                    const SizedBox(height: 10),
+                    _buildProviderCard(solicitud),
+                    const SizedBox(height: 24),
+                    // Contador
                     Center(
-                      child: TextButton.icon(
-                        onPressed: _isDeleting ? null : _deleteSolicitud,
-                        icon: _isDeleting
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
+                      child: Column(
+                        children: [
+                          Text(
+                            _formatHHMMSS(remaining),
+                            style: const TextStyle(
+                              color: Color(0xFFE01D25),
+                              fontWeight: FontWeight.w900,
+                              fontSize: 56,
+                              height: 1,
+                              letterSpacing: 2,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _TimeLabel('HRS'),
+                              SizedBox(width: 40),
+                              _TimeLabel('MIN'),
+                              SizedBox(width: 40),
+                              _TimeLabel('SEC'),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            (solicitud?.estado ?? 'pendiente_aprobacion') ==
+                                    'pendiente_aprobacion'
+                                ? 'Esperando respuesta del proveedor...\nTienes 24 horas disponibles para pagar el anticipo una vez que el proveedor acepte tu solicitud'
+                                : 'Estado: ${solicitud?.estado.replaceAll('_', ' ') ?? ''}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                              color: Color(0xFF010302),
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          if (solicitud?.estado == 'esperando_anticipo')
+                            Padding(
+                              padding: const EdgeInsets.only(top: 12),
+                              child: Text(
+                                'Tienes 24 horas para pagar el anticipo y asegurar tu servicio',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 14,
+                                  color: Colors.grey.shade700,
                                 ),
-                              )
-                            : const Icon(
-                                Icons.delete_outline,
-                                color: Colors.red,
+                                textAlign: TextAlign.center,
                               ),
-                        label: Text(
-                          _isDeleting ? 'Eliminando...' : 'Eliminar solicitud',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: Colors.red,
-                            fontSize: 16,
-                          ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    // Detalles del evento
+                    _buildSectionTitle('Detalles del evento'),
+                    const SizedBox(height: 12),
+                    _buildInfoCard([
+                      _buildInfoRow(
+                        Icons.event,
+                        'Evento',
+                        solicitud?.tituloEvento ?? 'Sin título',
+                      ),
+                      _buildInfoRow(
+                        Icons.calendar_today,
+                        'Fecha',
+                        solicitud != null
+                            ? DateFormat(
+                                'dd/MM/yyyy',
+                              ).format(solicitud.fechaServicio)
+                            : '-',
+                      ),
+                      _buildInfoRow(
+                        Icons.location_on,
+                        'Dirección',
+                        solicitud?.direccionServicio.isNotEmpty ?? false
+                            ? solicitud!.direccionServicio
+                            : 'No especificada',
+                      ),
+                    ]),
+                    const SizedBox(height: 20),
+                    // Items solicitados
+                    _buildSectionTitle('Servicios solicitados'),
+                    const SizedBox(height: 12),
+                    if (_items.isEmpty)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Text(
+                          'No hay items registrados',
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      )
+                    else
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          children: _items.asMap().entries.map((entry) {
+                            final item = entry.value;
+                            final nombre =
+                                item['nombre_paquete_snapshot'] as String? ??
+                                '';
+                            final cantidad = item['cantidad'] as int? ?? 0;
+                            final precio =
+                                (item['precio_unitario'] as num?)?.toDouble() ??
+                                0;
+                            return Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                border: entry.key < _items.length - 1
+                                    ? Border(
+                                        bottom: BorderSide(
+                                          color: Colors.grey.shade200,
+                                        ),
+                                      )
+                                    : null,
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFFFE5E7),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        'x$cantidad',
+                                        style: const TextStyle(
+                                          color: Color(0xFFE01D25),
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      nombre,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                  Text(
+                                    '\$${(precio * cantidad).toStringAsFixed(2)}',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFFE01D25),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
                         ),
                       ),
-                    )
-                  else if (solicitud?.estado != 'finalizado' &&
-                      solicitud?.estado != 'rechazada' &&
-                      solicitud?.estado != 'abandonada')
-                    Center(
-                      child: TextButton(
-                        onPressed: _isCancelling ? null : _cancelSolicitud,
-                        child: Text(
-                          _isCancelling
-                              ? 'Cancelando...'
-                              : 'Cancelar solicitud',
+                    const SizedBox(height: 20),
+                    // Resumen de costos
+                    _buildSectionTitle('Resumen'),
+                    const SizedBox(height: 12),
+                    _buildInfoCard([
+                      _buildCostRow('Total', solicitud?.montoTotal ?? 0),
+                      _buildCostRow(
+                        'Anticipo (50%)',
+                        solicitud?.montoAnticipo ?? 0,
+                      ),
+                      _buildCostRow(
+                        'Liquidación',
+                        solicitud?.montoLiquidacion ?? 0,
+                      ),
+                    ]),
+                    const SizedBox(height: 30),
+                    // Botón Regresar
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFE01D25),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          elevation: 0,
+                        ),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text(
+                          'Regresar',
                           style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey.shade600,
-                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 18,
                           ),
                         ),
                       ),
                     ),
-                  const SizedBox(height: 30),
-                ],
+                    const SizedBox(height: 12),
+                    // Botón de anticipo
+                    if (solicitud?.estado == 'esperando_anticipo')
+                      Center(
+                        child: ElevatedButton(
+                          onPressed: _isPayingAnticipo ? null : _payAnticipo,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 32,
+                              vertical: 12,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: Text(
+                            _isPayingAnticipo
+                                ? 'Procesando...'
+                                : 'Pagar Anticipo (\$${((_solicitud?.montoTotal ?? 0) * 0.5).toStringAsFixed(2)})',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    if (solicitud?.estado == 'reservado')
+                      Center(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.green),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.check_circle,
+                                color: Colors.green,
+                                size: 24,
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                '✓ Reserva Confirmada - Anticipo Pagado',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                  color: Colors.green,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 12),
+                    // Botón según estado
+                    if (solicitud?.estado == 'cancelada')
+                      Center(
+                        child: TextButton.icon(
+                          onPressed: _isDeleting ? null : _deleteSolicitud,
+                          icon: _isDeleting
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.delete_outline,
+                                  color: Colors.red,
+                                ),
+                          label: Text(
+                            _isDeleting
+                                ? 'Eliminando...'
+                                : 'Eliminar solicitud',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: Colors.red,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      )
+                    else if (solicitud?.estado != 'finalizado' &&
+                        solicitud?.estado != 'rechazada' &&
+                        solicitud?.estado != 'abandonada')
+                      Center(
+                        child: TextButton(
+                          onPressed: _isCancelling ? null : _cancelSolicitud,
+                          child: Text(
+                            _isCancelling
+                                ? 'Cancelando...'
+                                : 'Cancelar solicitud',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey.shade600,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 30),
+                  ],
+                ),
               ),
             ),
     );
@@ -730,9 +880,9 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
 }
 
 class _TimeLabel extends StatelessWidget {
-  final String text;
 
   const _TimeLabel(this.text);
+  final String text;
 
   @override
   Widget build(BuildContext context) {

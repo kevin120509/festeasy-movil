@@ -1,24 +1,22 @@
-import 'package:flutter/material.dart';
 import 'package:festeasy/app/view/provider_detail_page.dart';
 import 'package:festeasy/services/provider_database_service.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
 class ProvidersMapPage extends StatefulWidget {
+
+  const ProvidersMapPage({
+    required this.categoryName, required this.categoryId, super.key,
+    this.serviceAddress,
+    this.serviceDate,
+    this.serviceTime,
+  });
   final String categoryName;
   final String categoryId;
   final String? serviceAddress;
   final DateTime? serviceDate;
   final TimeOfDay? serviceTime;
-
-  const ProvidersMapPage({
-    Key? key,
-    required this.categoryName,
-    required this.categoryId,
-    this.serviceAddress,
-    this.serviceDate,
-    this.serviceTime,
-  }) : super(key: key);
 
   @override
   State<ProvidersMapPage> createState() => _ProvidersMapPageState();
@@ -49,7 +47,7 @@ class _ProvidersMapPageState extends State<ProvidersMapPage> {
 
   void _updateMarkers() {
     final markers = <Marker>[];
-    for (int i = 0; i < providers.length; i++) {
+    for (var i = 0; i < providers.length; i++) {
       final provider = providers[i];
       if (provider.latitud != null && provider.longitud != null) {
         final isSelected = selectedProviderIndex == i;
@@ -306,7 +304,6 @@ class _ProvidersMapPageState extends State<ProvidersMapPage> {
           mapController: _mapController,
           options: const MapOptions(
             initialCenter: _initialPosition,
-            initialZoom: 13,
             interactionOptions: InteractionOptions(
               flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
             ),
@@ -484,8 +481,8 @@ class _ProvidersMapPageState extends State<ProvidersMapPage> {
                             children: [
                               Container(
                                 padding: const EdgeInsets.all(20),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFFFE5E7),
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFFFE5E7),
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(
@@ -545,7 +542,6 @@ class _ProvidersMapPageState extends State<ProvidersMapPage> {
                         itemCount: providers.length,
                         cacheExtent: 500,
                         addAutomaticKeepAlives: false,
-                        addRepaintBoundaries: true,
                         itemBuilder: (context, index) {
                           final provider = providers[index];
                           final isSelected = selectedProviderIndex == index;

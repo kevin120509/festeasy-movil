@@ -1,6 +1,22 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SolicitudData {
+
+  const SolicitudData({
+    required this.id,
+    required this.numeroSolicitud,
+    required this.clienteUsuarioId,
+    required this.proveedorUsuarioId,
+    required this.fechaServicio,
+    required this.direccionServicio,
+    required this.montoTotal, required this.montoAnticipo, required this.montoLiquidacion, required this.estado, required this.creadoEn, required this.actualizadoEn, this.tituloEvento,
+    this.linkPagoAnticipo,
+    this.linkPagoLiquidacion,
+    this.expiracionAnticipo,
+    this.pinSeguridad,
+    this.pinValidadoEn,
+    this.providerName,
+  });
   final String id;
   final int numeroSolicitud;
   final String clienteUsuarioId;
@@ -20,28 +36,6 @@ class SolicitudData {
   final String? pinSeguridad;
   final DateTime? pinValidadoEn;
   final String? providerName;
-
-  const SolicitudData({
-    required this.id,
-    required this.numeroSolicitud,
-    required this.clienteUsuarioId,
-    required this.proveedorUsuarioId,
-    required this.fechaServicio,
-    required this.direccionServicio,
-    this.tituloEvento,
-    required this.montoTotal,
-    required this.montoAnticipo,
-    required this.montoLiquidacion,
-    required this.estado,
-    required this.creadoEn,
-    required this.actualizadoEn,
-    this.linkPagoAnticipo,
-    this.linkPagoLiquidacion,
-    this.expiracionAnticipo,
-    this.pinSeguridad,
-    this.pinValidadoEn,
-    this.providerName,
-  });
 
   static DateTime? _parseNullableDateTime(Object? value) {
     if (value == null) return null;
@@ -75,17 +69,17 @@ class SolicitudData {
       proveedorUsuarioId: (row['proveedor_usuario_id'] as String?) ?? '',
       fechaServicio: fechaServicio,
       direccionServicio: (row['direccion_servicio'] as String?) ?? '',
-      tituloEvento: (row['titulo_evento'] as String?),
+      tituloEvento: row['titulo_evento'] as String?,
       montoTotal: (row['monto_total'] as num?)?.toDouble() ?? 0,
       montoAnticipo: (row['monto_anticipo'] as num?)?.toDouble() ?? 0,
       montoLiquidacion: (row['monto_liquidacion'] as num?)?.toDouble() ?? 0,
       estado: (row['estado'] as String?) ?? 'pendiente_aprobacion',
       creadoEn: creado,
       actualizadoEn: actualizado,
-      linkPagoAnticipo: (row['link_pago_anticipo'] as String?),
-      linkPagoLiquidacion: (row['link_pago_liquidacion'] as String?),
+      linkPagoAnticipo: row['link_pago_anticipo'] as String?,
+      linkPagoLiquidacion: row['link_pago_liquidacion'] as String?,
       expiracionAnticipo: expiracion,
-      pinSeguridad: (row['pin_seguridad'] as String?),
+      pinSeguridad: row['pin_seguridad'] as String?,
       pinValidadoEn: pinValidado,
       providerName: provName,
     );
@@ -110,10 +104,7 @@ class SolicitudService {
     required String providerUserId,
     required String address,
     required DateTime serviceDateLocal,
-    String? tituloEvento,
-    required double montoTotal,
-    required Map<String, int> cartItems,
-    required List<Map<String, dynamic>> allItems,
+    required double montoTotal, required Map<String, int> cartItems, required List<Map<String, dynamic>> allItems, String? tituloEvento,
   }) async {
     final user = _user;
 
@@ -147,11 +138,15 @@ class SolicitudService {
     for (final entry in cartItems.entries) {
       final item = allItems.firstWhere(
         (e) => e['id'] == entry.key,
-        orElse: () => <String, Object>{'price': 0.0},
+        orElse: () => <String, Object>{
+          'name': 'Paquete desconocido',
+          'price': 0.0
+        },
       );
       items.add({
         'solicitud_id': solicitudId,
         'paquete_id': entry.key,
+        'nombre_paquete_snapshot': (item['name'] as String?) ?? 'Paquete desconocido',
         'cantidad': entry.value,
         'precio_unitario': (item['price'] as num?)?.toDouble() ?? 0,
       });
@@ -215,6 +210,7 @@ class SolicitudService {
         .neq('estado', 'rechazada')
         .neq('estado', 'abandonada')
         .order('creado_en', ascending: false)
+        .limit(1)
         .maybeSingle();
 
     if (row == null) return null;
@@ -247,12 +243,21 @@ class SolicitudService {
 
   Future<String?> _fetchProviderName(String providerId) async {
     try {
-      final profile = await _client
+      final byUserId = await _client
           .from('perfil_proveedor')
           .select('nombre_negocio')
-          .or('usuario_id.eq.$providerId,id.eq.$providerId')
+          .eq('usuario_id', providerId)
+          .limit(1)
           .maybeSingle();
-      return profile?['nombre_negocio'] as String?;
+      if (byUserId != null) return byUserId['nombre_negocio'] as String?;
+
+      final byProfileId = await _client
+          .from('perfil_proveedor')
+          .select('nombre_negocio')
+          .eq('id', providerId)
+          .limit(1)
+          .maybeSingle();
+      return byProfileId?['nombre_negocio'] as String?;
     } catch (_) {
       return null;
     }
@@ -326,6 +331,6 @@ class SolicitudService {
         'expiracion_anticipo': expiracionUtc.toIso8601String(),
     };
 
-    return await updateSolicitud(solicitudId, data);
+    return updateSolicitud(solicitudId, data);
   }
 }
