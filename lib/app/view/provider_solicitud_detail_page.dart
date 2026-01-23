@@ -4,9 +4,9 @@ import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ProviderSolicitudDetailPage extends StatefulWidget {
-
   const ProviderSolicitudDetailPage({
-    required this.solicitud, super.key,
+    required this.solicitud,
+    super.key,
     this.onStatusChanged,
   });
   final ProviderSolicitudData solicitud;
@@ -210,58 +210,143 @@ class _ProviderSolicitudDetailPageState
     final isPendiente = _solicitud.isPendiente;
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FFFF),
       appBar: AppBar(
-        title: const Text('Solicitud'),
+        backgroundColor: Colors.white,
+        foregroundColor: const Color(0xFF010302),
+        title: const Text(
+          'Solicitud',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF010302),
+          ),
+        ),
         centerTitle: true,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFFE01D25)),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Número y estado
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Solicitud #${_solicitud.numeroSolicitud}',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
                   ),
-                ),
-                Chip(
-                  label: Text(
-                    _getEstadoLabel(_solicitud.estado),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFE5E7),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.request_quote,
+                          color: Color(0xFFE01D25),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Solicitud #${_solicitud.numeroSolicitud}',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF010302),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _getEstadoColor(
+                        _solicitud.estado,
+                      ).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      _getEstadoLabel(_solicitud.estado),
+                      style: TextStyle(
+                        color: _getEstadoColor(_solicitud.estado),
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
-                  backgroundColor: _getEstadoColor(_solicitud.estado),
-                ),
-              ],
+                ],
+              ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
             // INFORMACIÓN DEL CLIENTE
-            Card(
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
-                    const CircleAvatar(
-                      backgroundColor: Color(0xFFFFE5E7),
-                      child: Icon(Icons.person, color: Color(0xFFE01D25)),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      _clienteNombre ?? _solicitud.clienteNombre ?? 'Cliente',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFE5E7),
+                        borderRadius: BorderRadius.circular(12),
                       ),
+                      child: const Icon(Icons.person, color: Color(0xFFE01D25)),
+                    ),
+                    const SizedBox(width: 16),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Cliente',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[500],
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          _clienteNombre ??
+                              _solicitud.clienteNombre ??
+                              'Cliente',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                            color: Color(0xFF010302),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -270,65 +355,52 @@ class _ProviderSolicitudDetailPageState
             const SizedBox(height: 16),
 
             // DETALLES DEL EVENTO
-            Card(
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       'Detalles del Evento',
-                      style: Theme.of(context).textTheme.titleMedium,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Color(0xFF010302),
+                      ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     if (_solicitud.tituloEvento != null)
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Tipo de evento:',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                          Text(
-                            _solicitud.tituloEvento!,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                        ],
+                      _buildDetailRow(
+                        icon: Icons.celebration,
+                        label: 'Tipo de evento',
+                        value: _solicitud.tituloEvento!,
                       ),
-                    Text(
-                      'Fecha y hora:',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    _buildDetailRow(
+                      icon: Icons.calendar_today_outlined,
+                      label: 'Fecha y hora',
+                      value: formatter.format(_solicitud.fechaServicio),
                     ),
-                    Text(
-                      formatter.format(_solicitud.fechaServicio),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Ubicación:',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                    ),
-                    Text(
-                      _solicitud.direccionServicio,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      ),
+                    _buildDetailRow(
+                      icon: Icons.location_on_outlined,
+                      label: 'Ubicación',
+                      value: _solicitud.direccionServicio,
                     ),
                     if (_solicitud.latitudServicio != null &&
                         _solicitud.longitudServicio != null)
                       Padding(
-                        padding: const EdgeInsets.only(top: 8),
+                        padding: const EdgeInsets.only(left: 44, bottom: 8),
                         child: Text(
                           '📍 ${_solicitud.latitudServicio!.toStringAsFixed(4)}, ${_solicitud.longitudServicio!.toStringAsFixed(4)}',
                           style: TextStyle(
@@ -339,17 +411,43 @@ class _ProviderSolicitudDetailPageState
                       ),
                     // Paquetes solicitados
                     if (_items.isNotEmpty) ...[
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 8),
                       const Divider(),
                       const SizedBox(height: 12),
-                      Text(
-                        'Paquetes solicitados:',
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF4F7F9),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.inventory_2_outlined,
+                              size: 18,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          const Text(
+                            'Paquetes solicitados',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              color: Color(0xFF010302),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 12),
                       ..._items.map(
-                        (item) => Padding(
-                          padding: const EdgeInsets.only(bottom: 6),
+                        (item) => Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF4F7F9),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -359,14 +457,16 @@ class _ProviderSolicitudDetailPageState
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w600,
                                     fontSize: 14,
+                                    color: Color(0xFF010302),
                                   ),
                                 ),
                               ),
                               Text(
                                 '\$${((item['precio_unitario'] as num?)?.toDouble() ?? 0).toStringAsFixed(2)}',
                                 style: const TextStyle(
-                                  fontWeight: FontWeight.w500,
+                                  fontWeight: FontWeight.w600,
                                   fontSize: 14,
+                                  color: Colors.green,
                                 ),
                               ),
                             ],
@@ -385,75 +485,73 @@ class _ProviderSolicitudDetailPageState
               builder: (context) {
                 // Calcular anticipo y liquidación basados en el monto total
                 final montoTotal = _solicitud.montoTotal;
-                final anticipo = _solicitud.montoAnticipo > 0 
-                    ? _solicitud.montoAnticipo 
+                final anticipo = _solicitud.montoAnticipo > 0
+                    ? _solicitud.montoAnticipo
                     : montoTotal * 0.5;
-                final liquidacion = _solicitud.montoLiquidacion > 0 
-                    ? _solicitud.montoLiquidacion 
+                final liquidacion = _solicitud.montoLiquidacion > 0
+                    ? _solicitud.montoLiquidacion
                     : montoTotal * 0.5;
-                
-                return Card(
-                  color: Colors.blue[50],
+
+                return Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Montos',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 12),
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              'Monto Total:',
-                              style: TextStyle(color: Colors.grey[700]),
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.green[50],
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                Icons.attach_money,
+                                size: 18,
+                                color: Colors.green[700],
+                              ),
                             ),
-                            Text(
-                              '\$${montoTotal.toStringAsFixed(2)}',
-                              style: const TextStyle(
+                            const SizedBox(width: 12),
+                            const Text(
+                              'Montos',
+                              style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
-                                color: Colors.green,
+                                color: Color(0xFF010302),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Anticipo (50%):',
-                              style: TextStyle(color: Colors.grey[700]),
-                            ),
-                            Text(
-                              '\$${anticipo.toStringAsFixed(2)}',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                color: Colors.blue[700],
-                              ),
-                            ),
-                          ],
+                        const SizedBox(height: 16),
+                        _buildMontoRow(
+                          label: 'Monto Total',
+                          value: '\$${montoTotal.toStringAsFixed(2)}',
+                          valueColor: Colors.green,
+                          isBold: true,
                         ),
-                        const SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Liquidación (50%):',
-                              style: TextStyle(color: Colors.grey[700]),
-                            ),
-                            Text(
-                              '\$${liquidacion.toStringAsFixed(2)}',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                color: Colors.amber[700],
-                              ),
-                            ),
-                          ],
+                        const SizedBox(height: 10),
+                        _buildMontoRow(
+                          label: 'Anticipo (50%)',
+                          value: '\$${anticipo.toStringAsFixed(2)}',
+                          valueColor: Colors.blue[700]!,
+                        ),
+                        const SizedBox(height: 10),
+                        _buildMontoRow(
+                          label: 'Liquidación (50%)',
+                          value: '\$${liquidacion.toStringAsFixed(2)}',
+                          valueColor: Colors.amber[700]!,
                         ),
                       ],
                     ),
@@ -461,7 +559,7 @@ class _ProviderSolicitudDetailPageState
                 );
               },
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
 
             // ACCIONES
             if (isPendiente)
@@ -472,10 +570,17 @@ class _ProviderSolicitudDetailPageState
                     child: ElevatedButton.icon(
                       onPressed: _isLoading ? null : _aceptarSolicitud,
                       icon: const Icon(Icons.check_circle),
-                      label: const Text('Aceptar Solicitud'),
+                      label: const Text(
+                        'Aceptar Solicitud',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                   ),
@@ -485,14 +590,158 @@ class _ProviderSolicitudDetailPageState
                     child: OutlinedButton.icon(
                       onPressed: _isLoading ? null : _rechazarSolicitud,
                       icon: const Icon(Icons.cancel),
-                      label: const Text('Rechazar Solicitud'),
+                      label: const Text(
+                        'Rechazar Solicitud',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
                       style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.red,
                         side: const BorderSide(color: Colors.red),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                   ),
                 ],
+              )
+            // Botón para validar PIN cuando está reservado
+            else if (_solicitud.isReservado)
+              Column(
+                children: [
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.green[50],
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.green.shade200),
+                    ),
+                    child: Column(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(50),
+                          ),
+                          child: const Icon(
+                            Icons.verified,
+                            color: Colors.green,
+                            size: 40,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        const Text(
+                          '¡Reserva Confirmada!',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'El cliente ya pagó el anticipo',
+                          style: TextStyle(color: Colors.grey[600]),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: _isLoading ? null : _showValidarPinDialog,
+                      icon: const Icon(Icons.lock_open),
+                      label: const Text(
+                        'Validar Entrega con PIN',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFE01D25),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Solicita el PIN de 4 dígitos al cliente\npara confirmar la entrega del servicio',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              )
+            // Estado entregado pendiente de liquidación
+            else if (_solicitud.estado == 'entregado_pendiente_liq')
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.amber[50],
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.amber.shade200),
+                ),
+                child: Column(
+                  children: [
+                    const Icon(
+                      Icons.hourglass_bottom,
+                      color: Colors.amber,
+                      size: 48,
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Entrega Validada',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.amber,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Esperando pago de liquidación del cliente',
+                      style: TextStyle(color: Colors.grey[600]),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              )
+            // Estado finalizado
+            else if (_solicitud.estado == 'finalizado')
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.teal[50],
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.teal.shade200),
+                ),
+                child: const Column(
+                  children: [
+                    Icon(Icons.check_circle, color: Colors.teal, size: 48),
+                    SizedBox(height: 8),
+                    Text(
+                      '¡Servicio Completado!',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.teal,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'El pago ha sido recibido al 100%',
+                      style: TextStyle(color: Colors.grey),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
               )
             else
               Container(
@@ -507,7 +756,7 @@ class _ProviderSolicitudDetailPageState
                     'Esta solicitud ya fue ${_solicitud.isRechazada
                         ? 'rechazada'
                         : _solicitud.espeandoAnticipo
-                        ? 'aceptada'
+                        ? 'aceptada - esperando pago'
                         : 'procesada'}',
                     style: TextStyle(
                       color: Colors.grey[700],
@@ -522,6 +771,220 @@ class _ProviderSolicitudDetailPageState
     );
   }
 
+  Future<void> _showValidarPinDialog() async {
+    final pinController = TextEditingController();
+    var isValidating = false;
+
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Row(
+            children: [
+              const Icon(Icons.lock, color: Color(0xFFE01D25)),
+              const SizedBox(width: 8),
+              Flexible(
+                child: const Text(
+                  'Validar PIN de Entrega',
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Solicita al cliente el PIN de 4 dígitos que aparece en su app o web.',
+                style: TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: pinController,
+                keyboardType: TextInputType.number,
+                maxLength: 4,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 16,
+                ),
+                decoration: InputDecoration(
+                  hintText: '----',
+                  hintStyle: TextStyle(
+                    fontSize: 32,
+                    color: Colors.grey[300],
+                    letterSpacing: 16,
+                  ),
+                  counterText: '',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Color(0xFFE01D25),
+                      width: 2,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: isValidating
+                  ? null
+                  : () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: isValidating
+                  ? null
+                  : () async {
+                      if (pinController.text.length != 4) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Ingresa un PIN de 4 dígitos'),
+                            backgroundColor: Colors.orange,
+                          ),
+                        );
+                        return;
+                      }
+
+                      setDialogState(() => isValidating = true);
+
+                      try {
+                        await ProviderSolicitudesService.instance
+                            .validarPinEntrega(
+                              solicitudId: _solicitud.id,
+                              pinIngresado: pinController.text,
+                            );
+                        if (dialogContext.mounted) {
+                          Navigator.pop(dialogContext, true);
+                        }
+                      } catch (e) {
+                        setDialogState(() => isValidating = false);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('$e'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFE01D25),
+              ),
+              child: isValidating
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text('Validar PIN'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (result == true && mounted) {
+      // Recargar datos de la solicitud
+      final updated = await ProviderSolicitudesService.instance
+          .getSolicitudById(_solicitud.id);
+      if (updated != null && mounted) {
+        setState(() => _solicitud = updated);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('¡PIN validado! Entrega confirmada'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        widget.onStatusChanged?.call();
+      }
+    }
+  }
+
+  Widget _buildDetailRow({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF4F7F9),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 18, color: Colors.grey[600]),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    color: Color(0xFF010302),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMontoRow({
+    required String label,
+    required String value,
+    required Color valueColor,
+    bool isBold = false,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF4F7F9),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(color: Colors.grey[700], fontSize: 14)),
+          Text(
+            value,
+            style: TextStyle(
+              fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
+              fontSize: isBold ? 16 : 14,
+              color: valueColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   String _getEstadoLabel(String estado) {
     switch (estado) {
       case 'pendiente_aprobacion':
@@ -532,6 +995,8 @@ class _ProviderSolicitudDetailPageState
         return 'Reservado';
       case 'en_progreso':
         return 'En Progreso';
+      case 'entregado_pendiente_liq':
+        return 'Pendiente Liquidación';
       case 'finalizado':
         return 'Finalizado';
       case 'rechazada':
@@ -551,6 +1016,8 @@ class _ProviderSolicitudDetailPageState
         return Colors.green;
       case 'en_progreso':
         return Colors.purple;
+      case 'entregado_pendiente_liq':
+        return Colors.amber;
       case 'finalizado':
         return Colors.teal;
       case 'rechazada':

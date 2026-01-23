@@ -6,9 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 class ProviderPaqueteDetailPage extends StatefulWidget {
-
   const ProviderPaqueteDetailPage({
-    required this.paquete, super.key,
+    required this.paquete,
+    super.key,
     this.onPaqueteUpdated,
   });
   final PaqueteProveedorData paquete;
@@ -30,10 +30,12 @@ class _ProviderPaqueteDetailPageState extends State<ProviderPaqueteDetailPage> {
 
   void _editPaquete() {
     final nombreController = TextEditingController(text: _paquete.nombre);
-    final descriptionController =
-        TextEditingController(text: _paquete.descripcion);
-    final priceController =
-        TextEditingController(text: _paquete.precioBase.toString());
+    final descriptionController = TextEditingController(
+      text: _paquete.descripcion,
+    );
+    final priceController = TextEditingController(
+      text: _paquete.precioBase.toString(),
+    );
     var tipoCobroSelected = _paquete.tipoCobro;
 
     showDialog(
@@ -86,26 +88,26 @@ class _ProviderPaqueteDetailPageState extends State<ProviderPaqueteDetailPage> {
           ElevatedButton(
             onPressed: () async {
               try {
-                final updated =
-                    await ProviderPaquetesService.instance.updatePaquete(
-                  paqueteId: _paquete.id,
-                  nombre: nombreController.text,
-                  descripcion: descriptionController.text,
-                  precioBase: double.tryParse(priceController.text),
-                  detallesJson: {
-                    'tipoCobro': tipoCobroSelected,
-                    'fotos': _paquete.fotos,
-                    ...?_paquete.detallesJson,
-                  },
-                );
+                final updated = await ProviderPaquetesService.instance
+                    .updatePaquete(
+                      paqueteId: _paquete.id,
+                      nombre: nombreController.text,
+                      descripcion: descriptionController.text,
+                      precioBase: double.tryParse(priceController.text),
+                      detallesJson: {
+                        'tipoCobro': tipoCobroSelected,
+                        'fotos': _paquete.fotos,
+                        ...?_paquete.detallesJson,
+                      },
+                    );
 
                 if (mounted) {
                   // Cerrar diálogo primero
                   Navigator.pop(context);
-                  
+
                   // Actualizar estado del paquete para que se vea reflejado
                   setState(() => _paquete = updated);
-                  
+
                   // Mostrar mensaje de éxito
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -113,15 +115,15 @@ class _ProviderPaqueteDetailPageState extends State<ProviderPaqueteDetailPage> {
                       backgroundColor: Colors.green,
                     ),
                   );
-                  
+
                   // Llamar callback después de cerrar el diálogo
                   Future.microtask(() => widget.onPaqueteUpdated?.call());
                 }
               } catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error: $e')),
-                  );
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('Error: $e')));
                 }
               }
             },
@@ -148,13 +150,14 @@ class _ProviderPaqueteDetailPageState extends State<ProviderPaqueteDetailPage> {
           ElevatedButton(
             onPressed: () async {
               try {
-                await ProviderPaquetesService.instance
-                    .deletePaquete(_paquete.id);
+                await ProviderPaquetesService.instance.deletePaquete(
+                  _paquete.id,
+                );
 
                 if (mounted) {
                   // Cerrar el diálogo de confirmación
                   Navigator.pop(context);
-                  
+
                   // Mostrar mensaje de éxito
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -162,18 +165,18 @@ class _ProviderPaqueteDetailPageState extends State<ProviderPaqueteDetailPage> {
                       backgroundColor: Colors.green,
                     ),
                   );
-                  
+
                   // Cerrar la página de detalle y regresar a la lista
                   Navigator.pop(context);
-                  
+
                   // Llamar callback después de navegar
                   Future.microtask(() => widget.onPaqueteUpdated?.call());
                 }
               } catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error: $e')),
-                  );
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('Error: $e')));
                 }
               }
             },
@@ -203,9 +206,7 @@ class _ProviderPaqueteDetailPageState extends State<ProviderPaqueteDetailPage> {
   }
 
   /// Sube una foto a Supabase y retorna la URL
-  Future<String?> _uploadPhotoToSupabase({
-    required XFile imageFile,
-  }) async {
+  Future<String?> _uploadPhotoToSupabase({required XFile imageFile}) async {
     try {
       final user = AuthService.instance.currentUser;
       if (user == null) return null;
@@ -226,8 +227,7 @@ class _ProviderPaqueteDetailPageState extends State<ProviderPaqueteDetailPage> {
         throw Exception('${imageFile.name} excede el límite de 5MB');
       }
 
-      final photoUrl =
-          await ProviderPaquetesService.instance.uploadFotoPaquete(
+      final photoUrl = await ProviderPaquetesService.instance.uploadFotoPaquete(
         proveedorUsuarioId: user.id,
         paqueteId: _paquete.id,
         fileBytes: fileBytes,
@@ -238,9 +238,9 @@ class _ProviderPaqueteDetailPageState extends State<ProviderPaqueteDetailPage> {
     } catch (e) {
       debugPrint('Error uploading photo: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error subiendo foto: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error subiendo foto: $e')));
       }
       return null;
     }
@@ -269,80 +269,80 @@ class _ProviderPaqueteDetailPageState extends State<ProviderPaqueteDetailPage> {
                         style: Theme.of(context).textTheme.titleSmall,
                       ),
                       const SizedBox(height: 8),
-                      ...fotosActuales.asMap().entries.map(
-                        (entry) {
-                          final url = entry.value;
-                          final index = entry.key;
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                border: Border.all(color: Colors.grey[300]!),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: Stack(
-                                  children: [
-                                    Container(
-                                      width: double.infinity,
-                                      height: 150,
-                                      color: Colors.grey[200],
-                                      child: Image.network(
-                                        url,
-                                        fit: BoxFit.cover,
-                                        errorBuilder:
-                                            (context, error, stackTrace) {
-                                          return Center(
-                                            child: Icon(
-                                              Icons.image_not_supported,
-                                              size: 48,
-                                              color: Colors.grey[400],
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                    Positioned(
-                                      top: 4,
-                                      right: 4,
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          shape: BoxShape.circle,
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black.withOpacity(0.2),
-                                              blurRadius: 4,
-                                            ),
-                                          ],
-                                        ),
-                                        child: IconButton(
-                                          icon: const Icon(
-                                            Icons.delete,
-                                            color: Colors.red,
-                                            size: 20,
-                                          ),
-                                          onPressed: () {
-                                            setState(() {
-                                              fotosActuales.removeAt(index);
-                                            });
+                      ...fotosActuales.asMap().entries.map((entry) {
+                        final url = entry.value;
+                        final index = entry.key;
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey[300]!),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Stack(
+                                children: [
+                                  Container(
+                                    width: double.infinity,
+                                    height: 150,
+                                    color: Colors.grey[200],
+                                    child: Image.network(
+                                      url,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                            return Center(
+                                              child: Icon(
+                                                Icons.image_not_supported,
+                                                size: 48,
+                                                color: Colors.grey[400],
+                                              ),
+                                            );
                                           },
-                                          constraints: const BoxConstraints(
-                                            minWidth: 32,
-                                            minHeight: 32,
+                                    ),
+                                  ),
+                                  Positioned(
+                                    top: 4,
+                                    right: 4,
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(
+                                              0.2,
+                                            ),
+                                            blurRadius: 4,
                                           ),
-                                          padding: EdgeInsets.zero,
+                                        ],
+                                      ),
+                                      child: IconButton(
+                                        icon: const Icon(
+                                          Icons.delete,
+                                          color: Colors.red,
+                                          size: 20,
                                         ),
+                                        onPressed: () {
+                                          setState(() {
+                                            fotosActuales.removeAt(index);
+                                          });
+                                        },
+                                        constraints: const BoxConstraints(
+                                          minWidth: 32,
+                                          minHeight: 32,
+                                        ),
+                                        padding: EdgeInsets.zero,
                                       ),
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
                             ),
-                          );
-                        },
-                      ),
+                          ),
+                        );
+                      }),
                       const SizedBox(height: 16),
                     ],
                   ),
@@ -357,80 +357,80 @@ class _ProviderPaqueteDetailPageState extends State<ProviderPaqueteDetailPage> {
                         style: Theme.of(context).textTheme.titleSmall,
                       ),
                       const SizedBox(height: 8),
-                      ...fotosNuevas.asMap().entries.map(
-                        (entry) {
-                          final image = entry.value;
-                          final index = entry.key;
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                border: Border.all(color: Colors.grey[300]!),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: Stack(
-                                  children: [
-                                    Container(
-                                      width: double.infinity,
-                                      height: 150,
-                                      color: Colors.grey[200],
-                                      child: Image.file(
-                                        File(image.path),
-                                        fit: BoxFit.cover,
-                                        errorBuilder:
-                                            (context, error, stackTrace) {
-                                          return Center(
-                                            child: Icon(
-                                              Icons.image_not_supported,
-                                              size: 48,
-                                              color: Colors.grey[400],
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                    Positioned(
-                                      top: 4,
-                                      right: 4,
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          shape: BoxShape.circle,
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black.withOpacity(0.2),
-                                              blurRadius: 4,
-                                            ),
-                                          ],
-                                        ),
-                                        child: IconButton(
-                                          icon: const Icon(
-                                            Icons.delete,
-                                            color: Colors.red,
-                                            size: 20,
-                                          ),
-                                          onPressed: () {
-                                            setState(() {
-                                              fotosNuevas.removeAt(index);
-                                            });
+                      ...fotosNuevas.asMap().entries.map((entry) {
+                        final image = entry.value;
+                        final index = entry.key;
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey[300]!),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Stack(
+                                children: [
+                                  Container(
+                                    width: double.infinity,
+                                    height: 150,
+                                    color: Colors.grey[200],
+                                    child: Image.file(
+                                      File(image.path),
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                            return Center(
+                                              child: Icon(
+                                                Icons.image_not_supported,
+                                                size: 48,
+                                                color: Colors.grey[400],
+                                              ),
+                                            );
                                           },
-                                          constraints: const BoxConstraints(
-                                            minWidth: 32,
-                                            minHeight: 32,
+                                    ),
+                                  ),
+                                  Positioned(
+                                    top: 4,
+                                    right: 4,
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(
+                                              0.2,
+                                            ),
+                                            blurRadius: 4,
                                           ),
-                                          padding: EdgeInsets.zero,
+                                        ],
+                                      ),
+                                      child: IconButton(
+                                        icon: const Icon(
+                                          Icons.delete,
+                                          color: Colors.red,
+                                          size: 20,
                                         ),
+                                        onPressed: () {
+                                          setState(() {
+                                            fotosNuevas.removeAt(index);
+                                          });
+                                        },
+                                        constraints: const BoxConstraints(
+                                          minWidth: 32,
+                                          minHeight: 32,
+                                        ),
+                                        padding: EdgeInsets.zero,
                                       ),
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
                             ),
-                          );
-                        },
-                      ),
+                          ),
+                        );
+                      }),
                       const SizedBox(height: 8),
                     ],
                   ),
@@ -508,19 +508,19 @@ class _ProviderPaqueteDetailPageState extends State<ProviderPaqueteDetailPage> {
                   final todasLasFotos = [...fotosActuales, ...fotosUrlsNuevas];
 
                   // Actualizar paquete
-                  final updated =
-                      await ProviderPaquetesService.instance.updateFotosPaquete(
-                    paqueteId: _paquete.id,
-                    fotos: todasLasFotos,
-                  );
+                  final updated = await ProviderPaquetesService.instance
+                      .updateFotosPaquete(
+                        paqueteId: _paquete.id,
+                        fotos: todasLasFotos,
+                      );
 
                   if (mounted) {
                     // Cerrar diálogo primero
                     Navigator.pop(context);
-                    
+
                     // Actualizar estado del paquete para que se vea reflejado
                     setState(() => _paquete = updated);
-                    
+
                     // Mostrar mensaje de éxito
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
@@ -528,15 +528,15 @@ class _ProviderPaqueteDetailPageState extends State<ProviderPaqueteDetailPage> {
                         backgroundColor: Colors.green,
                       ),
                     );
-                    
+
                     // Llamar callback después de cerrar el diálogo
                     Future.microtask(() => widget.onPaqueteUpdated?.call());
                   }
                 } catch (e) {
                   if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error: $e')),
-                    );
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text('Error: $e')));
                   }
                 }
               },
@@ -551,10 +551,23 @@ class _ProviderPaqueteDetailPageState extends State<ProviderPaqueteDetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FFFF),
       appBar: AppBar(
-        title: const Text('Detalles del Paquete'),
+        backgroundColor: Colors.white,
+        foregroundColor: const Color(0xFF010302),
+        title: const Text(
+          'Detalles del Paquete',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF010302),
+          ),
+        ),
         centerTitle: true,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFFE01D25)),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -568,16 +581,26 @@ class _ProviderPaqueteDetailPageState extends State<ProviderPaqueteDetailPage> {
                   itemCount: _paquete.fotos.length,
                   itemBuilder: (context, index) {
                     return Container(
-                      color: Colors.grey[300],
+                      color: Colors.grey[200],
                       child: Image.network(
                         _paquete.fotos[index],
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
                           return Center(
-                            child: Icon(
-                              Icons.image_not_supported,
-                              size: 64,
-                              color: Colors.grey[400],
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.image_not_supported,
+                                  size: 48,
+                                  color: Colors.grey[400],
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Imagen no disponible',
+                                  style: TextStyle(color: Colors.grey[500]),
+                                ),
+                              ],
                             ),
                           );
                         },
@@ -589,68 +612,187 @@ class _ProviderPaqueteDetailPageState extends State<ProviderPaqueteDetailPage> {
             else
               Container(
                 height: 200,
-                color: Colors.grey[200],
+                color: const Color(0xFFF4F7F9),
                 child: Center(
-                  child: Icon(
-                    Icons.image,
-                    size: 64,
-                    color: Colors.grey[400],
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(50),
+                        ),
+                        child: Icon(
+                          Icons.image,
+                          size: 40,
+                          color: Colors.grey[400],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Sin fotos',
+                        style: TextStyle(color: Colors.grey[500]),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // NOMBRE Y ESTADO
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          _paquete.nombre,
-                          style: Theme.of(context).textTheme.headlineSmall,
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
                         ),
-                      ),
-                      Chip(
-                        label: Text(
-                          _paquete.estado,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFE5E7),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(
+                                  Icons.inventory_2,
+                                  color: Color(0xFFE01D25),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  _paquete.nombre,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                    color: Color(0xFF010302),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        backgroundColor: _paquete.isPublished
-                            ? Colors.green
-                            : _paquete.isDraft
-                                ? Colors.orange
-                                : Colors.grey,
-                      ),
-                    ],
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _paquete.isPublished
+                                ? Colors.green[50]
+                                : _paquete.isDraft
+                                ? Colors.orange[50]
+                                : Colors.grey[100],
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            _paquete.estado,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                              color: _paquete.isPublished
+                                  ? Colors.green[700]
+                                  : _paquete.isDraft
+                                  ? Colors.orange[700]
+                                  : Colors.grey[700],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 16),
 
                   // DESCRIPCIÓN
                   if (_paquete.descripcion != null &&
                       _paquete.descripcion!.isNotEmpty)
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Descripción',
-                          style: Theme.of(context).textTheme.labelMedium,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(_paquete.descripcion!),
-                        const SizedBox(height: 16),
-                      ],
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF4F7F9),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(
+                                  Icons.description_outlined,
+                                  size: 18,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              const Text(
+                                'Descripción',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                  color: Color(0xFF010302),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            _paquete.descripcion!,
+                            style: TextStyle(
+                              color: Colors.grey[700],
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                  if (_paquete.descripcion != null &&
+                      _paquete.descripcion!.isNotEmpty)
+                    const SizedBox(height: 16),
 
                   // PRECIO
-                  Card(
-                    color: Colors.green[50],
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
                     child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: Row(
@@ -659,14 +801,32 @@ class _ProviderPaqueteDetailPageState extends State<ProviderPaqueteDetailPage> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'Precio Base',
-                                style: TextStyle(color: Colors.grey[700]),
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: Colors.green[50],
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Icon(
+                                      Icons.attach_money,
+                                      size: 18,
+                                      color: Colors.green[700],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Text(
+                                    'Precio Base',
+                                    style: TextStyle(color: Colors.grey[600]),
+                                  ),
+                                ],
                               ),
+                              const SizedBox(height: 8),
                               Text(
                                 '\$${_paquete.precioBase.toStringAsFixed(2)}',
                                 style: const TextStyle(
-                                  fontSize: 24,
+                                  fontSize: 26,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.green,
                                 ),
@@ -675,21 +835,20 @@ class _ProviderPaqueteDetailPageState extends State<ProviderPaqueteDetailPage> {
                           ),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
+                              horizontal: 14,
+                              vertical: 10,
                             ),
                             decoration: BoxDecoration(
                               color: Colors.blue[50],
-                              border: Border.all(color: Colors.blue),
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(12),
                             ),
                             child: Column(
                               children: [
                                 Text(
                                   'Tipo de Cobro',
                                   style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey[700],
+                                    fontSize: 11,
+                                    color: Colors.grey[600],
                                   ),
                                 ),
                                 const SizedBox(height: 4),
@@ -697,9 +856,9 @@ class _ProviderPaqueteDetailPageState extends State<ProviderPaqueteDetailPage> {
                                   _paquete.esCobroFijo
                                       ? 'Precio Fijo'
                                       : 'Por Persona',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontWeight: FontWeight.w600,
-                                    color: Colors.blue,
+                                    color: Colors.blue[700],
                                   ),
                                 ),
                               ],
@@ -713,48 +872,83 @@ class _ProviderPaqueteDetailPageState extends State<ProviderPaqueteDetailPage> {
 
                   // ITEMS
                   if (_paquete.items != null && _paquete.items!.isNotEmpty)
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Items Incluidos',
-                          style: Theme.of(context).textTheme.labelMedium,
-                        ),
-                        const SizedBox(height: 8),
-                        Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: _paquete.items!
-                                  .map(
-                                    (item) => Padding(
-                                      padding:
-                                          const EdgeInsets.only(bottom: 8),
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            Icons.check_circle,
-                                            size: 16,
-                                            color: Colors.green[600],
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: Text(
-                                              '${item.nombreItem} (${item.cantidad}${item.unidad != null ? ' ${item.unidad}' : ''})',
-                                            ),
-                                          ),
-                                        ],
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFE5E7),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(
+                                  Icons.checklist,
+                                  size: 18,
+                                  color: Color(0xFFE01D25),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              const Text(
+                                'Items Incluidos',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                  color: Color(0xFF010302),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          ..._paquete.items!.map(
+                            (item) => Container(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF4F7F9),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.check_circle,
+                                    size: 18,
+                                    color: Colors.green[600],
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      '${item.nombreItem} (${item.cantidad}${item.unidad != null ? ' ${item.unidad}' : ''})',
+                                      style: const TextStyle(
+                                        color: Color(0xFF010302),
+                                        fontSize: 14,
                                       ),
                                     ),
-                                  )
-                                  .toList(),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 16),
-                      ],
+                        ],
+                      ),
                     ),
+                  if (_paquete.items != null && _paquete.items!.isNotEmpty)
+                    const SizedBox(height: 20),
 
                   // BOTONES DE ACCIÓN
                   Column(
@@ -764,16 +958,42 @@ class _ProviderPaqueteDetailPageState extends State<ProviderPaqueteDetailPage> {
                           Expanded(
                             child: ElevatedButton.icon(
                               onPressed: _editPaquete,
-                              icon: const Icon(Icons.edit),
-                              label: const Text('Editar'),
+                              icon: const Icon(Icons.edit, size: 18),
+                              label: const Text(
+                                'Editar',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFE01D25),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
                             ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: ElevatedButton.icon(
                               onPressed: _editFotos,
-                              icon: const Icon(Icons.image),
-                              label: const Text('Fotos'),
+                              icon: const Icon(Icons.image, size: 18),
+                              label: const Text(
+                                'Fotos',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
                             ),
                           ),
                         ],
@@ -781,18 +1001,26 @@ class _ProviderPaqueteDetailPageState extends State<ProviderPaqueteDetailPage> {
                       const SizedBox(height: 12),
                       SizedBox(
                         width: double.infinity,
-                        child: ElevatedButton.icon(
+                        child: OutlinedButton.icon(
                           onPressed: _deletePaquete,
-                          icon: const Icon(Icons.delete),
-                          label: const Text('Eliminar'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
+                          icon: const Icon(Icons.delete, size: 18),
+                          label: const Text(
+                            'Eliminar',
+                            style: TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.red,
+                            side: const BorderSide(color: Colors.red),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
                 ],
               ),
             ),
