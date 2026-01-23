@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:festeasy/app/view/cart_list_page.dart';
+import 'package:festeasy/app/view/mis_eventos_page.dart';
 import 'package:festeasy/app/view/profile_page.dart';
 import 'package:festeasy/app/view/provider_detail_page.dart';
 import 'package:festeasy/app/view/request_status_page.dart';
@@ -42,7 +43,48 @@ class _ClientHomePageState extends State<ClientHomePage> {
     _loadActiveSolicitud();
     _loadCancelledSolicitudes();
     _loadNearbyProviders();
+    _loadCartCount();
     _subscribeSolicitudesRealtime();
+  }
+
+  Future<void> _loadCartCount() async {
+    try {
+      final client = Supabase.instance.client;
+      final user = client.auth.currentUser;
+      if (user == null) return;
+
+      // Obtener carrito activo
+      final cartResult = await client
+          .from('carrito')
+          .select('id')
+          .eq('cliente_usuario_id', user.id)
+          .eq('estado', 'activo')
+          .maybeSingle();
+
+      if (cartResult == null) {
+        if (mounted) setState(() => cartCount = 0);
+        return;
+      }
+
+      // Contar items del carrito
+      final itemsResult = await client
+          .from('items_carrito')
+          .select('cantidad')
+          .eq('carrito_id', cartResult['id'] as String);
+
+      var total = 0;
+      for (final item in (itemsResult as List)) {
+        total += (item['cantidad'] as int? ?? 1);
+      }
+
+      if (mounted) setState(() => cartCount = total);
+    } catch (e) {
+      debugPrint('Error cargando cart count: $e');
+    }
+  }
+
+  void _navigateToMisEventos() {
+    setState(() => _currentIndex = 1);
   }
 
   @override
@@ -182,8 +224,13 @@ class _ClientHomePageState extends State<ClientHomePage> {
           index: _currentIndex,
           children: [
             _buildHomeBody(),
-            const Center(child: Text('Búsqueda (Próximamente)')),
-            const CartListPage(),
+            const MisEventosPage(),
+            CartListPage(
+              onSolicitudesEnviadas: () {
+                _loadCartCount();
+                _navigateToMisEventos();
+              },
+            ),
             const ProfilePage(),
           ],
         ),
@@ -534,9 +581,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
             ),
           ),
           const SizedBox(height: 12),
-          ..._cancelledSolicitudes.map(
-            _buildCancelledRequestCard,
-          ),
+          ..._cancelledSolicitudes.map(_buildCancelledRequestCard),
         ],
       ),
     );
@@ -902,8 +947,8 @@ class _ClientHomePageState extends State<ClientHomePage> {
             label: 'Inicio',
           ),
           const BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            label: 'Buscar',
+            icon: Icon(Icons.event),
+            label: 'Mis eventos',
           ),
           BottomNavigationBarItem(
             icon: Stack(

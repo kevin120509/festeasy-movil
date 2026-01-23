@@ -25,6 +25,7 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
   bool _isCancelling = false;
   bool _isDeleting = false;
   bool _isPayingAnticipo = false;
+  bool _isPayingLiquidacion = false;
 
   Timer? _ticker;
   RealtimeChannel? _channel;
@@ -275,20 +276,16 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
     });
 
     try {
-      // Simular pago del anticipo - actualizar estado a "reservado"
-      final anticipoAmount = (_solicitud?.montoTotal ?? 0) * 0.5;
-      await SolicitudService.instance.updateSolicitud(widget.solicitudId, {
-        'estado': 'reservado',
-        'monto_anticipo': anticipoAmount,
-      });
+      // Simular pago del anticipo - genera PIN y actualiza estado a "reservado"
+      await SolicitudService.instance.simularPagoAnticipo(widget.solicitudId);
 
       if (!mounted) return;
       await _load();
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('¡Anticipo pagado! Tu reserva está confirmada.'),
-          duration: Duration(seconds: 3),
+          content: Text('¡Anticipo pagado! Tu reserva está confirmada. Se ha generado un PIN de seguridad.'),
+          duration: Duration(seconds: 4),
         ),
       );
     } catch (e) {
@@ -300,6 +297,39 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
       if (!mounted) return;
       setState(() {
         _isPayingAnticipo = false;
+      });
+    }
+  }
+
+  Future<void> _payLiquidacion() async {
+    if (_isPayingLiquidacion) return;
+
+    setState(() {
+      _isPayingLiquidacion = true;
+    });
+
+    try {
+      // Simular pago de la liquidación - actualiza estado a "finalizado"
+      await SolicitudService.instance.simularPagoLiquidacion(widget.solicitudId);
+
+      if (!mounted) return;
+      await _load();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('¡Liquidación pagada! El servicio ha sido completado.'),
+          duration: Duration(seconds: 4),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error al procesar pago: $e')));
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _isPayingLiquidacion = false;
       });
     }
   }
@@ -346,8 +376,11 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
                     const SizedBox(height: 10),
                     _buildProviderCard(solicitud),
                     const SizedBox(height: 24),
-                    // Contador - solo mostrar si NO está reservado
-                    if (solicitud?.estado != 'reservado')
+                    // Contador - solo mostrar si está pendiente o esperando anticipo
+                    if (solicitud?.estado != 'reservado' &&
+                        solicitud?.estado != 'entregado' &&
+                        solicitud?.estado != 'entregado_pendiente_liq' &&
+                        solicitud?.estado != 'finalizado')
                       Center(
                         child: Column(
                           children: [
@@ -601,39 +634,205 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
                         ),
                       ),
                     if (solicitud?.estado == 'reservado')
-                      Center(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 12,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.green.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.green),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.check_circle,
-                                color: Colors.green,
-                                size: 24,
-                              ),
-                              const SizedBox(width: 8),
-                              Flexible(
-                                child: Text(
-                                  '✓ Reserva Confirmada - Anticipo Pagado',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
-                                    color: Colors.green,
+                      Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.green),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.check_circle,
+                                  color: Colors.green,
+                                  size: 24,
+                                ),
+                                const SizedBox(width: 8),
+                                const Flexible(
+                                  child: Text(
+                                    '✓ Reserva Confirmada - Anticipo Pagado',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14,
+                                      color: Colors.green,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Mostrar PIN de seguridad
+                          if (solicitud?.pinSeguridad != null) ...[
+                            const SizedBox(height: 16),
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE01D25).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: const Color(0xFFE01D25),
+                                  width: 2,
                                 ),
                               ),
-                            ],
+                              child: Column(
+                                children: [
+                                  const Icon(
+                                    Icons.lock,
+                                    color: Color(0xFFE01D25),
+                                    size: 32,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  const Text(
+                                    'PIN DE SEGURIDAD',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                      color: Color(0xFFE01D25),
+                                      letterSpacing: 1.5,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    solicitud!.pinSeguridad!,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 40,
+                                      letterSpacing: 12,
+                                      color: Color(0xFFE01D25),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Compártelo con el proveedor al recibir tu servicio',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey[600],
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    // Estado entregado pendiente de liquidación
+                    if (solicitud?.estado == 'entregado_pendiente_liq')
+                      Column(
+                        children: [
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.amber.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.amber),
+                            ),
+                            child: Column(
+                              children: [
+                                const Icon(
+                                  Icons.delivery_dining,
+                                  color: Colors.amber,
+                                  size: 48,
+                                ),
+                                const SizedBox(height: 8),
+                                const Text(
+                                  '¡Servicio Entregado!',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                    color: Colors.amber,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'El proveedor ha validado la entrega.\nSolo falta pagar la liquidación.',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey[600],
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
                           ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: _isPayingLiquidacion ? null : _payLiquidacion,
+                              icon: _isPayingLiquidacion
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Icon(Icons.payment),
+                              label: Text(
+                                _isPayingLiquidacion
+                                    ? 'Procesando...'
+                                    : 'Pagar Liquidación (\$${((_solicitud?.montoTotal ?? 0) * 0.5).toStringAsFixed(2)})',
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    // Estado finalizado
+                    if (solicitud?.estado == 'finalizado')
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.teal.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.teal),
+                        ),
+                        child: const Column(
+                          children: [
+                            Icon(
+                              Icons.check_circle,
+                              color: Colors.teal,
+                              size: 48,
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              '¡Servicio Completado!',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                color: Colors.teal,
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              'Gracias por usar Festeasy',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
                         ),
                       ),
                     const SizedBox(height: 12),

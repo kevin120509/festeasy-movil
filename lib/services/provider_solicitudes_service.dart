@@ -216,10 +216,14 @@ class ProviderSolicitudesService {
   /// Acepta una solicitud (cambia estado a 'esperando_anticipo')
   Future<ProviderSolicitudData> aceptarSolicitud(String solicitudId) async {
     try {
+      // Establecer expiración de anticipo en 24 horas
+      final expiracionAnticipo = DateTime.now().toUtc().add(const Duration(hours: 24));
+      
       final response = await _client
           .from('solicitudes')
           .update({
             'estado': 'esperando_anticipo',
+            'expiracion_anticipo': expiracionAnticipo.toIso8601String(),
             'actualizado_en': DateTime.now().toUtc().toIso8601String(),
           })
           .eq('id', solicitudId)
@@ -274,6 +278,86 @@ class ProviderSolicitudesService {
       return (response as List).length;
     } catch (e) {
       return 0;
+    }
+  }
+
+  /// Valida el PIN de entrega ingresado por el proveedor
+  /// Si es correcto, cambia estado a 'entregado_pendiente_liq'
+  Future<ProviderSolicitudData> validarPinEntrega({
+    required String solicitudId,
+    required String pinIngresado,
+  }) async {
+    try {
+      debugPrint('🔐 [validarPinEntrega] Validando PIN para solicitud: $solicitudId');
+      
+      // Obtener el PIN real de la BD
+      final solicitud = await _client
+          .from('solicitudes')
+          .select('pin_seguridad, estado')
+          .eq('id', solicitudId)
+          .single();
+      
+      final pinReal = solicitud['pin_seguridad'] as String?;
+      final estadoActual = solicitud['estado'] as String?;
+      
+      // Verificar que la solicitud esté en estado 'reservado'
+      if (estadoActual != 'reservado') {
+        throw Exception('La solicitud no está en estado reservado');
+      }
+      
+      // Verificar que exista un PIN
+      if (pinReal == null || pinReal.isEmpty) {
+        throw Exception('Esta solicitud no tiene PIN asignado');
+      }
+      
+      // Comparar PINs
+      if (pinIngresado != pinReal) {
+        throw Exception('PIN incorrecto. Verifica con el cliente.');
+      }
+      
+      // PIN correcto - actualizar estado
+      debugPrint('✅ [validarPinEntrega] PIN correcto! Actualizando estado...');
+      
+      final response = await _client
+          .from('solicitudes')
+          .update({
+            'estado': 'entregado_pendiente_liq',
+            'pin_validado_en': DateTime.now().toUtc().toIso8601String(),
+            'actualizado_en': DateTime.now().toUtc().toIso8601String(),
+          })
+          .eq('id', solicitudId)
+          .select()
+          .single();
+
+      debugPrint('✅ [validarPinEntrega] Estado actualizado a entregado_pendiente_liq');
+      return ProviderSolicitudData.fromMap(response);
+    } catch (e) {
+      debugPrint('❌ [validarPinEntrega] Error: $e');
+      rethrow;
+    }
+  }
+
+  /// Marca la liquidación como pagada (simulado)
+  /// Cambia estado a 'finalizado'
+  Future<ProviderSolicitudData> marcarLiquidacionPagada(String solicitudId) async {
+    try {
+      debugPrint('💰 [marcarLiquidacionPagada] Marcando liquidación pagada: $solicitudId');
+      
+      final response = await _client
+          .from('solicitudes')
+          .update({
+            'estado': 'finalizado',
+            'actualizado_en': DateTime.now().toUtc().toIso8601String(),
+          })
+          .eq('id', solicitudId)
+          .select()
+          .single();
+
+      debugPrint('✅ [marcarLiquidacionPagada] Estado actualizado a finalizado');
+      return ProviderSolicitudData.fromMap(response);
+    } catch (e) {
+      debugPrint('❌ [marcarLiquidacionPagada] Error: $e');
+      rethrow;
     }
   }
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SolicitudData {
@@ -200,15 +201,15 @@ class SolicitudService {
 
   Future<SolicitudData?> getActiveSolicitudForCurrentUser() async {
     final user = _user;
-    // Considerar cualquier solicitud que no esté en estados terminales.
+    // Solo traer solicitudes que requieren acción o espera activa del cliente
+    // Estados que muestran el banner "Esperando respuesta":
+    // - pendiente_aprobacion: esperando que el proveedor acepte
+    // - esperando_anticipo: esperando que el cliente pague el anticipo
     final row = await _client
         .from('solicitudes')
         .select()
         .eq('cliente_usuario_id', user.id)
-        .neq('estado', 'finalizado')
-        .neq('estado', 'cancelada')
-        .neq('estado', 'rechazada')
-        .neq('estado', 'abandonada')
+        .or('estado.eq.pendiente_aprobacion,estado.eq.esperando_anticipo')
         .order('creado_en', ascending: false)
         .limit(1)
         .maybeSingle();
@@ -260,6 +261,53 @@ class SolicitudService {
       return byProfileId?['nombre_negocio'] as String?;
     } catch (_) {
       return null;
+    }
+  }
+
+  /// Obtiene TODAS las solicitudes del cliente actual
+  Future<List<SolicitudData>> getAllSolicitudesForClient() async {
+    final user = _user;
+    
+    try {
+      final rows = await _client
+          .from('solicitudes')
+          .select()
+          .eq('cliente_usuario_id', user.id)
+          .order('creado_en', ascending: false);
+
+      debugPrint('📋 Solicitudes encontradas: ${(rows as List).length}');
+      
+      final solicitudes = <SolicitudData>[];
+      for (final row in rows) {
+        final data = SolicitudData.fromMap(row);
+        // Obtener nombre del proveedor
+        final providerName = await _fetchProviderName(data.proveedorUsuarioId);
+        solicitudes.add(SolicitudData(
+          id: data.id,
+          numeroSolicitud: data.numeroSolicitud,
+          clienteUsuarioId: data.clienteUsuarioId,
+          proveedorUsuarioId: data.proveedorUsuarioId,
+          fechaServicio: data.fechaServicio,
+          direccionServicio: data.direccionServicio,
+          tituloEvento: data.tituloEvento,
+          montoTotal: data.montoTotal,
+          montoAnticipo: data.montoAnticipo,
+          montoLiquidacion: data.montoLiquidacion,
+          estado: data.estado,
+          creadoEn: data.creadoEn,
+          actualizadoEn: data.actualizadoEn,
+          linkPagoAnticipo: data.linkPagoAnticipo,
+          linkPagoLiquidacion: data.linkPagoLiquidacion,
+          expiracionAnticipo: data.expiracionAnticipo,
+          pinSeguridad: data.pinSeguridad,
+          pinValidadoEn: data.pinValidadoEn,
+          providerName: providerName,
+        ));
+      }
+      return solicitudes;
+    } catch (e) {
+      debugPrint('❌ Error obteniendo solicitudes: $e');
+      return [];
     }
   }
 
@@ -332,5 +380,95 @@ class SolicitudService {
     };
 
     return updateSolicitud(solicitudId, data);
+  }
+
+  /// Genera un PIN de seguridad aleatorio de 4 dígitos
+  String _generarPin() {
+    final random = DateTime.now().millisecondsSinceEpoch;
+    final pin = ((random % 9000) + 1000).toString();
+    return pin;
+  }
+
+  /// Simula el pago del anticipo y genera el PIN de seguridad
+  /// En producción, esto se llamaría desde un webhook de la pasarela de pago
+  Future<SolicitudData> simularPagoAnticipo(String solicitudId) async {
+    try {
+      debugPrint('💳 [simularPagoAnticipo] Simulando pago para: $solicitudId');
+      
+      // Obtener datos actuales de la solicitud
+      final solicitud = await getSolicitudById(solicitudId);
+      if (solicitud == null) {
+        throw Exception('Solicitud no encontrada');
+      }
+      
+      // Verificar que esté en estado esperando_anticipo
+      if (solicitud.estado != 'esperando_anticipo') {
+        throw Exception('La solicitud no está esperando pago de anticipo');
+      }
+      
+      // Generar PIN de 4 dígitos
+      final pin = _generarPin();
+      debugPrint('🔐 [simularPagoAnticipo] PIN generado: $pin');
+      
+      // Calcular montos (50% anticipo, 50% liquidación)
+      final montoAnticipo = solicitud.montoTotal * 0.5;
+      final montoLiquidacion = solicitud.montoTotal * 0.5;
+      
+      // Actualizar solicitud
+      final response = await _client
+          .from('solicitudes')
+          .update({
+            'estado': 'reservado',
+            'pin_seguridad': pin,
+            'monto_anticipo': montoAnticipo,
+            'monto_liquidacion': montoLiquidacion,
+            'actualizado_en': DateTime.now().toUtc().toIso8601String(),
+          })
+          .eq('id', solicitudId)
+          .select()
+          .single();
+
+      debugPrint('✅ [simularPagoAnticipo] Pago simulado exitosamente. Estado: reservado');
+      return SolicitudData.fromMap(response);
+    } catch (e) {
+      debugPrint('❌ [simularPagoAnticipo] Error: $e');
+      rethrow;
+    }
+  }
+
+  /// Simula el pago de la liquidación
+  /// En producción, esto se llamaría desde un webhook de la pasarela de pago
+  Future<SolicitudData> simularPagoLiquidacion(String solicitudId) async {
+    try {
+      debugPrint('💳 [simularPagoLiquidacion] Simulando pago liquidación para: $solicitudId');
+      
+      // Obtener datos actuales de la solicitud
+      final solicitud = await getSolicitudById(solicitudId);
+      if (solicitud == null) {
+        throw Exception('Solicitud no encontrada');
+      }
+      
+      // Verificar que esté en estado entregado_pendiente_liq
+      if (solicitud.estado != 'entregado_pendiente_liq') {
+        throw Exception('La solicitud no está pendiente de liquidación');
+      }
+      
+      // Actualizar solicitud a finalizado
+      final response = await _client
+          .from('solicitudes')
+          .update({
+            'estado': 'finalizado',
+            'actualizado_en': DateTime.now().toUtc().toIso8601String(),
+          })
+          .eq('id', solicitudId)
+          .select()
+          .single();
+
+      debugPrint('✅ [simularPagoLiquidacion] Pago liquidación simulado. Estado: finalizado');
+      return SolicitudData.fromMap(response);
+    } catch (e) {
+      debugPrint('❌ [simularPagoLiquidacion] Error: $e');
+      rethrow;
+    }
   }
 }
