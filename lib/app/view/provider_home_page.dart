@@ -291,7 +291,8 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    initialValue: selectedCategoryId,
+                    value: selectedCategoryId,
+                    isExpanded: true,
                     decoration: const InputDecoration(
                       labelText: 'Categoría',
                       border: OutlineInputBorder(),
@@ -300,7 +301,10 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                         .map(
                           (cat) => DropdownMenuItem(
                             value: cat['id'] as String,
-                            child: Text(cat['nombre'] as String),
+                            child: Text(
+                              cat['nombre'] as String,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         )
                         .toList(),

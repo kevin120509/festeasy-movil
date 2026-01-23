@@ -2,6 +2,7 @@ import 'package:festeasy/app/view/package_detail_page_client.dart';
 import 'package:festeasy/services/provider_paquetes_service.dart';
 import 'package:festeasy/services/provider_search_service.dart';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ProviderDetailPageClient extends StatefulWidget {
 
@@ -17,11 +18,14 @@ class ProviderDetailPageClient extends StatefulWidget {
 
 class _ProviderDetailPageClientState extends State<ProviderDetailPageClient> {
   late Future<List<PaqueteProveedorData>> _paquetesFuture;
+  ProviderSearchResult? _providerData;
+  bool _isLoadingProvider = true;
 
   @override
   void initState() {
     super.initState();
     _loadPaquetes();
+    _loadProviderData();
   }
 
   void _loadPaquetes() {
@@ -30,6 +34,48 @@ class _ProviderDetailPageClientState extends State<ProviderDetailPageClient> {
       widget.provider.usuarioId,
     );
   }
+
+  Future<void> _loadProviderData() async {
+    try {
+      final client = Supabase.instance.client;
+      final data = await client
+          .from('perfil_proveedor')
+          .select()
+          .eq('usuario_id', widget.provider.usuarioId)
+          .maybeSingle();
+      
+      if (data != null && mounted) {
+        setState(() {
+          _providerData = ProviderSearchResult(
+            perfilId: data['id'] as String? ?? '',
+            usuarioId: data['usuario_id'] as String? ?? widget.provider.usuarioId,
+            nombreNegocio: data['nombre_negocio'] as String? ?? widget.provider.nombreNegocio,
+            descripcion: data['descripcion'] as String?,
+            avatarUrl: data['avatar_url'] as String? ?? widget.provider.avatarUrl,
+            direccionFormato: data['direccion_formato'] as String?,
+            latitud: (data['latitud'] as num?)?.toDouble(),
+            longitud: (data['longitud'] as num?)?.toDouble(),
+            calificacionPromedio: widget.provider.calificacionPromedio,
+            totalResenas: widget.provider.totalResenas,
+          );
+          _isLoadingProvider = false;
+        });
+      } else {
+        setState(() {
+          _providerData = widget.provider;
+          _isLoadingProvider = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error cargando datos del proveedor: $e');
+      setState(() {
+        _providerData = widget.provider;
+        _isLoadingProvider = false;
+      });
+    }
+  }
+
+  ProviderSearchResult get _currentProvider => _providerData ?? widget.provider;
 
   @override
   Widget build(BuildContext context) {
@@ -67,6 +113,15 @@ class _ProviderDetailPageClientState extends State<ProviderDetailPageClient> {
   }
 
   Widget _buildProviderHeader() {
+    if (_isLoadingProvider) {
+      return Container(
+        color: Colors.grey[100],
+        padding: const EdgeInsets.all(16),
+        child: const Center(child: CircularProgressIndicator()),
+      );
+    }
+    
+    final provider = _currentProvider;
     return Container(
       color: Colors.grey[100],
       padding: const EdgeInsets.all(16),
@@ -85,11 +140,11 @@ class _ProviderDetailPageClientState extends State<ProviderDetailPageClient> {
                   borderRadius: BorderRadius.circular(12),
                   color: Colors.grey[300],
                 ),
-                child: widget.provider.avatarUrl != null
+                child: provider.avatarUrl != null
                     ? ClipRRect(
                         borderRadius: BorderRadius.circular(12),
                         child: Image.network(
-                          widget.provider.avatarUrl!,
+                          provider.avatarUrl!,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
                             return Container(
@@ -111,7 +166,7 @@ class _ProviderDetailPageClientState extends State<ProviderDetailPageClient> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      widget.provider.nombreNegocio,
+                      provider.nombreNegocio,
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -121,26 +176,26 @@ class _ProviderDetailPageClientState extends State<ProviderDetailPageClient> {
                     ),
                     const SizedBox(height: 8),
                     // Rating
-                    if (widget.provider.calificacionPromedio != null)
+                    if (provider.calificacionPromedio != null)
                       Row(
                         children: [
                           const Icon(Icons.star, size: 16, color: Colors.amber),
                           const SizedBox(width: 4),
                           Text(
-                            '${widget.provider.calificacionPromedio!.toStringAsFixed(1)} (${widget.provider.totalResenas} reseñas)',
+                            '${provider.calificacionPromedio!.toStringAsFixed(1)} (${provider.totalResenas} reseñas)',
                             style: const TextStyle(fontSize: 12),
                           ),
                         ],
                       ),
                     const SizedBox(height: 8),
                     // Distancia
-                    if (widget.provider.distanciaKm != null)
+                    if (provider.distanciaKm != null)
                       Row(
                         children: [
                           const Icon(Icons.location_on, size: 16, color: Color(0xFFE01D25)),
                           const SizedBox(width: 4),
                           Text(
-                            '${widget.provider.distanciaKm!.toStringAsFixed(1)} km de distancia',
+                            '${provider.distanciaKm!.toStringAsFixed(1)} km de distancia',
                             style: const TextStyle(fontSize: 12, color: Color(0xFFE01D25)),
                           ),
                         ],
@@ -152,20 +207,20 @@ class _ProviderDetailPageClientState extends State<ProviderDetailPageClient> {
           ),
           const SizedBox(height: 16),
           // Descripción
-          if (widget.provider.descripcion != null) ...[
+          if (provider.descripcion != null && provider.descripcion!.isNotEmpty) ...[
             Text(
               'Descripción',
               style: Theme.of(context).textTheme.titleSmall,
             ),
             const SizedBox(height: 4),
             Text(
-              widget.provider.descripcion!,
+              provider.descripcion!,
               style: TextStyle(fontSize: 13, color: Colors.grey[700]),
             ),
             const SizedBox(height: 12),
           ],
           // Ubicación
-          if (widget.provider.direccionFormato != null) ...[
+          if (provider.direccionFormato != null && provider.direccionFormato!.isNotEmpty) ...[
             Text(
               'Ubicación',
               style: Theme.of(context).textTheme.titleSmall,
@@ -178,7 +233,7 @@ class _ProviderDetailPageClientState extends State<ProviderDetailPageClient> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    widget.provider.direccionFormato!,
+                    provider.direccionFormato!,
                     style: TextStyle(fontSize: 12, color: Colors.grey[700]),
                   ),
                 ),

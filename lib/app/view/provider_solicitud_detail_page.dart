@@ -381,72 +381,85 @@ class _ProviderSolicitudDetailPageState
             const SizedBox(height: 16),
 
             // MONTOS
-            Card(
-              color: Colors.blue[50],
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Montos',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Builder(
+              builder: (context) {
+                // Calcular anticipo y liquidación basados en el monto total
+                final montoTotal = _solicitud.montoTotal;
+                final anticipo = _solicitud.montoAnticipo > 0 
+                    ? _solicitud.montoAnticipo 
+                    : montoTotal * 0.5;
+                final liquidacion = _solicitud.montoLiquidacion > 0 
+                    ? _solicitud.montoLiquidacion 
+                    : montoTotal * 0.5;
+                
+                return Card(
+                  color: Colors.blue[50],
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Monto Total:',
-                          style: TextStyle(color: Colors.grey[700]),
+                          'Montos',
+                          style: Theme.of(context).textTheme.titleMedium,
                         ),
-                        Text(
-                          '\$${_solicitud.montoTotal.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: Colors.green,
-                          ),
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Monto Total:',
+                              style: TextStyle(color: Colors.grey[700]),
+                            ),
+                            Text(
+                              '\$${montoTotal.toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: Colors.green,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Anticipo (50%):',
+                              style: TextStyle(color: Colors.grey[700]),
+                            ),
+                            Text(
+                              '\$${anticipo.toStringAsFixed(2)}',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: Colors.blue[700],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Liquidación (50%):',
+                              style: TextStyle(color: Colors.grey[700]),
+                            ),
+                            Text(
+                              '\$${liquidacion.toStringAsFixed(2)}',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: Colors.amber[700],
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Anticipo (50%):',
-                          style: TextStyle(color: Colors.grey[700]),
-                        ),
-                        Text(
-                          '\$${_solicitud.montoAnticipo.toStringAsFixed(2)}',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: Colors.blue[700],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Liquidación (50%):',
-                          style: TextStyle(color: Colors.grey[700]),
-                        ),
-                        Text(
-                          '\$${_solicitud.montoLiquidacion.toStringAsFixed(2)}',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: Colors.amber[700],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 32),
 

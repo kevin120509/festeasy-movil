@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:festeasy/app/view/provider_detail_page_client.dart';
+import 'package:festeasy/services/provider_search_service.dart';
 import 'package:festeasy/services/solicitud_service.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -342,79 +344,76 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 10),
-                    Center(
-                      child: Text(
-                        (_providerName != null &&
-                                _providerName!.trim().isNotEmpty)
-                            ? _providerName!.trim()
-                            : 'Proveedor',
-                        style: const TextStyle(
-                          color: Color(0xFFE01D25),
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
                     _buildProviderCard(solicitud),
                     const SizedBox(height: 24),
-                    // Contador
-                    Center(
-                      child: Column(
-                        children: [
-                          Text(
-                            _formatHHMMSS(remaining),
-                            style: const TextStyle(
-                              color: Color(0xFFE01D25),
-                              fontWeight: FontWeight.w900,
-                              fontSize: 56,
-                              height: 1,
-                              letterSpacing: 2,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              _TimeLabel('HRS'),
-                              SizedBox(width: 40),
-                              _TimeLabel('MIN'),
-                              SizedBox(width: 40),
-                              _TimeLabel('SEC'),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            (solicitud?.estado ?? 'pendiente_aprobacion') ==
-                                    'pendiente_aprobacion'
-                                ? 'Esperando respuesta del proveedor...\nTienes 24 horas disponibles para pagar el anticipo una vez que el proveedor acepte tu solicitud'
-                                : 'Estado: ${solicitud?.estado.replaceAll('_', ' ') ?? ''}',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                              color: Color(0xFF010302),
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          if (solicitud?.estado == 'esperando_anticipo')
-                            Padding(
-                              padding: const EdgeInsets.only(top: 12),
-                              child: Text(
-                                'Tienes 24 horas para pagar el anticipo y asegurar tu servicio',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 14,
-                                  color: Colors.grey.shade700,
-                                ),
-                                textAlign: TextAlign.center,
+                    // Contador - solo mostrar si NO está reservado
+                    if (solicitud?.estado != 'reservado')
+                      Center(
+                        child: Column(
+                          children: [
+                            Text(
+                              _formatHHMMSS(remaining),
+                              style: const TextStyle(
+                                color: Color(0xFFE01D25),
+                                fontWeight: FontWeight.w900,
+                                fontSize: 56,
+                                height: 1,
+                                letterSpacing: 2,
                               ),
                             ),
-                        ],
+                            const SizedBox(height: 8),
+                            const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                _TimeLabel('HRS'),
+                                SizedBox(width: 40),
+                                _TimeLabel('MIN'),
+                                SizedBox(width: 40),
+                                _TimeLabel('SEC'),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              (solicitud?.estado ?? 'pendiente_aprobacion') ==
+                                      'pendiente_aprobacion'
+                                  ? 'Esperando respuesta del proveedor...\nTienes 24 horas disponibles para pagar el anticipo una vez que el proveedor acepte tu solicitud'
+                                  : 'Estado: ${solicitud?.estado.replaceAll('_', ' ') ?? ''}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                color: Color(0xFF010302),
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            if (solicitud?.estado == 'esperando_anticipo')
+                              Padding(
+                                padding: const EdgeInsets.only(top: 12),
+                                child: Text(
+                                  'Tienes 24 horas para pagar el anticipo y asegurar tu servicio',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 14,
+                                    color: Colors.grey.shade700,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
-                    ),
+                    // Mostrar solo el estado cuando está reservado
+                    if (solicitud?.estado == 'reservado')
+                      Center(
+                        child: Text(
+                          'Estado: reservado',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                            color: Color(0xFF010302),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
                     const SizedBox(height: 24),
                     // Detalles del evento
                     _buildSectionTitle('Detalles del evento'),
@@ -531,17 +530,22 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
                     // Resumen de costos
                     _buildSectionTitle('Resumen'),
                     const SizedBox(height: 12),
-                    _buildInfoCard([
-                      _buildCostRow('Total', solicitud?.montoTotal ?? 0),
-                      _buildCostRow(
-                        'Anticipo (50%)',
-                        solicitud?.montoAnticipo ?? 0,
-                      ),
-                      _buildCostRow(
-                        'Liquidación',
-                        solicitud?.montoLiquidacion ?? 0,
-                      ),
-                    ]),
+                    Builder(
+                      builder: (context) {
+                        final montoTotal = solicitud?.montoTotal ?? 0;
+                        final anticipo = (solicitud?.montoAnticipo ?? 0) > 0
+                            ? solicitud!.montoAnticipo
+                            : montoTotal * 0.5;
+                        final liquidacion = (solicitud?.montoLiquidacion ?? 0) > 0
+                            ? solicitud!.montoLiquidacion
+                            : montoTotal * 0.5;
+                        return _buildInfoCard([
+                          _buildCostRow('Total', montoTotal),
+                          _buildCostRow('Anticipo (50%)', anticipo),
+                          _buildCostRow('Liquidación (50%)', liquidacion),
+                        ]);
+                      },
+                    ),
                     const SizedBox(height: 30),
                     // Botón Regresar
                     SizedBox(
@@ -608,21 +612,24 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(color: Colors.green),
                           ),
-                          child: const Row(
+                          child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(
+                              const Icon(
                                 Icons.check_circle,
                                 color: Colors.green,
                                 size: 24,
                               ),
-                              SizedBox(width: 8),
-                              Text(
-                                '✓ Reserva Confirmada - Anticipo Pagado',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
-                                  color: Colors.green,
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  '✓ Reserva Confirmada - Anticipo Pagado',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                    color: Colors.green,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ],
@@ -763,19 +770,36 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
   }
 
   Widget _buildProviderCard(SolicitudData? solicitud) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+    return GestureDetector(
+      onTap: () {
+        if (solicitud != null && solicitud.proveedorUsuarioId.isNotEmpty) {
+          // Crear ProviderSearchResult con los datos disponibles
+          final provider = ProviderSearchResult(
+            perfilId: '',
+            usuarioId: solicitud.proveedorUsuarioId,
+            nombreNegocio: _providerName ?? 'Proveedor',
+            avatarUrl: _providerPhotoUrl,
+          );
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (context) => ProviderDetailPageClient(provider: provider),
+            ),
+          );
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
       child: Row(
         children: [
           // Foto del proveedor
@@ -874,6 +898,7 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
             ),
           ),
         ],
+      ),
       ),
     );
   }
