@@ -10,7 +10,7 @@ environment:
 dependencies:
   bloc: ^9.0.1
   carousel_slider: ^5.0.0
-  dio: ^5.9.0
+  dio: ^5.9.1
   flutter:
     sdk: flutter
   flutter_bloc: ^9.1.1
