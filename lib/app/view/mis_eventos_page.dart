@@ -323,7 +323,7 @@ class _MisEventosPageState extends State<MisEventosPage>
                   ),
                   // PIN de seguridad (solo si está reservado y tiene PIN)
                   if (solicitud.estado == 'reservado' &&
-                      solicitud.pinSeguridad != null) ...[
+                      solicitud.pinValidacion != null) ...[
                     const SizedBox(height: 12),
                     Container(
                       padding: const EdgeInsets.all(12),
@@ -346,7 +346,7 @@ class _MisEventosPageState extends State<MisEventosPage>
                             ),
                           ),
                           Text(
-                            solicitud.pinSeguridad!,
+                            solicitud.pinValidacion!,
                             style: const TextStyle(
                               color: Colors.green,
                               fontWeight: FontWeight.bold,

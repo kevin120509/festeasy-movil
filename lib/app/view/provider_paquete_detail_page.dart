@@ -229,9 +229,8 @@ class _ProviderPaqueteDetailPageState extends State<ProviderPaqueteDetailPage> {
 
       final photoUrl = await ProviderPaquetesService.instance.uploadFotoPaquete(
         proveedorUsuarioId: user.id,
-        paqueteId: _paquete.id,
         fileBytes: fileBytes,
-        fileName: '${DateTime.now().millisecondsSinceEpoch}.jpg',
+        fileName: imageFile.name,
       );
 
       return photoUrl;

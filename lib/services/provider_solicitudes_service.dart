@@ -293,11 +293,11 @@ class ProviderSolicitudesService {
       // Obtener el PIN real de la BD
       final solicitud = await _client
           .from('solicitudes')
-          .select('pin_seguridad, estado')
+          .select('pin_validacion, estado')
           .eq('id', solicitudId)
           .single();
       
-      final pinReal = solicitud['pin_seguridad'] as String?;
+      final pinReal = solicitud['pin_validacion'] as String?;
       final estadoActual = solicitud['estado'] as String?;
       
       // Verificar que la solicitud esté en estado 'reservado'

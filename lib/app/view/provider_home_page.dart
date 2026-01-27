@@ -210,9 +210,9 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
   }
 
   /// Sube una foto a Supabase y retorna la URL
+  /// Estructura sincronizada con web: packages/{userId}-{timestamp}-{random}.{ext}
   Future<String?> _uploadPhotoToSupabase({
     required XFile imageFile,
-    required String paqueteId,
   }) async {
     try {
       final user = AuthService.instance.currentUser;
@@ -221,12 +221,11 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
       // Leer los bytes de la imagen
       final fileBytes = await imageFile.readAsBytes();
 
-      // Subir a Supabase Storage
+      // Subir a Supabase Storage (estructura sincronizada con web)
       final photoUrl = await ProviderPaquetesService.instance.uploadFotoPaquete(
         proveedorUsuarioId: user.id,
-        paqueteId: paqueteId,
         fileBytes: fileBytes,
-        fileName: '${DateTime.now().millisecondsSinceEpoch}.jpg',
+        fileName: imageFile.name,
       );
 
       return photoUrl;
@@ -497,7 +496,6 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                       for (final foto in fotosSeleccionadas) {
                         final url = await _uploadPhotoToSupabase(
                           imageFile: foto,
-                          paqueteId: paquete.id,
                         );
                         if (url != null) {
                           fotosUrls.add(url);

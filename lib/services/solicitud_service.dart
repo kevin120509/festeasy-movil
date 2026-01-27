@@ -14,7 +14,7 @@ class SolicitudData {
     this.linkPagoAnticipo,
     this.linkPagoLiquidacion,
     this.expiracionAnticipo,
-    this.pinSeguridad,
+    this.pinValidacion,
     this.pinValidadoEn,
     this.providerName,
   });
@@ -34,7 +34,7 @@ class SolicitudData {
   final String? linkPagoAnticipo;
   final String? linkPagoLiquidacion;
   final DateTime? expiracionAnticipo;
-  final String? pinSeguridad;
+  final String? pinValidacion;
   final DateTime? pinValidadoEn;
   final String? providerName;
 
@@ -80,7 +80,7 @@ class SolicitudData {
       linkPagoAnticipo: row['link_pago_anticipo'] as String?,
       linkPagoLiquidacion: row['link_pago_liquidacion'] as String?,
       expiracionAnticipo: expiracion,
-      pinSeguridad: row['pin_seguridad'] as String?,
+      pinValidacion: row['pin_validacion'] as String?,
       pinValidadoEn: pinValidado,
       providerName: provName,
     );
@@ -193,7 +193,7 @@ class SolicitudService {
       linkPagoAnticipo: data.linkPagoAnticipo,
       linkPagoLiquidacion: data.linkPagoLiquidacion,
       expiracionAnticipo: data.expiracionAnticipo,
-      pinSeguridad: data.pinSeguridad,
+      pinValidacion: data.pinValidacion,
       pinValidadoEn: data.pinValidadoEn,
       providerName: providerName,
     );
@@ -236,7 +236,7 @@ class SolicitudService {
       linkPagoAnticipo: data.linkPagoAnticipo,
       linkPagoLiquidacion: data.linkPagoLiquidacion,
       expiracionAnticipo: data.expiracionAnticipo,
-      pinSeguridad: data.pinSeguridad,
+      pinValidacion: data.pinValidacion,
       pinValidadoEn: data.pinValidadoEn,
       providerName: providerName,
     );
@@ -299,7 +299,7 @@ class SolicitudService {
           linkPagoAnticipo: data.linkPagoAnticipo,
           linkPagoLiquidacion: data.linkPagoLiquidacion,
           expiracionAnticipo: data.expiracionAnticipo,
-          pinSeguridad: data.pinSeguridad,
+          pinValidacion: data.pinValidacion,
           pinValidadoEn: data.pinValidadoEn,
           providerName: providerName,
         ));
@@ -419,7 +419,7 @@ class SolicitudService {
           .from('solicitudes')
           .update({
             'estado': 'reservado',
-            'pin_seguridad': pin,
+            'pin_validacion': pin,
             'monto_anticipo': montoAnticipo,
             'monto_liquidacion': montoLiquidacion,
             'actualizado_en': DateTime.now().toUtc().toIso8601String(),

@@ -670,7 +670,7 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
                             ),
                           ),
                           // Mostrar PIN de seguridad
-                          if (solicitud?.pinSeguridad != null) ...[
+                          if (solicitud?.pinValidacion != null) ...[
                             const SizedBox(height: 16),
                             Container(
                               width: double.infinity,
@@ -702,7 +702,7 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
-                                    solicitud!.pinSeguridad!,
+                                    solicitud!.pinValidacion!,
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 40,

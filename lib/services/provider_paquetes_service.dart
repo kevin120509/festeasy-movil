@@ -1,4 +1,5 @@
 
+import 'package:festeasy/services/storage_constants.dart';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -332,76 +333,38 @@ class ProviderPaquetesService {
     }
   }
 
-  /// Nombre del bucket de almacenamiento
-  static const String _bucketName = 'festeasy';
-  static const String _paqueteFotosFolder = 'paquete_fotos';
-  
-  /// Obtiene la ruta de almacenamiento para una foto de paquete
-  static String _getPaqueteFotoPath({
-    required String proveedorUsuarioId,
-    required String paqueteId,
-    required String fileName,
-  }) => '$proveedorUsuarioId/$_paqueteFotosFolder/$paqueteId/$fileName';
-
   /// Sube una foto para un paquete
+  /// 
+  /// Estructura sincronizada con web:
+  /// packages/{userId}-{timestamp}-{random}.{ext}
   Future<String?> uploadFotoPaquete({
     required String proveedorUsuarioId,
-    required String paqueteId,
     required List<int> fileBytes,
     required String fileName,
   }) async {
     try {
-      final filePath = _getPaqueteFotoPath(
-        proveedorUsuarioId: proveedorUsuarioId,
-        paqueteId: paqueteId,
-        fileName: fileName,
+      // Extraer extensión del archivo
+      final ext = fileName.contains('.') 
+          ? fileName.split('.').last 
+          : 'jpg';
+      
+      // Generar path usando la misma estructura que web
+      final filePath = StorageConstants.getPaqueteFotoPath(
+        userId: proveedorUsuarioId,
+        fileExtension: ext,
       );
 
-      await _client.storage.from(_bucketName).uploadBinary(
+      await _client.storage.from(StorageConstants.bucketName).uploadBinary(
         filePath,
         Uint8List.fromList(fileBytes),
         fileOptions: const FileOptions(upsert: true),
       );
 
-      final publicUrl = _client.storage.from(_bucketName).getPublicUrl(filePath);
+      final publicUrl = _client.storage.from(StorageConstants.bucketName).getPublicUrl(filePath);
       return publicUrl;
     } catch (e) {
       debugPrint('❌ Error subiendo foto: $e');
       throw Exception('Error subiendo foto: $e');
-    }
-  }
-  
-  /// Obtiene la URL pública de una foto sin subirla
-  String getFotoPublicUrl({
-    required String proveedorUsuarioId,
-    required String paqueteId,
-    required String fileName,
-  }) {
-    final filePath = _getPaqueteFotoPath(
-      proveedorUsuarioId: proveedorUsuarioId,
-      paqueteId: paqueteId,
-      fileName: fileName,
-    );
-    return _client.storage.from(_bucketName).getPublicUrl(filePath);
-  }
-
-  /// Elimina una foto del storage
-  Future<void> deleteFotoPaquete({
-    required String proveedorUsuarioId,
-    required String paqueteId,
-    required String fileName,
-  }) async {
-    try {
-      final filePath = _getPaqueteFotoPath(
-        proveedorUsuarioId: proveedorUsuarioId,
-        paqueteId: paqueteId,
-        fileName: fileName,
-      );
-      await _client.storage.from(_bucketName).remove([filePath]);
-      debugPrint('✅ Foto eliminada: $filePath');
-    } catch (e) {
-      debugPrint('❌ Error eliminando foto: $e');
-      throw Exception('Error eliminando foto: $e');
     }
   }
 
@@ -410,21 +373,13 @@ class ProviderPaquetesService {
     required String fotoUrl,
   }) async {
     try {
-      // Extraer el path del storage desde la URL
-      // URL format: https://xxx.supabase.co/storage/v1/object/public/festeasy/{path}
-      final uri = Uri.parse(fotoUrl);
-      final pathSegments = uri.pathSegments;
-      
-      // Encontrar el índice de 'festeasy' en los segmentos
-      final festeasyIndex = pathSegments.indexOf(_bucketName);
-      if (festeasyIndex == -1) {
-        throw Exception('URL inválida: no contiene el bucket $_bucketName');
+      // Usar StorageConstants para extraer el path de la URL
+      final filePath = StorageConstants.extractPathFromUrl(fotoUrl);
+      if (filePath == null) {
+        throw Exception('URL inválida: no contiene el bucket ${StorageConstants.bucketName}');
       }
       
-      // Construir el path: todo después de 'festeasy'
-      final filePath = pathSegments.sublist(festeasyIndex + 1).join('/');
-      
-      await _client.storage.from(_bucketName).remove([filePath]);
+      await _client.storage.from(StorageConstants.bucketName).remove([filePath]);
       debugPrint('✅ Foto eliminada por URL: $filePath');
     } catch (e) {
       debugPrint('❌ Error eliminando foto por URL: $e');
