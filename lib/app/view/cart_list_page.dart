@@ -6,15 +6,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Modelo para item del carrito con info del proveedor
 class CartItemWithProvider {
-  final String itemId;
-  final String paqueteId;
-  final String paqueteNombre;
-  final double precioUnitario;
-  final int cantidad;
-  final String proveedorUsuarioId;
-  final String proveedorNombre;
-  final String? proveedorAvatarUrl;
-
   CartItemWithProvider({
     required this.itemId,
     required this.paqueteId,
@@ -25,6 +16,14 @@ class CartItemWithProvider {
     required this.proveedorNombre,
     this.proveedorAvatarUrl,
   });
+  final String itemId;
+  final String paqueteId;
+  final String paqueteNombre;
+  final double precioUnitario;
+  final int cantidad;
+  final String proveedorUsuarioId;
+  final String proveedorNombre;
+  final String? proveedorAvatarUrl;
 }
 
 class CartListPage extends StatefulWidget {
@@ -664,7 +663,7 @@ class _CartListPageState extends State<CartListPage> {
           ),
 
           // Items
-          ...items.map((item) => _buildItemRow(item)),
+          ...items.map(_buildItemRow),
         ],
       ),
     );

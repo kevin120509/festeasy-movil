@@ -8,7 +8,6 @@ import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class RequestStatusPage extends StatefulWidget {
-
   const RequestStatusPage({required this.solicitudId, super.key});
   final String solicitudId;
 
@@ -94,10 +93,10 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
 
             // Si no se encuentra, intentar buscar por id del perfil
             perfil ??= await client
-                  .from('perfil_proveedor')
-                  .select('nombre_negocio, avatar_url')
-                  .eq('id', solicitud.proveedorUsuarioId)
-                  .maybeSingle();
+                .from('perfil_proveedor')
+                .select('nombre_negocio, avatar_url')
+                .eq('id', solicitud.proveedorUsuarioId)
+                .maybeSingle();
 
             if (perfil != null) {
               final nombre = perfil['nombre_negocio'] as String?;
@@ -284,8 +283,9 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('¡Anticipo pagado! Tu reserva está confirmada. Se ha generado un PIN de seguridad.'),
-          duration: Duration(seconds: 4),
+          content: Text(
+            '¡Anticipo pagado! Tu reserva está confirmada. Se ha generado un PIN de seguridad.',
+          ),
         ),
       );
     } catch (e) {
@@ -310,7 +310,9 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
 
     try {
       // Simular pago de la liquidación - actualiza estado a "finalizado"
-      await SolicitudService.instance.simularPagoLiquidacion(widget.solicitudId);
+      await SolicitudService.instance.simularPagoLiquidacion(
+        widget.solicitudId,
+      );
 
       if (!mounted) return;
       await _load();
@@ -318,7 +320,6 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('¡Liquidación pagada! El servicio ha sido completado.'),
-          duration: Duration(seconds: 4),
         ),
       );
     } catch (e) {
@@ -436,10 +437,10 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
                       ),
                     // Mostrar solo el estado cuando está reservado
                     if (solicitud?.estado == 'reservado')
-                      Center(
+                      const Center(
                         child: Text(
                           'Estado: reservado',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 18,
                             color: Color(0xFF010302),
@@ -569,7 +570,8 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
                         final anticipo = (solicitud?.montoAnticipo ?? 0) > 0
                             ? solicitud!.montoAnticipo
                             : montoTotal * 0.5;
-                        final liquidacion = (solicitud?.montoLiquidacion ?? 0) > 0
+                        final liquidacion =
+                            (solicitud?.montoLiquidacion ?? 0) > 0
                             ? solicitud!.montoLiquidacion
                             : montoTotal * 0.5;
                         return _buildInfoCard([
@@ -646,16 +648,16 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(color: Colors.green),
                             ),
-                            child: Row(
+                            child: const Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.check_circle,
                                   color: Colors.green,
                                   size: 24,
                                 ),
-                                const SizedBox(width: 8),
-                                const Flexible(
+                                SizedBox(width: 8),
+                                Flexible(
                                   child: Text(
                                     '✓ Reserva Confirmada - Anticipo Pagado',
                                     style: TextStyle(
@@ -769,7 +771,9 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton.icon(
-                              onPressed: _isPayingLiquidacion ? null : _payLiquidacion,
+                              onPressed: _isPayingLiquidacion
+                                  ? null
+                                  : _payLiquidacion,
                               icon: _isPayingLiquidacion
                                   ? const SizedBox(
                                       width: 20,
@@ -788,7 +792,9 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.green,
                                 foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -981,7 +987,8 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
           );
           Navigator.of(context).push(
             MaterialPageRoute<void>(
-              builder: (context) => ProviderDetailPageClient(provider: provider),
+              builder: (context) =>
+                  ProviderDetailPageClient(provider: provider),
             ),
           );
         }
@@ -999,112 +1006,112 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
             ),
           ],
         ),
-      child: Row(
-        children: [
-          // Foto del proveedor
-          Container(
-            width: 70,
-            height: 70,
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFE5E7),
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 3),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-              image: _providerPhotoUrl != null && _providerPhotoUrl!.isNotEmpty
-                  ? DecorationImage(
-                      image: NetworkImage(_providerPhotoUrl!),
-                      fit: BoxFit.cover,
-                    )
+        child: Row(
+          children: [
+            // Foto del proveedor
+            Container(
+              width: 70,
+              height: 70,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFE5E7),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 3),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+                image:
+                    _providerPhotoUrl != null && _providerPhotoUrl!.isNotEmpty
+                    ? DecorationImage(
+                        image: NetworkImage(_providerPhotoUrl!),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
+              ),
+              child: _providerPhotoUrl == null || _providerPhotoUrl!.isEmpty
+                  ? const Icon(Icons.person, color: Color(0xFFE01D25), size: 36)
                   : null,
             ),
-            child: _providerPhotoUrl == null || _providerPhotoUrl!.isEmpty
-                ? const Icon(Icons.person, color: Color(0xFFE01D25), size: 36)
-                : null,
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _providerName ?? 'Proveedor',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                    color: Color(0xFF010302),
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE8F5E9),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.verified,
-                            color: Color(0xFF4CAF50),
-                            size: 14,
-                          ),
-                          SizedBox(width: 4),
-                          Text(
-                            'Verificado',
-                            style: TextStyle(
-                              color: Color(0xFF4CAF50),
-                              fontWeight: FontWeight.w600,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _providerName ?? 'Proveedor',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: Color(0xFF010302),
                     ),
-                  ],
-                ),
-              ],
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE8F5E9),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.verified,
+                              color: Color(0xFF4CAF50),
+                              size: 14,
+                            ),
+                            SizedBox(width: 4),
+                            Text(
+                              'Verificado',
+                              style: TextStyle(
+                                color: Color(0xFF4CAF50),
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          // Punto verde de online
-          Container(
-            width: 16,
-            height: 16,
-            decoration: BoxDecoration(
-              color: const Color(0xFF4CAF50),
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF4CAF50).withOpacity(0.4),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+            // Punto verde de online
+            Container(
+              width: 16,
+              height: 16,
+              decoration: BoxDecoration(
+                color: const Color(0xFF4CAF50),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF4CAF50).withOpacity(0.4),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
 }
 
 class _TimeLabel extends StatelessWidget {
-
   const _TimeLabel(this.text);
   final String text;
 

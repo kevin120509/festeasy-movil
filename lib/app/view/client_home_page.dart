@@ -74,7 +74,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
 
       var total = 0;
       for (final item in (itemsResult as List)) {
-        total += (item['cantidad'] as int? ?? 1);
+        total += item['cantidad'] as int? ?? 1;
       }
 
       if (mounted) setState(() => cartCount = total);

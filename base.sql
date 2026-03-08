@@ -46,6 +46,7 @@ CREATE TABLE public.cotizaciones (
   notas text,
   estado text NOT NULL DEFAULT 'pendiente'::text CHECK (estado = ANY (ARRAY['pendiente'::text, 'aceptada_cliente'::text, 'rechazada_cliente'::text])),
   creado_en timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  fecha_expiracion date,
   CONSTRAINT cotizaciones_pkey PRIMARY KEY (id),
   CONSTRAINT cotizaciones_solicitud_id_fkey FOREIGN KEY (solicitud_id) REFERENCES public.solicitudes(id)
 );
@@ -128,12 +129,11 @@ CREATE TABLE public.paquetes_proveedor (
   actualizado_en timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   detalles_json jsonb,
   CONSTRAINT paquetes_proveedor_pkey PRIMARY KEY (id),
-  CONSTRAINT paquetes_proveedor_categoria_servicio_id_fkey FOREIGN KEY (categoria_servicio_id) REFERENCES public.categorias_servicio(id),
-  CONSTRAINT fk_paquetes_proveedor_auth FOREIGN KEY (proveedor_usuario_id) REFERENCES auth.users(id)
+  CONSTRAINT paquetes_proveedor_categoria_servicio_id_fkey FOREIGN KEY (categoria_servicio_id) REFERENCES public.categorias_servicio(id)
 );
 CREATE TABLE public.perfil_cliente (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
-  usuario_id uuid NOT NULL,
+  usuario_id uuid NOT NULL UNIQUE,
   nombre_completo character varying NOT NULL,
   telefono character varying,
   avatar_url character varying,
@@ -196,9 +196,12 @@ CREATE TABLE public.solicitudes (
   link_pago_anticipo text,
   link_pago_liquidacion text,
   expiracion_anticipo timestamp with time zone,
-  pin_validacion text,
+  pin_seguridad character varying,
   pin_validado_en timestamp with time zone,
+  pin_validacion text,
+  fecha_validacion_pin timestamp with time zone,
   CONSTRAINT solicitudes_pkey PRIMARY KEY (id),
   CONSTRAINT fk_solicitud_cliente_auth FOREIGN KEY (cliente_usuario_id) REFERENCES auth.users(id),
-  CONSTRAINT fk_solicitud_proveedor_auth FOREIGN KEY (proveedor_usuario_id) REFERENCES auth.users(id)
+  CONSTRAINT fk_solicitud_proveedor_auth FOREIGN KEY (proveedor_usuario_id) REFERENCES auth.users(id),
+  CONSTRAINT solicitudes_cliente_perfil_fkey FOREIGN KEY (cliente_usuario_id) REFERENCES public.perfil_cliente(usuario_id)
 );

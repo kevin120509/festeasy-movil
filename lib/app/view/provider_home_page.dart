@@ -1,10 +1,14 @@
 import 'dart:io';
 
 import 'package:festeasy/app/view/login_page.dart';
+import 'package:festeasy/app/view/producto_card.dart';
+import 'package:festeasy/app/view/producto_form_dialog.dart';
 import 'package:festeasy/app/view/provider_paquete_detail_page.dart';
+import 'package:festeasy/app/view/provider_calendar_screen.dart';
 import 'package:festeasy/app/view/provider_setup_page.dart';
 import 'package:festeasy/app/view/provider_solicitudes_page.dart';
 import 'package:festeasy/services/auth_service.dart';
+import 'package:festeasy/services/provider_inventario_service.dart';
 import 'package:festeasy/services/provider_paquetes_service.dart';
 import 'package:festeasy/services/provider_perfil_service.dart';
 import 'package:festeasy/services/provider_solicitudes_service.dart';
@@ -111,9 +115,12 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
   ProviderPerfilData? _perfil;
   List<PaqueteProveedorData> _paquetes = [];
   List<ProviderSolicitudData> _solicitudes = [];
+  List<ProductoInventarioData> _productos = [];
+  FiltroInventario _filtroActual = FiltroInventario.todos;
   bool _isLoadingPerfil = true;
   bool _isLoadingPaquetes = true;
   bool _isLoadingSolicitudes = true;
+  bool _isLoadingProductos = true;
 
   @override
   void initState() {
@@ -121,6 +128,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
     _loadPerfil();
     _loadPaquetes();
     _loadSolicitudes();
+    _loadProductos();
   }
 
   Future<void> _loadPerfil() async {
@@ -192,6 +200,28 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
     }
   }
 
+  Future<void> _loadProductos() async {
+    try {
+      final user = AuthService.instance.currentUser;
+      if (user != null) {
+        final productos = await ProviderInventarioService.instance.getProductos(
+          user.id,
+        );
+        if (mounted) {
+          setState(() {
+            _productos = productos;
+            _isLoadingProductos = false;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Error loading productos: $e');
+      if (mounted) {
+        setState(() => _isLoadingProductos = false);
+      }
+    }
+  }
+
   /// Selecciona una foto de la galería o cámara
   Future<XFile?> _pickImage() async {
     try {
@@ -211,9 +241,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
 
   /// Sube una foto a Supabase y retorna la URL
   /// Estructura sincronizada con web: packages/{userId}-{timestamp}-{random}.{ext}
-  Future<String?> _uploadPhotoToSupabase({
-    required XFile imageFile,
-  }) async {
+  Future<String?> _uploadPhotoToSupabase({required XFile imageFile}) async {
     try {
       final user = AuthService.instance.currentUser;
       if (user == null) return null;
@@ -290,7 +318,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: selectedCategoryId,
+                    initialValue: selectedCategoryId,
                     isExpanded: true,
                     decoration: const InputDecoration(
                       labelText: 'Categoría',
@@ -560,61 +588,18 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
         elevation: 0,
         automaticallyImplyLeading: false,
         actions: [
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.person, color: Color(0xFFE01D25)),
-            onSelected: (value) async {
-              if (value == 'logout') {
-                final confirm = await showDialog<bool>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text('Cerrar Sesión'),
-                    content: const Text(
-                      '¿Estás seguro de que deseas cerrar sesión?',
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        child: const Text('Cancelar'),
-                      ),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFE01D25),
-                        ),
-                        onPressed: () => Navigator.pop(context, true),
-                        child: const Text(
-                          'Cerrar Sesión',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-                if ((confirm ?? false) && mounted) {
-                  await AuthService.instance.signOut();
-                  if (mounted) {
-                    // Navegar a login y eliminar todas las rutas anteriores
-                    Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute<void>(
-                        builder: (context) => const LoginPage(),
-                      ),
-                      (route) => false,
-                    );
-                  }
-                }
+          IconButton(
+            icon: _perfil?.avatarUrl != null
+                ? CircleAvatar(
+                    backgroundImage: NetworkImage(_perfil!.avatarUrl!),
+                    radius: 16,
+                  )
+                : const Icon(Icons.person, color: Color(0xFFE01D25)),
+            onPressed: () {
+              if (_perfil != null) {
+                _showAjustesDialog();
               }
             },
-            itemBuilder: (context) => [
-              const PopupMenuItem<String>(
-                value: 'logout',
-                child: Row(
-                  children: [
-                    Icon(Icons.logout, color: Color(0xFFE01D25)),
-                    SizedBox(width: 12),
-                    Text('Cerrar Sesión'),
-                  ],
-                ),
-              ),
-            ],
           ),
         ],
       ),
@@ -623,6 +608,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
         children: [
           _buildDashboardTab(),
           _buildSolicitudesTab(),
+          _buildInventarioTab(),
           _buildPaquetesTab(),
           _buildCalendarioTab(),
         ],
@@ -660,6 +646,10 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.inventory_2),
+              label: 'Inventario',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.shopping_bag),
               label: 'Paquetes',
             ),
             BottomNavigationBarItem(
@@ -672,10 +662,216 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
     );
   }
 
+  Future<void> _showAjustesDialog() async {
+    if (_perfil == null) return;
+
+    final nombreController = TextEditingController(text: _perfil!.nombreNegocio);
+    final descripcionController = TextEditingController(text: _perfil!.descripcion ?? '');
+    final telefonoController = TextEditingController(text: _perfil!.telefono ?? '');
+    final correoController = TextEditingController(text: _perfil!.correoElectronico ?? '');
+    
+    XFile? nuevaFoto;
+    bool isLoading = false;
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            title: const Text('Ajustes de Perfil'),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Stack(
+                      children: [
+                        CircleAvatar(
+                          radius: 50,
+                          backgroundColor: Colors.grey[200],
+                          backgroundImage: nuevaFoto != null 
+                              ? FileImage(File(nuevaFoto!.path)) as ImageProvider
+                              : (_perfil!.avatarUrl != null 
+                                  ? NetworkImage(_perfil!.avatarUrl!) 
+                                  : null),
+                          child: nuevaFoto == null && _perfil!.avatarUrl == null
+                              ? const Icon(Icons.store, size: 50, color: Colors.grey)
+                              : null,
+                        ),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: InkWell(
+                            onTap: () async {
+                              final image = await _pickImage();
+                              if (image != null) {
+                                setDialogState(() => nuevaFoto = image);
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFE01D25),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.camera_alt, size: 18, color: Colors.white),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: nombreController,
+                      decoration: const InputDecoration(
+                        labelText: 'Nombre del Negocio',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: descripcionController,
+                      decoration: const InputDecoration(
+                        labelText: 'Descripción',
+                        border: OutlineInputBorder(),
+                      ),
+                      maxLines: 3,
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: telefonoController,
+                      decoration: const InputDecoration(
+                        labelText: 'Teléfono de Contacto',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.phone,
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: correoController,
+                      decoration: const InputDecoration(
+                        labelText: 'Correo de Contacto',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.emailAddress,
+                    ),
+                    if (isLoading)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 16),
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE01D25)),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            actionsAlignment: MainAxisAlignment.spaceBetween,
+            actions: [
+              TextButton(
+                onPressed: isLoading ? null : () async {
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Cerrar Sesión'),
+                      content: const Text('¿Estás seguro de que deseas cerrar sesión?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text('Cancelar'),
+                        ),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE01D25)),
+                          onPressed: () => Navigator.pop(context, true),
+                          child: const Text('Cerrar Sesión', style: TextStyle(color: Colors.white)),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirm ?? false) {
+                    await AuthService.instance.signOut();
+                    if (mounted) {
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute<void>(builder: (context) => const LoginPage()),
+                        (route) => false,
+                      );
+                    }
+                  }
+                },
+                child: const Text('Cerrar Sesión', style: TextStyle(color: Colors.red)),
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextButton(
+                    onPressed: isLoading ? null : () => Navigator.pop(context),
+                    child: const Text('Cancelar', style: TextStyle(color: Colors.grey)),
+                  ),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE01D25)),
+                    onPressed: isLoading ? null : () async {
+                      setDialogState(() => isLoading = true);
+                      try {
+                        String? newAvatarUrl = _perfil!.avatarUrl;
+                        if (nuevaFoto != null) {
+                           final bytes = await nuevaFoto!.readAsBytes();
+                           newAvatarUrl = await ProviderPerfilService.instance.uploadAvatar(
+                             usuarioId: AuthService.instance.currentUser!.id,
+                             fileBytes: bytes,
+                             fileName: 'avatar_${DateTime.now().millisecondsSinceEpoch}.jpg',
+                           );
+                        }
+
+                        await ProviderPerfilService.instance.updatePerfil(
+                          perfilId: _perfil!.id,
+                          nombreNegocio: nombreController.text,
+                          descripcion: descripcionController.text,
+                          telefono: telefonoController.text,
+                          correoElectronico: correoController.text,
+                          avatarUrl: newAvatarUrl,
+                        );
+                        
+                        if (mounted) {
+                          Navigator.pop(context);
+                          _loadPerfil();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Perfil actualizado excitosamente'),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                         setDialogState(() => isLoading = false);
+                         if (mounted) {
+                           ScaffoldMessenger.of(context).showSnackBar(
+                             SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+                           );
+                         }
+                      }
+                    },
+                    child: const Text('Guardar', style: TextStyle(color: Colors.white)),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
   Widget _buildDashboardTab() {
     return RefreshIndicator(
       onRefresh: () async {
-        await Future.wait([_loadPerfil(), _loadPaquetes(), _loadSolicitudes()]);
+        await Future.wait([
+          _loadPerfil(),
+          _loadPaquetes(),
+          _loadSolicitudes(),
+          _loadProductos(),
+        ]);
       },
       color: const Color(0xFFE01D25),
       child: SingleChildScrollView(
@@ -1284,6 +1480,253 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
     );
   }
 
+  Widget _buildInventarioTab() {
+    return Column(
+      children: [
+        // Header con botones de filtro
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Todos los productos',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: Color(0xFF010302),
+                    ),
+                  ),
+                  FloatingActionButton.extended(
+                    onPressed: () async {
+                      final result = await showDialog<bool>(
+                        context: context,
+                        builder: (_) => const ProductoFormDialog(),
+                      );
+                      if (result ?? false) {
+                        _loadProductos();
+                      }
+                    },
+                    backgroundColor: const Color(0xFFE01D25),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Nuevo'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              // Filtros
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _buildFiltroButton('Todos', FiltroInventario.todos),
+                    const SizedBox(width: 8),
+                    _buildFiltroButton('Stock bajo', FiltroInventario.bajo),
+                    const SizedBox(width: 8),
+                    _buildFiltroButton('Sin stock', FiltroInventario.agotado),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        // Contenido
+        Expanded(
+          child: _isLoadingProductos
+              ? const Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Color(0xFFE01D25),
+                    ),
+                  ),
+                )
+              : _productos.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.inventory_2,
+                        size: 64,
+                        color: Colors.grey[400],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'No hay productos',
+                        style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton.icon(
+                        onPressed: () async {
+                          final result = await showDialog<bool>(
+                            context: context,
+                            builder: (_) => const ProductoFormDialog(),
+                          );
+                          if (result ?? false) {
+                            _loadProductos();
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFE01D25),
+                        ),
+                        icon: const Icon(Icons.add),
+                        label: const Text('Crear Producto'),
+                      ),
+                    ],
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: _loadProductos,
+                  color: const Color(0xFFE01D25),
+                  child: GridView.builder(
+                    padding: const EdgeInsets.all(16),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          childAspectRatio: 0.45,
+                        ),
+                    itemCount: ProviderInventarioService.filtrarProductos(
+                      _productos,
+                      _filtroActual,
+                    ).length,
+                    itemBuilder: (context, index) {
+                      final productos =
+                          ProviderInventarioService.filtrarProductos(
+                            _productos,
+                            _filtroActual,
+                          );
+                      final producto = productos[index];
+
+                      return ProductoCard(
+                        producto: producto,
+                        onEdit: () async {
+                          final result = await showDialog<bool>(
+                            context: context,
+                            builder: (_) =>
+                                ProductoFormDialog(producto: producto),
+                          );
+                          if (result ?? false) {
+                            _loadProductos();
+                          }
+                        },
+                        onDelete: () async {
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Eliminar Producto'),
+                              content: Text(
+                                '¿Estás seguro de que deseas eliminar "${producto.nombre}"?',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.pop(context, false),
+                                  child: const Text('Cancelar'),
+                                ),
+                                ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.red,
+                                  ),
+                                  onPressed: () => Navigator.pop(context, true),
+                                  child: const Text(
+                                    'Eliminar',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+
+                          if (confirm ?? false) {
+                            try {
+                              await ProviderInventarioService.instance
+                                  .deleteProducto(producto.id);
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      '"${producto.nombre}" eliminado',
+                                    ),
+                                  ),
+                                );
+                                _loadProductos();
+                              }
+                            } catch (e) {
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Error: $e'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            }
+                          }
+                        },
+                        onToggleDestacado: (nuevoEstado) async {
+                          try {
+                            await ProviderInventarioService.instance
+                                .toggleDestacado(producto.id, nuevoEstado);
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    nuevoEstado
+                                        ? '"${producto.nombre}" destacado'
+                                        : '"${producto.nombre}" sin destacar',
+                                  ),
+                                ),
+                              );
+                              _loadProductos();
+                            }
+                          } catch (e) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Error: $e'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          }
+                        },
+                      );
+                    },
+                  ),
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFiltroButton(String label, FiltroInventario filtro) {
+    final isActive = _filtroActual == filtro;
+    return FilterChip(
+      label: Text(label),
+      selected: isActive,
+      onSelected: (selected) {
+        setState(() => _filtroActual = filtro);
+      },
+      backgroundColor: Colors.grey[200],
+      selectedColor: const Color(0xFFE01D25),
+      labelStyle: TextStyle(
+        color: isActive ? Colors.white : Colors.black,
+        fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+      ),
+    );
+  }
+
   Widget _buildPaquetesTab() {
     if (_isLoadingPaquetes) {
       return const Center(
@@ -1559,39 +2002,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
   }
 
   Widget _buildCalendarioTab() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF4F7F9),
-              borderRadius: BorderRadius.circular(50),
-            ),
-            child: Icon(
-              Icons.calendar_month,
-              size: 48,
-              color: Colors.grey[400],
-            ),
-          ),
-          const SizedBox(height: 20),
-          const Text(
-            'Calendario de Eventos',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-              color: Color(0xFF010302),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Próximamente podrás ver tu agenda aquí',
-            style: TextStyle(color: Colors.grey[600]),
-          ),
-        ],
-      ),
-    );
+    return const ProviderCalendarScreen();
   }
 
   void _showEditPaqueteDialog(PaqueteProveedorData paquete) {

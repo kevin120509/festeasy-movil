@@ -52,7 +52,7 @@ class _ProviderSolicitudesPageState extends State<ProviderSolicitudesPage> {
     return Column(
       children: [
         // Filtros
-        Container(
+        ColoredBox(
           color: Colors.white,
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,

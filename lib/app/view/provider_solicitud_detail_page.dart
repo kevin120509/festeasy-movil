@@ -780,12 +780,12 @@ class _ProviderSolicitudDetailPageState
       barrierDismissible: false,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: Row(
+          title: const Row(
             children: [
-              const Icon(Icons.lock, color: Color(0xFFE01D25)),
-              const SizedBox(width: 8),
+              Icon(Icons.lock, color: Color(0xFFE01D25)),
+              SizedBox(width: 8),
               Flexible(
-                child: const Text(
+                child: Text(
                   'Validar PIN de Entrega',
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -895,7 +895,7 @@ class _ProviderSolicitudDetailPageState
       ),
     );
 
-    if (result == true && mounted) {
+    if ((result ?? false) && mounted) {
       // Recargar datos de la solicitud
       final updated = await ProviderSolicitudesService.instance
           .getSolicitudById(_solicitud.id);

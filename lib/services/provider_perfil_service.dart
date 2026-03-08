@@ -10,6 +10,7 @@ class ProviderPerfilData {
     required this.nombreNegocio, required this.creadoEn, required this.actualizadoEn, this.usuarioId,
     this.descripcion,
     this.telefono,
+    this.correoElectronico,
     this.avatarUrl,
     this.direccionFormato,
     this.latitud,
@@ -25,6 +26,7 @@ class ProviderPerfilData {
   final String nombreNegocio;
   final String? descripcion;
   final String? telefono;
+  final String? correoElectronico;
   final String? avatarUrl;
   final String? direccionFormato;
   final double? latitud;
@@ -44,6 +46,7 @@ class ProviderPerfilData {
       nombreNegocio: row['nombre_negocio'] as String? ?? 'Sin nombre',
       descripcion: row['descripcion'] as String?,
       telefono: row['telefono'] as String?,
+      correoElectronico: row['correo_electronico'] as String?,
       avatarUrl: row['avatar_url'] as String?,
       direccionFormato: row['direccion_formato'] as String?,
       latitud: (row['latitud'] as num?)?.toDouble(),
@@ -63,6 +66,7 @@ class ProviderPerfilData {
       'nombre_negocio': nombreNegocio,
       'descripcion': descripcion,
       'telefono': telefono,
+      'correo_electronico': correoElectronico,
       'avatar_url': avatarUrl,
       'direccion_formato': direccionFormato,
       'latitud': latitud,
@@ -138,6 +142,7 @@ class ProviderPerfilService {
     String? nombreNegocio,
     String? descripcion,
     String? telefono,
+    String? correoElectronico,
     String? avatarUrl,
     String? direccionFormato,
     double? latitud,
@@ -150,6 +155,7 @@ class ProviderPerfilService {
       if (nombreNegocio != null) updateData['nombre_negocio'] = nombreNegocio;
       if (descripcion != null) updateData['descripcion'] = descripcion;
       if (telefono != null) updateData['telefono'] = telefono;
+      if (correoElectronico != null) updateData['correo_electronico'] = correoElectronico;
       if (avatarUrl != null) updateData['avatar_url'] = avatarUrl;
       if (direccionFormato != null) updateData['direccion_formato'] = direccionFormato;
       if (latitud != null) updateData['latitud'] = latitud;
