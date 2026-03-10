@@ -27,25 +27,28 @@ class _ProvidersListPageState extends State<ProvidersListPage> {
       setState(() {
         _isLoading = true;
       });
-      
-      _providersFuture = ProviderSearchService.instance.searchProvidersByCategory(
-        categoryId: _sessionData.categoryId!,
-        latitude: _sessionData.latitude ?? 20.962632, // Default Mérida
-        longitude: _sessionData.longitude ?? -87.307022,
-      ).then((results) {
-        setState(() {
-          _isLoading = false;
-        });
-        return results;
-      }).catchError((Object error) {
-        setState(() {
-          _isLoading = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $error')),
-        );
-        return <ProviderSearchResult>[];
-      });
+
+      _providersFuture = ProviderSearchService.instance
+          .searchProvidersByCategory(
+            categoryId: _sessionData.categoryId!,
+            latitude: _sessionData.latitude ?? 20.962632, // Default Mérida
+            longitude: _sessionData.longitude ?? -87.307022,
+          )
+          .then((results) {
+            setState(() {
+              _isLoading = false;
+            });
+            return results;
+          })
+          .catchError((Object error) {
+            setState(() {
+              _isLoading = false;
+            });
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text('Error: $error')));
+            return <ProviderSearchResult>[];
+          });
     }
   }
 
@@ -65,9 +68,7 @@ class _ProvidersListPageState extends State<ProvidersListPage> {
         ),
       ),
       body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
+          ? const Center(child: CircularProgressIndicator())
           : FutureBuilder<List<ProviderSearchResult>>(
               future: _providersFuture,
               builder: (context, snapshot) {
@@ -100,7 +101,11 @@ class _ProvidersListPageState extends State<ProvidersListPage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.search_off, size: 48, color: Colors.grey),
+                        const Icon(
+                          Icons.search_off,
+                          size: 48,
+                          color: Colors.grey,
+                        ),
                         const SizedBox(height: 16),
                         const Text(
                           'No se encontraron proveedores',
@@ -109,7 +114,10 @@ class _ProvidersListPageState extends State<ProvidersListPage> {
                         const SizedBox(height: 8),
                         Text(
                           'Ubicación: ${_sessionData.address ?? 'No especificada'}',
-                          style: const TextStyle(fontSize: 12, color: Colors.grey),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
                         ),
                         const SizedBox(height: 16),
                         ElevatedButton(
@@ -134,7 +142,10 @@ class _ProvidersListPageState extends State<ProvidersListPage> {
     );
   }
 
-  Widget _buildProviderCard(BuildContext context, ProviderSearchResult provider) {
+  Widget _buildProviderCard(
+    BuildContext context,
+    ProviderSearchResult provider,
+  ) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
       child: InkWell(
@@ -208,7 +219,11 @@ class _ProvidersListPageState extends State<ProvidersListPage> {
                         Row(
                           children: [
                             if (provider.distanciaKm != null) ...[
-                              const Icon(Icons.location_on, size: 14, color: Color(0xFFE01D25)),
+                              const Icon(
+                                Icons.location_on,
+                                size: 14,
+                                color: Color(0xFFE01D25),
+                              ),
                               const SizedBox(width: 4),
                               Text(
                                 '${provider.distanciaKm!.toStringAsFixed(1)} km',
@@ -220,10 +235,16 @@ class _ProvidersListPageState extends State<ProvidersListPage> {
                             ],
                             const SizedBox(width: 12),
                             if (provider.calificacionPromedio != null) ...[
-                              const Icon(Icons.star, size: 14, color: Colors.amber),
+                              const Icon(
+                                Icons.star,
+                                size: 14,
+                                color: Colors.amber,
+                              ),
                               const SizedBox(width: 4),
                               Text(
-                                provider.calificacionPromedio!.toStringAsFixed(1),
+                                provider.calificacionPromedio!.toStringAsFixed(
+                                  1,
+                                ),
                                 style: const TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
@@ -253,15 +274,16 @@ class _ProvidersListPageState extends State<ProvidersListPage> {
               padding: const EdgeInsets.all(8),
               child: Row(
                 children: [
-                  const Icon(Icons.location_on_outlined, size: 16, color: Colors.grey),
+                  const Icon(
+                    Icons.location_on_outlined,
+                    size: 16,
+                    color: Colors.grey,
+                  ),
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
                       provider.direccionFormato ?? 'Ubicación no disponible',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey[600],
-                      ),
+                      style: TextStyle(fontSize: 11, color: Colors.grey[600]),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),

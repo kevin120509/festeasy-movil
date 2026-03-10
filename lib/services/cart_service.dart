@@ -1,11 +1,13 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CartData {
-
   CartData({
     required this.id,
     required this.clienteUsuarioId,
-    required this.estado, required this.creadoEn, required this.actualizadoEn, this.fechaServicioDeseada,
+    required this.estado,
+    required this.creadoEn,
+    required this.actualizadoEn,
+    this.fechaServicioDeseada,
     this.direccionServicio,
   });
   final String id;
@@ -55,7 +57,9 @@ class CartService {
         .order('actualizado_en', ascending: false);
 
     final data = response as List<dynamic>;
-    return data.map((e) => CartData.fromMap(e as Map<String, dynamic>)).toList();
+    return data
+        .map((e) => CartData.fromMap(e as Map<String, dynamic>))
+        .toList();
   }
 
   /// Crea un carrito si no existe, o retorna el existente
@@ -122,8 +126,10 @@ class CartService {
     required double precioUnitario,
   }) async {
     try {
-      print('[CartService] Agregando item: paqueteId=$paqueteId, cantidad=$cantidad, precio=$precioUnitario al carrito=$carritoId');
-      
+      print(
+        '[CartService] Agregando item: paqueteId=$paqueteId, cantidad=$cantidad, precio=$precioUnitario al carrito=$carritoId',
+      );
+
       // Buscar si el item ya existe
       final existing = await _client
           .from('items_carrito')
@@ -137,9 +143,7 @@ class CartService {
         print('[CartService] Actualizando cantidad del item existente');
         await _client
             .from('items_carrito')
-            .update({
-              'cantidad': cantidad,
-            })
+            .update({'cantidad': cantidad})
             .eq('carrito_id', carritoId)
             .eq('paquete_id', paqueteId);
       } else {
@@ -159,7 +163,7 @@ class CartService {
           .from('carrito')
           .update({'actualizado_en': DateTime.now().toIso8601String()})
           .eq('id', carritoId);
-      
+
       print('[CartService] Item agregado correctamente');
     } catch (e) {
       print('[CartService] ERROR al agregar item: $e');
@@ -176,11 +180,12 @@ class CartService {
   }
 
   /// Obtiene los items de un carrito con información del paquete y proveedor
-  Future<Map<String, dynamic>?> getCartItemsWithProvider(String carritoId) async {
+  Future<Map<String, dynamic>?> getCartItemsWithProvider(
+    String carritoId,
+  ) async {
     final itemsResponse = await _client
         .from('items_carrito')
-        .select(
-          '''
+        .select('''
           id,
           cantidad,
           precio_unitario_momento,
@@ -191,8 +196,7 @@ class CartService {
             precio_base,
             proveedor_usuario_id
           )
-          '''
-        )
+          ''')
         .eq('carrito_id', carritoId);
 
     if ((itemsResponse as List).isEmpty) {
@@ -200,22 +204,24 @@ class CartService {
     }
 
     final items = itemsResponse as List<dynamic>;
-    
+
     // Obtener información del proveedor del primer item
     final firstItem = items.first as Map<String, dynamic>;
     final paquete = firstItem['paquetes_proveedor'] as Map<String, dynamic>;
     final proveedorUsuarioId = paquete['proveedor_usuario_id'] as String;
-    
+
     // Consulta separada para obtener perfil del proveedor
     final providerProfile = await _client
         .from('perfil_proveedor')
         .select('nombre_negocio, avatar_url')
         .eq('usuario_id', proveedorUsuarioId)
         .maybeSingle();
-    
+
     // Construir lista de items para CartPage
     final allItems = items.map((item) {
-      final paq = (item as Map<String, dynamic>)['paquetes_proveedor'] as Map<String, dynamic>;
+      final paq =
+          (item as Map<String, dynamic>)['paquetes_proveedor']
+              as Map<String, dynamic>;
       return {
         'id': paq['id'] as String,
         'name': paq['nombre'] as String,
@@ -227,14 +233,17 @@ class CartService {
     // Construir mapa cartItems (paquete_id -> cantidad)
     final cartItems = <String, int>{};
     for (final item in items) {
-      final paq = (item as Map<String, dynamic>)['paquetes_proveedor'] as Map<String, dynamic>;
+      final paq =
+          (item as Map<String, dynamic>)['paquetes_proveedor']
+              as Map<String, dynamic>;
       cartItems[paq['id'] as String] = item['cantidad'] as int;
     }
 
     return {
       'cartItems': cartItems,
       'allItems': allItems,
-      'providerName': providerProfile?['nombre_negocio'] as String? ?? 'Proveedor',
+      'providerName':
+          providerProfile?['nombre_negocio'] as String? ?? 'Proveedor',
       'providerUserId': proveedorUsuarioId,
       'providerAvatarUrl': providerProfile?['avatar_url'] as String?,
     };

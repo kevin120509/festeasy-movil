@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
 class ProviderResultsPage extends StatefulWidget {
-
   const ProviderResultsPage({
-    required this.categoryName, required this.categoryId, super.key,
+    required this.categoryName,
+    required this.categoryId,
+    super.key,
   });
   final String categoryName;
   final String categoryId;
@@ -537,10 +538,7 @@ class _ProviderResultsPageState extends State<ProviderResultsPage> {
           });
         },
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.explore),
-            label: 'Explorar',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.explore), label: 'Explorar'),
           BottomNavigationBarItem(
             icon: Icon(Icons.favorite_border),
             label: 'Favoritos',

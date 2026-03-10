@@ -3,7 +3,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Modelo para solicitudes recibidas por el proveedor
 class ProviderSolicitudData {
-
   ProviderSolicitudData({
     required this.id,
     required this.numeroSolicitud,
@@ -11,7 +10,13 @@ class ProviderSolicitudData {
     required this.proveedorUsuarioId,
     required this.fechaServicio,
     required this.direccionServicio,
-    required this.estado, required this.montoTotal, required this.montoAnticipo, required this.montoLiquidacion, required this.creadoEn, required this.actualizadoEn, this.latitudServicio,
+    required this.estado,
+    required this.montoTotal,
+    required this.montoAnticipo,
+    required this.montoLiquidacion,
+    required this.creadoEn,
+    required this.actualizadoEn,
+    this.latitudServicio,
     this.longitudServicio,
     this.tituloEvento,
     this.clienteNombre,
@@ -82,7 +87,9 @@ class ProviderSolicitudData {
     );
   }
 
-  bool get isPendiente => estado == 'pendiente_aprobacion';
+  bool get isPendiente => estado == 'pendiente_aprobacion' && montoAnticipo == 0;
+  bool get isCotizacionEnviada =>
+      estado == 'pendiente_aprobacion' && montoAnticipo > 0;
   bool get isRechazada => estado == 'rechazada';
   bool get espeandoAnticipo => estado == 'esperando_anticipo';
   bool get isReservado => estado == 'reservado';
@@ -217,8 +224,10 @@ class ProviderSolicitudesService {
   Future<ProviderSolicitudData> aceptarSolicitud(String solicitudId) async {
     try {
       // Establecer expiración de anticipo en 24 horas
-      final expiracionAnticipo = DateTime.now().toUtc().add(const Duration(hours: 24));
-      
+      final expiracionAnticipo = DateTime.now().toUtc().add(
+        const Duration(hours: 24),
+      );
+
       final response = await _client
           .from('solicitudes')
           .update({
@@ -233,6 +242,58 @@ class ProviderSolicitudesService {
       return ProviderSolicitudData.fromMap(response);
     } catch (e) {
       throw Exception('Error aceptando solicitud: $e');
+    }
+  }
+
+  /// Envía cotización final (cambia estado de vuelta a pendiente_aprobacion o cotizacion_enviada, lo dejaremos en pendiente_aprobacion para que el cliente lo acepte)
+  Future<ProviderSolicitudData> enviarCotizacion({
+    required String solicitudId,
+    required double nuevoMontoTotal,
+    required double nuevoMontoAnticipo,
+    required double nuevoMontoLiquidacion,
+    String? notasCotizacion,
+    List<Map<String, dynamic>>? extraItems,
+  }) async {
+    try {
+      final updateData = {
+        'estado': 'pendiente_aprobacion',
+        'monto_total': nuevoMontoTotal,
+        'monto_anticipo': nuevoMontoAnticipo,
+        'monto_liquidacion': nuevoMontoLiquidacion,
+        'actualizado_en': DateTime.now().toUtc().toIso8601String(),
+      };
+
+      // if notasCotizacion exists we could place it somewhere if there is a column for it. We'll skip for now if no column exists, or we could add it to a generic JSON field if present.
+
+      final response = await _client
+          .from('solicitudes')
+          .update(updateData)
+          .eq('id', solicitudId)
+          .select()
+          .single();
+
+      if (extraItems != null && extraItems.isNotEmpty) {
+        // We will insert these into items_solicitud. But first we probably want to delete any existing 
+        // extra items? If they are building on top of the base package, we can just insert them.
+        // Actually, the simplest approach is to fetch the current items, keep the base, and clear the rest, 
+        // OR just insert the new extra items. Let's insert them directly.
+        final itemsToInsert = extraItems.map((item) {
+          return {
+            'solicitud_id': solicitudId,
+            'paquete_id': item['id'], // Assuming id is the inventory product id
+            'nombre_paquete_snapshot': item['nombre'],
+            'cantidad': item['cantidad'],
+            'precio_unitario': item['precio'],
+            // Optionally flag it as an extra item if we had a column, but we just insert it.
+          };
+        }).toList();
+
+        await _client.from('items_solicitud').insert(itemsToInsert);
+      }
+
+      return ProviderSolicitudData.fromMap(response);
+    } catch (e) {
+      throw Exception('Error enviando cotización: $e');
     }
   }
 
@@ -288,36 +349,38 @@ class ProviderSolicitudesService {
     required String pinIngresado,
   }) async {
     try {
-      debugPrint('🔐 [validarPinEntrega] Validando PIN para solicitud: $solicitudId');
-      
+      debugPrint(
+        '🔐 [validarPinEntrega] Validando PIN para solicitud: $solicitudId',
+      );
+
       // Obtener el PIN real de la BD
       final solicitud = await _client
           .from('solicitudes')
           .select('pin_validacion, estado')
           .eq('id', solicitudId)
           .single();
-      
+
       final pinReal = solicitud['pin_validacion'] as String?;
       final estadoActual = solicitud['estado'] as String?;
-      
+
       // Verificar que la solicitud esté en estado 'reservado'
       if (estadoActual != 'reservado') {
         throw Exception('La solicitud no está en estado reservado');
       }
-      
+
       // Verificar que exista un PIN
       if (pinReal == null || pinReal.isEmpty) {
         throw Exception('Esta solicitud no tiene PIN asignado');
       }
-      
+
       // Comparar PINs
       if (pinIngresado != pinReal) {
         throw Exception('PIN incorrecto. Verifica con el cliente.');
       }
-      
+
       // PIN correcto - actualizar estado
       debugPrint('✅ [validarPinEntrega] PIN correcto! Actualizando estado...');
-      
+
       final response = await _client
           .from('solicitudes')
           .update({
@@ -329,7 +392,9 @@ class ProviderSolicitudesService {
           .select()
           .single();
 
-      debugPrint('✅ [validarPinEntrega] Estado actualizado a entregado_pendiente_liq');
+      debugPrint(
+        '✅ [validarPinEntrega] Estado actualizado a entregado_pendiente_liq',
+      );
       return ProviderSolicitudData.fromMap(response);
     } catch (e) {
       debugPrint('❌ [validarPinEntrega] Error: $e');
@@ -339,10 +404,14 @@ class ProviderSolicitudesService {
 
   /// Marca la liquidación como pagada (simulado)
   /// Cambia estado a 'finalizado'
-  Future<ProviderSolicitudData> marcarLiquidacionPagada(String solicitudId) async {
+  Future<ProviderSolicitudData> marcarLiquidacionPagada(
+    String solicitudId,
+  ) async {
     try {
-      debugPrint('💰 [marcarLiquidacionPagada] Marcando liquidación pagada: $solicitudId');
-      
+      debugPrint(
+        '💰 [marcarLiquidacionPagada] Marcando liquidación pagada: $solicitudId',
+      );
+
       final response = await _client
           .from('solicitudes')
           .update({

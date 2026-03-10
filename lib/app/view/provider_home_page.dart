@@ -1,10 +1,13 @@
 import 'dart:io';
 
+import 'package:festeasy/app/view/chat_list_page.dart';
 import 'package:festeasy/app/view/login_page.dart';
+import 'package:festeasy/app/view/mis_eventos_page.dart';
 import 'package:festeasy/app/view/producto_card.dart';
 import 'package:festeasy/app/view/producto_form_dialog.dart';
 import 'package:festeasy/app/view/provider_paquete_detail_page.dart';
 import 'package:festeasy/app/view/provider_calendar_screen.dart';
+import 'package:festeasy/app/view/provider_notifications_page.dart';
 import 'package:festeasy/app/view/provider_setup_page.dart';
 import 'package:festeasy/app/view/provider_solicitudes_page.dart';
 import 'package:festeasy/services/auth_service.dart';
@@ -14,6 +17,7 @@ import 'package:festeasy/services/provider_perfil_service.dart';
 import 'package:festeasy/services/provider_solicitudes_service.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:festeasy/app/view/provider_finanzas_page.dart';
 
 class ProviderHomePage extends StatefulWidget {
   const ProviderHomePage({super.key, this.userName = 'Proveedor'});
@@ -586,8 +590,30 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
         ),
         centerTitle: true,
         elevation: 0,
-        automaticallyImplyLeading: false,
         actions: [
+          IconButton(
+            icon: const Icon(
+              Icons.chat_bubble_outline,
+              color: Color(0xFFE01D25),
+            ),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const ChatListPage(isProvider: true),
+                ),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.notifications, color: Color(0xFFE01D25)),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const ProviderNotificationsPage(),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: _perfil?.avatarUrl != null
                 ? CircleAvatar(
@@ -665,11 +691,19 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
   Future<void> _showAjustesDialog() async {
     if (_perfil == null) return;
 
-    final nombreController = TextEditingController(text: _perfil!.nombreNegocio);
-    final descripcionController = TextEditingController(text: _perfil!.descripcion ?? '');
-    final telefonoController = TextEditingController(text: _perfil!.telefono ?? '');
-    final correoController = TextEditingController(text: _perfil!.correoElectronico ?? '');
-    
+    final nombreController = TextEditingController(
+      text: _perfil!.nombreNegocio,
+    );
+    final descripcionController = TextEditingController(
+      text: _perfil!.descripcion ?? '',
+    );
+    final telefonoController = TextEditingController(
+      text: _perfil!.telefono ?? '',
+    );
+    final correoController = TextEditingController(
+      text: _perfil!.correoElectronico ?? '',
+    );
+
     XFile? nuevaFoto;
     bool isLoading = false;
 
@@ -691,13 +725,18 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                         CircleAvatar(
                           radius: 50,
                           backgroundColor: Colors.grey[200],
-                          backgroundImage: nuevaFoto != null 
-                              ? FileImage(File(nuevaFoto!.path)) as ImageProvider
-                              : (_perfil!.avatarUrl != null 
-                                  ? NetworkImage(_perfil!.avatarUrl!) 
-                                  : null),
+                          backgroundImage: nuevaFoto != null
+                              ? FileImage(File(nuevaFoto!.path))
+                                    as ImageProvider
+                              : (_perfil!.avatarUrl != null
+                                    ? NetworkImage(_perfil!.avatarUrl!)
+                                    : null),
                           child: nuevaFoto == null && _perfil!.avatarUrl == null
-                              ? const Icon(Icons.store, size: 50, color: Colors.grey)
+                              ? const Icon(
+                                  Icons.store,
+                                  size: 50,
+                                  color: Colors.grey,
+                                )
                               : null,
                         ),
                         Positioned(
@@ -716,7 +755,11 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                                 color: Color(0xFFE01D25),
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(Icons.camera_alt, size: 18, color: Colors.white),
+                              child: const Icon(
+                                Icons.camera_alt,
+                                size: 18,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                         ),
@@ -761,7 +804,9 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                       const Padding(
                         padding: EdgeInsets.only(top: 16),
                         child: CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE01D25)),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Color(0xFFE01D25),
+                          ),
                         ),
                       ),
                   ],
@@ -771,88 +816,129 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
             actionsAlignment: MainAxisAlignment.spaceBetween,
             actions: [
               TextButton(
-                onPressed: isLoading ? null : () async {
-                  final confirm = await showDialog<bool>(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Cerrar Sesión'),
-                      content: const Text('¿Estás seguro de que deseas cerrar sesión?'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: const Text('Cancelar'),
-                        ),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE01D25)),
-                          onPressed: () => Navigator.pop(context, true),
-                          child: const Text('Cerrar Sesión', style: TextStyle(color: Colors.white)),
-                        ),
-                      ],
-                    ),
-                  );
-                  if (confirm ?? false) {
-                    await AuthService.instance.signOut();
-                    if (mounted) {
-                      Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute<void>(builder: (context) => const LoginPage()),
-                        (route) => false,
-                      );
-                    }
-                  }
-                },
-                child: const Text('Cerrar Sesión', style: TextStyle(color: Colors.red)),
+                onPressed: isLoading
+                    ? null
+                    : () async {
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Cerrar Sesión'),
+                            content: const Text(
+                              '¿Estás seguro de que deseas cerrar sesión?',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('Cancelar'),
+                              ),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFE01D25),
+                                ),
+                                onPressed: () => Navigator.pop(context, true),
+                                child: const Text(
+                                  'Cerrar Sesión',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirm ?? false) {
+                          await AuthService.instance.signOut();
+                          if (mounted) {
+                            Navigator.of(context).pushAndRemoveUntil(
+                              MaterialPageRoute<void>(
+                                builder: (context) => const LoginPage(),
+                              ),
+                              (route) => false,
+                            );
+                          }
+                        }
+                      },
+                child: const Text(
+                  'Cerrar Sesión',
+                  style: TextStyle(color: Colors.red),
+                ),
               ),
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextButton(
                     onPressed: isLoading ? null : () => Navigator.pop(context),
-                    child: const Text('Cancelar', style: TextStyle(color: Colors.grey)),
+                    child: const Text(
+                      'Cancelar',
+                      style: TextStyle(color: Colors.grey),
+                    ),
                   ),
                   ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE01D25)),
-                    onPressed: isLoading ? null : () async {
-                      setDialogState(() => isLoading = true);
-                      try {
-                        String? newAvatarUrl = _perfil!.avatarUrl;
-                        if (nuevaFoto != null) {
-                           final bytes = await nuevaFoto!.readAsBytes();
-                           newAvatarUrl = await ProviderPerfilService.instance.uploadAvatar(
-                             usuarioId: AuthService.instance.currentUser!.id,
-                             fileBytes: bytes,
-                             fileName: 'avatar_${DateTime.now().millisecondsSinceEpoch}.jpg',
-                           );
-                        }
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFE01D25),
+                    ),
+                    onPressed: isLoading
+                        ? null
+                        : () async {
+                            setDialogState(() => isLoading = true);
+                            try {
+                              String? newAvatarUrl = _perfil!.avatarUrl;
+                              if (nuevaFoto != null) {
+                                final bytes = await nuevaFoto!.readAsBytes();
+                                newAvatarUrl = await ProviderPerfilService
+                                    .instance
+                                    .uploadAvatar(
+                                      usuarioId:
+                                          AuthService.instance.currentUser!.id,
+                                      fileBytes: bytes,
+                                      fileName:
+                                          'avatar_${DateTime.now().millisecondsSinceEpoch}.jpg',
+                                    );
+                              }
 
-                        await ProviderPerfilService.instance.updatePerfil(
-                          perfilId: _perfil!.id,
-                          nombreNegocio: nombreController.text,
-                          descripcion: descripcionController.text,
-                          telefono: telefonoController.text,
-                          correoElectronico: correoController.text,
-                          avatarUrl: newAvatarUrl,
-                        );
-                        
-                        if (mounted) {
-                          Navigator.pop(context);
-                          _loadPerfil();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Perfil actualizado excitosamente'),
-                              backgroundColor: Colors.green,
-                            ),
-                          );
-                        }
-                      } catch (e) {
-                         setDialogState(() => isLoading = false);
-                         if (mounted) {
-                           ScaffoldMessenger.of(context).showSnackBar(
-                             SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-                           );
-                         }
-                      }
-                    },
-                    child: const Text('Guardar', style: TextStyle(color: Colors.white)),
+                              await ProviderPerfilService.instance.updatePerfil(
+                                perfilId: _perfil!.id,
+                                nombreNegocio: nombreController.text.trim(),
+                                descripcion:
+                                    descripcionController.text.trim().isEmpty
+                                    ? null
+                                    : descripcionController.text.trim(),
+                                telefono: telefonoController.text.trim().isEmpty
+                                    ? null
+                                    : telefonoController.text.trim(),
+                                correoElectronico:
+                                    correoController.text.trim().isEmpty
+                                    ? null
+                                    : correoController.text.trim(),
+                                avatarUrl: newAvatarUrl,
+                              );
+
+                              if (mounted) {
+                                Navigator.pop(context);
+                                _loadPerfil();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Perfil actualizado excitosamente',
+                                    ),
+                                    backgroundColor: Colors.green,
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              setDialogState(() => isLoading = false);
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Error: $e'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                    child: const Text(
+                      'Guardar',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                 ],
               ),
@@ -1144,6 +1230,61 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 16),
+          Container(height: 1, color: const Color(0xFFF4F7F9)),
+          const SizedBox(height: 16),
+          InkWell(
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const MisFinanzasPage(),
+                ),
+              );
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE8F5E9),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.account_balance_wallet,
+                    color: Color(0xFF4CAF50),
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Mis Finanzas',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Color(0xFF010302),
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Ingresos, gastos y analíticas',
+                        style: TextStyle(fontSize: 13, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                  color: Colors.grey,
+                ),
+              ],
+            ),
           ),
         ],
       ),

@@ -154,10 +154,7 @@ class _ProviderCalendarScreenState extends State<ProviderCalendarScreen> {
           const SizedBox(height: 4),
           Text(
             _selectedDay != null ? dateFormatter.format(_selectedDay!) : '',
-            style: const TextStyle(
-              fontSize: 14,
-              color: Colors.black54,
-            ),
+            style: const TextStyle(fontSize: 14, color: Colors.black54),
           ),
           const SizedBox(height: 32),
           if (eventsForSelectedDay.isEmpty)
@@ -189,10 +186,7 @@ class _ProviderCalendarScreenState extends State<ProviderCalendarScreen> {
                   const SizedBox(height: 8),
                   const Text(
                     'Selecciona otra fecha o gestiona tus bloqueos.',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.black38,
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.black38),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -234,7 +228,9 @@ class _ProviderCalendarScreenState extends State<ProviderCalendarScreen> {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: _getColorForEstado(evento.estado).withOpacity(0.1),
+                              color: _getColorForEstado(
+                                evento.estado,
+                              ).withOpacity(0.1),
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: Text(
@@ -251,14 +247,22 @@ class _ProviderCalendarScreenState extends State<ProviderCalendarScreen> {
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          const Icon(Icons.person, size: 16, color: Colors.grey),
+                          const Icon(
+                            Icons.person,
+                            size: 16,
+                            color: Colors.grey,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             evento.clienteNombre ?? 'Cliente',
                             style: const TextStyle(color: Colors.grey),
                           ),
                           const SizedBox(width: 16),
-                          const Icon(Icons.access_time, size: 16, color: Colors.grey),
+                          const Icon(
+                            Icons.access_time,
+                            size: 16,
+                            color: Colors.grey,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             DateFormat('HH:mm').format(evento.fechaServicio),
@@ -291,10 +295,7 @@ class _ProviderCalendarScreenState extends State<ProviderCalendarScreen> {
           const SizedBox(height: 8),
           const Text(
             'Gestión centralizada de eventos y disponibilidad.',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.black54,
-            ),
+            style: TextStyle(fontSize: 16, color: Colors.black54),
           ),
           const SizedBox(height: 24),
           if (isWide)

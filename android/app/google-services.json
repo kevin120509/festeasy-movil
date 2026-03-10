@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "454333124674",
+    "project_id": "festeasy-7049d",
+    "storage_bucket": "festeasy-7049d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:454333124674:android:83b8c7e7e7b409e88ddddb",
+        "android_client_info": {
+          "package_name": "com.festeasy.app.festeasy"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB9bt5_9QWQGhuXCiA55KCmtMT2-ir4YVM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:454333124674:android:83b8c7e7e7b409e88ddddb",
+        "android_client_info": {
+          "package_name": "com.festeasy.app.festeasy.dev"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB9bt5_9QWQGhuXCiA55KCmtMT2-ir4YVM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

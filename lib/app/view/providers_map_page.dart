@@ -5,9 +5,10 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
 class ProvidersMapPage extends StatefulWidget {
-
   const ProvidersMapPage({
-    required this.categoryName, required this.categoryId, super.key,
+    required this.categoryName,
+    required this.categoryId,
+    super.key,
     this.serviceAddress,
     this.serviceDate,
     this.serviceTime,
@@ -121,9 +122,7 @@ class _ProvidersMapPageState extends State<ProvidersMapPage> {
     try {
       // Buscar proveedores de la base de datos por nombre de categoría
       final results = await ProviderDatabaseService.instance
-          .getProvidersByCategoryName(
-            widget.categoryName,
-          );
+          .getProvidersByCategoryName(widget.categoryName);
 
       // NO cargar ratings individualmente - muy lento
       // Los ratings se pueden cargar lazy cuando el usuario ve el detalle

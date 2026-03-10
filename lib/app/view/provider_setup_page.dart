@@ -45,8 +45,7 @@ class _ProviderSetupPageState extends State<ProviderSetupPage> {
   }
 
   Future<void> _loadCategorias() async {
-    final categorias =
-        await ProviderPerfilService.instance.getCategorias();
+    final categorias = await ProviderPerfilService.instance.getCategorias();
     setState(() {
       _categorias = categorias;
     });
@@ -60,9 +59,7 @@ class _ProviderSetupPageState extends State<ProviderSetupPage> {
         if (result == LocationPermission.denied) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Permiso de ubicación denegado'),
-              ),
+              const SnackBar(content: Text('Permiso de ubicación denegado')),
             );
           }
           return;
@@ -95,18 +92,18 @@ class _ProviderSetupPageState extends State<ProviderSetupPage> {
 
     if (_selectedCategoryId == null) {
       debugPrint('Validation failed: categoría no seleccionada');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Categoría requerida')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Categoría requerida')));
       return;
     }
 
     // Validar Paso 2
     if (_direccionController.text.isEmpty) {
       debugPrint('Validation failed: dirección vacía');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Dirección requerida')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Dirección requerida')));
       return;
     }
 
@@ -128,8 +125,7 @@ class _ProviderSetupPageState extends State<ProviderSetupPage> {
 
       // Crear o actualizar perfil del proveedor
       final perfilService = ProviderPerfilService.instance;
-      var perfil =
-          await perfilService.getPerfilByUserId(user.id);
+      var perfil = await perfilService.getPerfilByUserId(user.id);
       debugPrint('Existing profile: ${perfil?.id}');
 
       if (perfil == null) {
@@ -181,10 +177,7 @@ class _ProviderSetupPageState extends State<ProviderSetupPage> {
       debugPrint('Error in _completeSetup: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -444,15 +437,9 @@ class _ProviderSetupPageState extends State<ProviderSetupPage> {
                         : 'No especificado',
                   ),
                   const Divider(),
-                  _buildResumenItem(
-                    'Dirección',
-                    _direccionController.text,
-                  ),
+                  _buildResumenItem('Dirección', _direccionController.text),
                   const Divider(),
-                  _buildResumenItem(
-                    'Cobertura',
-                    '$_radioCoberturaKm km',
-                  ),
+                  _buildResumenItem('Cobertura', '$_radioCoberturaKm km'),
                   const Divider(),
                   _buildResumenItem(
                     'Coordenadas',
@@ -499,10 +486,7 @@ class _ProviderSetupPageState extends State<ProviderSetupPage> {
           const SizedBox(height: 4),
           Text(
             value,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-            ),
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
           ),
         ],
       ),
@@ -547,9 +531,7 @@ class _ProviderSetupPageState extends State<ProviderSetupPage> {
                       width: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : Text(
-                      _currentStep < 2 ? 'Siguiente' : 'Completar Setup',
-                    ),
+                  : Text(_currentStep < 2 ? 'Siguiente' : 'Completar Setup'),
             ),
           ),
         ],

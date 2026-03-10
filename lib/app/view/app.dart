@@ -1,5 +1,5 @@
 import 'package:festeasy/app/theme.dart';
-import 'package:festeasy/features/home/view/home_page.dart';
+import 'package:festeasy/app/view/splash_page.dart';
 import 'package:festeasy/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
@@ -13,7 +13,7 @@ class App extends StatelessWidget {
       theme: AppTheme.theme,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: const HomePage(),
+      home: const SplashPage(),
     );
   }
 }

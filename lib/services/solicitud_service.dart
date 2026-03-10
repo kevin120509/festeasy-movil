@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SolicitudData {
-
   const SolicitudData({
     required this.id,
     required this.numeroSolicitud,
@@ -10,7 +9,13 @@ class SolicitudData {
     required this.proveedorUsuarioId,
     required this.fechaServicio,
     required this.direccionServicio,
-    required this.montoTotal, required this.montoAnticipo, required this.montoLiquidacion, required this.estado, required this.creadoEn, required this.actualizadoEn, this.tituloEvento,
+    required this.montoTotal,
+    required this.montoAnticipo,
+    required this.montoLiquidacion,
+    required this.estado,
+    required this.creadoEn,
+    required this.actualizadoEn,
+    this.tituloEvento,
     this.linkPagoAnticipo,
     this.linkPagoLiquidacion,
     this.expiracionAnticipo,
@@ -58,9 +63,12 @@ class SolicitudData {
     String? provName;
     if (row['perfil_proveedor'] != null && row['perfil_proveedor'] is Map) {
       provName = row['perfil_proveedor']['nombre_negocio'] as String?;
-    } else if (row['perfil_proveedor'] != null && row['perfil_proveedor'] is List && (row['perfil_proveedor'] as List).isNotEmpty) {
-       // In case it returns a list
-       provName = (row['perfil_proveedor'] as List).first['nombre_negocio'] as String?;
+    } else if (row['perfil_proveedor'] != null &&
+        row['perfil_proveedor'] is List &&
+        (row['perfil_proveedor'] as List).isNotEmpty) {
+      // In case it returns a list
+      provName =
+          (row['perfil_proveedor'] as List).first['nombre_negocio'] as String?;
     }
 
     return SolicitudData(
@@ -85,6 +93,9 @@ class SolicitudData {
       providerName: provName,
     );
   }
+  bool get isPendiente => estado == 'pendiente_aprobacion' && montoAnticipo == 0;
+  bool get isCotizacionEnviada =>
+      estado == 'pendiente_aprobacion' && montoAnticipo > 0;
 }
 
 class SolicitudService {
@@ -105,7 +116,10 @@ class SolicitudService {
     required String providerUserId,
     required String address,
     required DateTime serviceDateLocal,
-    required double montoTotal, required Map<String, int> cartItems, required List<Map<String, dynamic>> allItems, String? tituloEvento,
+    required double montoTotal,
+    required Map<String, int> cartItems,
+    required List<Map<String, dynamic>> allItems,
+    String? tituloEvento,
   }) async {
     final user = _user;
 
@@ -141,13 +155,14 @@ class SolicitudService {
         (e) => e['id'] == entry.key,
         orElse: () => <String, Object>{
           'name': 'Paquete desconocido',
-          'price': 0.0
+          'price': 0.0,
         },
       );
       items.add({
         'solicitud_id': solicitudId,
         'paquete_id': entry.key,
-        'nombre_paquete_snapshot': (item['name'] as String?) ?? 'Paquete desconocido',
+        'nombre_paquete_snapshot':
+            (item['name'] as String?) ?? 'Paquete desconocido',
         'cantidad': entry.value,
         'precio_unitario': (item['price'] as num?)?.toDouble() ?? 0,
       });
@@ -175,7 +190,7 @@ class SolicitudService {
 
     final data = SolicitudData.fromMap(row);
     final providerName = await _fetchProviderName(data.proveedorUsuarioId);
-    
+
     return SolicitudData(
       id: data.id,
       numeroSolicitud: data.numeroSolicitud,
@@ -267,7 +282,7 @@ class SolicitudService {
   /// Obtiene TODAS las solicitudes del cliente actual
   Future<List<SolicitudData>> getAllSolicitudesForClient() async {
     final user = _user;
-    
+
     try {
       final rows = await _client
           .from('solicitudes')
@@ -276,33 +291,35 @@ class SolicitudService {
           .order('creado_en', ascending: false);
 
       debugPrint('📋 Solicitudes encontradas: ${(rows as List).length}');
-      
+
       final solicitudes = <SolicitudData>[];
       for (final row in rows) {
         final data = SolicitudData.fromMap(row);
         // Obtener nombre del proveedor
         final providerName = await _fetchProviderName(data.proveedorUsuarioId);
-        solicitudes.add(SolicitudData(
-          id: data.id,
-          numeroSolicitud: data.numeroSolicitud,
-          clienteUsuarioId: data.clienteUsuarioId,
-          proveedorUsuarioId: data.proveedorUsuarioId,
-          fechaServicio: data.fechaServicio,
-          direccionServicio: data.direccionServicio,
-          tituloEvento: data.tituloEvento,
-          montoTotal: data.montoTotal,
-          montoAnticipo: data.montoAnticipo,
-          montoLiquidacion: data.montoLiquidacion,
-          estado: data.estado,
-          creadoEn: data.creadoEn,
-          actualizadoEn: data.actualizadoEn,
-          linkPagoAnticipo: data.linkPagoAnticipo,
-          linkPagoLiquidacion: data.linkPagoLiquidacion,
-          expiracionAnticipo: data.expiracionAnticipo,
-          pinValidacion: data.pinValidacion,
-          pinValidadoEn: data.pinValidadoEn,
-          providerName: providerName,
-        ));
+        solicitudes.add(
+          SolicitudData(
+            id: data.id,
+            numeroSolicitud: data.numeroSolicitud,
+            clienteUsuarioId: data.clienteUsuarioId,
+            proveedorUsuarioId: data.proveedorUsuarioId,
+            fechaServicio: data.fechaServicio,
+            direccionServicio: data.direccionServicio,
+            tituloEvento: data.tituloEvento,
+            montoTotal: data.montoTotal,
+            montoAnticipo: data.montoAnticipo,
+            montoLiquidacion: data.montoLiquidacion,
+            estado: data.estado,
+            creadoEn: data.creadoEn,
+            actualizadoEn: data.actualizadoEn,
+            linkPagoAnticipo: data.linkPagoAnticipo,
+            linkPagoLiquidacion: data.linkPagoLiquidacion,
+            expiracionAnticipo: data.expiracionAnticipo,
+            pinValidacion: data.pinValidacion,
+            pinValidadoEn: data.pinValidadoEn,
+            providerName: providerName,
+          ),
+        );
       }
       return solicitudes;
     } catch (e) {
@@ -354,7 +371,10 @@ class SolicitudService {
   Future<void> deleteSolicitud(String solicitudId) async {
     final user = _user;
     // Primero eliminar los items de la solicitud
-    await _client.from('items_solicitud').delete().eq('solicitud_id', solicitudId);
+    await _client
+        .from('items_solicitud')
+        .delete()
+        .eq('solicitud_id', solicitudId);
     // Luego eliminar la solicitud
     await _client
         .from('solicitudes')
@@ -394,26 +414,26 @@ class SolicitudService {
   Future<SolicitudData> simularPagoAnticipo(String solicitudId) async {
     try {
       debugPrint('💳 [simularPagoAnticipo] Simulando pago para: $solicitudId');
-      
+
       // Obtener datos actuales de la solicitud
       final solicitud = await getSolicitudById(solicitudId);
       if (solicitud == null) {
         throw Exception('Solicitud no encontrada');
       }
-      
+
       // Verificar que esté en estado esperando_anticipo
       if (solicitud.estado != 'esperando_anticipo') {
         throw Exception('La solicitud no está esperando pago de anticipo');
       }
-      
+
       // Generar PIN de 4 dígitos
       final pin = _generarPin();
       debugPrint('🔐 [simularPagoAnticipo] PIN generado: $pin');
-      
+
       // Calcular montos (50% anticipo, 50% liquidación)
       final montoAnticipo = solicitud.montoTotal * 0.5;
       final montoLiquidacion = solicitud.montoTotal * 0.5;
-      
+
       // Actualizar solicitud
       final response = await _client
           .from('solicitudes')
@@ -428,7 +448,9 @@ class SolicitudService {
           .select()
           .single();
 
-      debugPrint('✅ [simularPagoAnticipo] Pago simulado exitosamente. Estado: reservado');
+      debugPrint(
+        '✅ [simularPagoAnticipo] Pago simulado exitosamente. Estado: reservado',
+      );
       return SolicitudData.fromMap(response);
     } catch (e) {
       debugPrint('❌ [simularPagoAnticipo] Error: $e');
@@ -440,19 +462,21 @@ class SolicitudService {
   /// En producción, esto se llamaría desde un webhook de la pasarela de pago
   Future<SolicitudData> simularPagoLiquidacion(String solicitudId) async {
     try {
-      debugPrint('💳 [simularPagoLiquidacion] Simulando pago liquidación para: $solicitudId');
-      
+      debugPrint(
+        '💳 [simularPagoLiquidacion] Simulando pago liquidación para: $solicitudId',
+      );
+
       // Obtener datos actuales de la solicitud
       final solicitud = await getSolicitudById(solicitudId);
       if (solicitud == null) {
         throw Exception('Solicitud no encontrada');
       }
-      
+
       // Verificar que esté en estado entregado_pendiente_liq
       if (solicitud.estado != 'entregado_pendiente_liq') {
         throw Exception('La solicitud no está pendiente de liquidación');
       }
-      
+
       // Actualizar solicitud a finalizado
       final response = await _client
           .from('solicitudes')
@@ -464,7 +488,9 @@ class SolicitudService {
           .select()
           .single();
 
-      debugPrint('✅ [simularPagoLiquidacion] Pago liquidación simulado. Estado: finalizado');
+      debugPrint(
+        '✅ [simularPagoLiquidacion] Pago liquidación simulado. Estado: finalizado',
+      );
       return SolicitudData.fromMap(response);
     } catch (e) {
       debugPrint('❌ [simularPagoLiquidacion] Error: $e');

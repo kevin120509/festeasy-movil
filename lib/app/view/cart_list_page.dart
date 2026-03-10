@@ -1,5 +1,10 @@
 import 'package:festeasy/services/cart_service.dart';
 import 'package:festeasy/services/solicitud_service.dart';
+import 'package:festeasy/app/view/profile_page.dart';
+import 'package:festeasy/app/view/client_notifications_page.dart';
+import 'package:festeasy/services/client_perfil_service.dart';
+import 'package:festeasy/services/client_direcciones_service.dart';
+import 'package:festeasy/service_session_data.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -41,16 +46,58 @@ class _CartListPageState extends State<CartListPage> {
   CartData? _activeCart;
   bool _isLoading = true;
   bool _isSending = false;
+  String? _avatarUrl;
 
   // Datos del evento (compartidos entre todos los proveedores)
   DateTime _fechaServicio = DateTime.now().add(const Duration(days: 7));
   TimeOfDay _horaServicio = const TimeOfDay(hour: 14, minute: 0);
   String _direccion = '';
+  late TextEditingController _direccionController;
+  int? _numeroInvitados;
+  late TextEditingController _invitadosController;
+  late TextEditingController _eventNameController;
 
   @override
   void initState() {
     super.initState();
+    _direccionController = TextEditingController();
+    _invitadosController = TextEditingController();
+    _eventNameController = TextEditingController();
+
+    // Intenta prellenar desde la sesión
+    final sessionData = ServiceSessionData.getInstance();
+    if (sessionData.eventName != null) {
+      _eventNameController.text = sessionData.eventName!;
+    }
+    if (sessionData.numberOfGuests != null) {
+      _numeroInvitados = sessionData.numberOfGuests;
+      _invitadosController.text = _numeroInvitados.toString();
+    }
+
+    _loadProfile();
     _loadCart();
+  }
+
+  Future<void> _loadProfile() async {
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user != null) {
+        final perfil = await ClientPerfilService.instance.getPerfil(user.id);
+        if (mounted) {
+          setState(() {
+            _avatarUrl = perfil?.avatarUrl;
+          });
+        }
+      }
+    } catch (_) {}
+  }
+
+  @override
+  void dispose() {
+    _direccionController.dispose();
+    _invitadosController.dispose();
+    _eventNameController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadCart() async {
@@ -89,6 +136,7 @@ class _CartListPageState extends State<CartListPage> {
       }
       if (_activeCart!.direccionServicio != null) {
         _direccion = _activeCart!.direccionServicio!;
+        _direccionController.text = _direccion;
       }
 
       // Obtener items del carrito con info del paquete y proveedor
@@ -273,11 +321,19 @@ class _CartListPageState extends State<CartListPage> {
         }
 
         try {
+          final titulo = _eventNameController.text.isNotEmpty
+              ? _numeroInvitados != null
+                    ? '${_eventNameController.text.trim()} - $providerName ($_numeroInvitados invitados)'
+                    : '${_eventNameController.text.trim()} - $providerName'
+              : _numeroInvitados != null
+              ? 'Evento - $providerName ($_numeroInvitados invitados)'
+              : 'Evento - $providerName';
+
           await SolicitudService.instance.createSolicitud(
             providerUserId: providerUserId,
             address: _direccion,
             serviceDateLocal: serviceDateTime,
-            tituloEvento: 'Evento - $providerName',
+            tituloEvento: titulo,
             montoTotal: total,
             cartItems: cartItems,
             allItems: allItemsData,
@@ -359,6 +415,62 @@ class _CartListPageState extends State<CartListPage> {
     }
   }
 
+  Future<void> _showSavedAddresses() async {
+    final dirs = await ClientDireccionesService.instance.loadDirecciones();
+    if (dirs.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No tienes direcciones guardadas')),
+      );
+      return;
+    }
+
+    if (!mounted) return;
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Text(
+                  'Mis Direcciones',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ),
+              const Divider(height: 1),
+              ...dirs
+                  .map(
+                    (d) => ListTile(
+                      leading: const Icon(
+                        Icons.location_on,
+                        color: Color(0xFFE01D25),
+                      ),
+                      title: Text(d['titulo'] ?? ''),
+                      subtitle: Text(d['direccion'] ?? ''),
+                      onTap: () {
+                        setState(() {
+                          _direccion = d['direccion'] ?? '';
+                          _direccionController.text = _direccion;
+                        });
+                        Navigator.pop(context);
+                      },
+                    ),
+                  )
+                  .toList(),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -367,6 +479,7 @@ class _CartListPageState extends State<CartListPage> {
         backgroundColor: Colors.white,
         elevation: 0,
         automaticallyImplyLeading: false,
+        foregroundColor: const Color(0xFF010302), // Added foregroundColor
         title: const Text(
           'Mi Carrito',
           style: TextStyle(
@@ -378,8 +491,33 @@ class _CartListPageState extends State<CartListPage> {
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh, color: Color(0xFF010302)),
-            onPressed: _loadCart,
+            icon: const Icon(Icons.notifications, color: Color(0xFFE01D25)),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const ClientNotificationsPage(),
+                ),
+              );
+            },
+          ),
+          IconButton(
+            icon: _avatarUrl != null
+                ? CircleAvatar(
+                    radius: 14,
+                    backgroundImage: NetworkImage(_avatarUrl!),
+                  )
+                : const Icon(Icons.person_outline, color: Color(0xFF010302)),
+            onPressed: () {
+              Navigator.of(context)
+                  .push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const ProfilePage(),
+                    ),
+                  )
+                  .then((_) {
+                    if (mounted) _loadProfile();
+                  });
+            },
           ),
         ],
       ),
@@ -396,25 +534,39 @@ class _CartListPageState extends State<CartListPage> {
   }
 
   Widget _buildEmptyCart() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+    return RefreshIndicator(
+      onRefresh: _loadCart,
+      color: const Color(0xFFE01D25),
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
         children: [
-          Icon(Icons.shopping_cart_outlined, size: 80, color: Colors.grey[400]),
-          const SizedBox(height: 16),
-          Text(
-            'Tu carrito está vacío',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[600],
+          SizedBox(
+            height: MediaQuery.of(context).size.height * 0.6,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.shopping_cart_outlined,
+                  size: 80,
+                  color: Colors.grey[400],
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Tu carrito está vacío',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Agrega paquetes de proveedores\npara planificar tu evento',
+                  style: TextStyle(color: Colors.grey[500]),
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Agrega paquetes de proveedores\npara planificar tu evento',
-            style: TextStyle(color: Colors.grey[500]),
-            textAlign: TextAlign.center,
           ),
         ],
       ),
@@ -556,6 +708,72 @@ class _CartListPageState extends State<CartListPage> {
           ),
           const SizedBox(height: 16),
 
+          // Nombre del Evento (Opcional)
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Icon(Icons.celebration, size: 20, color: Colors.grey[600]),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Nombre del Evento',
+                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                    ),
+                    TextField(
+                      controller: _eventNameController,
+                      textCapitalization: TextCapitalization.sentences,
+                      decoration: const InputDecoration(
+                        hintText: 'Ej. Boda de Carlos y Ana (Opcional)',
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Número de Invitados (Opcional)
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Icon(Icons.people, size: 20, color: Colors.grey[600]),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Número de Invitados',
+                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                    ),
+                    TextField(
+                      controller: _invitadosController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        hintText: 'Ej. 50 (Opcional)',
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                      onChanged: (value) =>
+                          _numeroInvitados = int.tryParse(value),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
           // Dirección
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -571,15 +789,23 @@ class _CartListPageState extends State<CartListPage> {
                       style: TextStyle(color: Colors.grey[600], fontSize: 12),
                     ),
                     TextField(
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         hintText: 'Ingresa la dirección del evento',
                         border: InputBorder.none,
                         isDense: true,
                         contentPadding: EdgeInsets.zero,
+                        suffixIcon: IconButton(
+                          icon: const Icon(
+                            Icons.bookmark,
+                            color: Color(0xFFE01D25),
+                          ),
+                          tooltip: 'Usar dirección guardada',
+                          onPressed: _showSavedAddresses,
+                        ),
                       ),
                       style: const TextStyle(fontWeight: FontWeight.w600),
                       onChanged: (value) => _direccion = value,
-                      controller: TextEditingController(text: _direccion),
+                      controller: _direccionController,
                     ),
                   ],
                 ),

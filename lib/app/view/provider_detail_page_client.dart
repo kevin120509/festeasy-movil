@@ -5,10 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ProviderDetailPageClient extends StatefulWidget {
-
-  const ProviderDetailPageClient({
-    required this.provider, super.key,
-  });
+  const ProviderDetailPageClient({required this.provider, super.key});
   final ProviderSearchResult provider;
 
   @override
@@ -29,8 +26,7 @@ class _ProviderDetailPageClientState extends State<ProviderDetailPageClient> {
   }
 
   void _loadPaquetes() {
-    _paquetesFuture =
-        ProviderPaquetesService.instance.getPaquetesByProveedor(
+    _paquetesFuture = ProviderPaquetesService.instance.getPaquetesByProveedor(
       widget.provider.usuarioId,
     );
   }
@@ -43,15 +39,19 @@ class _ProviderDetailPageClientState extends State<ProviderDetailPageClient> {
           .select()
           .eq('usuario_id', widget.provider.usuarioId)
           .maybeSingle();
-      
+
       if (data != null && mounted) {
         setState(() {
           _providerData = ProviderSearchResult(
             perfilId: data['id'] as String? ?? '',
-            usuarioId: data['usuario_id'] as String? ?? widget.provider.usuarioId,
-            nombreNegocio: data['nombre_negocio'] as String? ?? widget.provider.nombreNegocio,
+            usuarioId:
+                data['usuario_id'] as String? ?? widget.provider.usuarioId,
+            nombreNegocio:
+                data['nombre_negocio'] as String? ??
+                widget.provider.nombreNegocio,
             descripcion: data['descripcion'] as String?,
-            avatarUrl: data['avatar_url'] as String? ?? widget.provider.avatarUrl,
+            avatarUrl:
+                data['avatar_url'] as String? ?? widget.provider.avatarUrl,
             direccionFormato: data['direccion_formato'] as String?,
             latitud: (data['latitud'] as num?)?.toDouble(),
             longitud: (data['longitud'] as num?)?.toDouble(),
@@ -81,7 +81,10 @@ class _ProviderDetailPageClientState extends State<ProviderDetailPageClient> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Detalles del Proveedor', style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Detalles del Proveedor',
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: const Color(0xFFE01D25),
         centerTitle: true,
         leading: IconButton(
@@ -120,7 +123,7 @@ class _ProviderDetailPageClientState extends State<ProviderDetailPageClient> {
         child: const Center(child: CircularProgressIndicator()),
       );
     }
-    
+
     final provider = _currentProvider;
     return Container(
       color: Colors.grey[100],
@@ -192,11 +195,18 @@ class _ProviderDetailPageClientState extends State<ProviderDetailPageClient> {
                     if (provider.distanciaKm != null)
                       Row(
                         children: [
-                          const Icon(Icons.location_on, size: 16, color: Color(0xFFE01D25)),
+                          const Icon(
+                            Icons.location_on,
+                            size: 16,
+                            color: Color(0xFFE01D25),
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             '${provider.distanciaKm!.toStringAsFixed(1)} km de distancia',
-                            style: const TextStyle(fontSize: 12, color: Color(0xFFE01D25)),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFFE01D25),
+                            ),
                           ),
                         ],
                       ),
@@ -207,11 +217,9 @@ class _ProviderDetailPageClientState extends State<ProviderDetailPageClient> {
           ),
           const SizedBox(height: 16),
           // Descripción
-          if (provider.descripcion != null && provider.descripcion!.isNotEmpty) ...[
-            Text(
-              'Descripción',
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
+          if (provider.descripcion != null &&
+              provider.descripcion!.isNotEmpty) ...[
+            Text('Descripción', style: Theme.of(context).textTheme.titleSmall),
             const SizedBox(height: 4),
             Text(
               provider.descripcion!,
@@ -220,16 +228,18 @@ class _ProviderDetailPageClientState extends State<ProviderDetailPageClient> {
             const SizedBox(height: 12),
           ],
           // Ubicación
-          if (provider.direccionFormato != null && provider.direccionFormato!.isNotEmpty) ...[
-            Text(
-              'Ubicación',
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
+          if (provider.direccionFormato != null &&
+              provider.direccionFormato!.isNotEmpty) ...[
+            Text('Ubicación', style: Theme.of(context).textTheme.titleSmall),
             const SizedBox(height: 4),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.location_on, size: 16, color: Color(0xFFE01D25)),
+                const Icon(
+                  Icons.location_on,
+                  size: 16,
+                  color: Color(0xFFE01D25),
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -356,10 +366,7 @@ class _ProviderDetailPageClientState extends State<ProviderDetailPageClient> {
                   if (paquete.descripcion != null)
                     Text(
                       paquete.descripcion!,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),

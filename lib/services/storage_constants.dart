@@ -75,8 +75,8 @@ class StorageConstants {
   }) {
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final randomStr = _generateRandomString();
-    final ext = fileExtension.startsWith('.') 
-        ? fileExtension.substring(1) 
+    final ext = fileExtension.startsWith('.')
+        ? fileExtension.substring(1)
         : fileExtension;
     return '$packagesFolder/$userId-$timestamp-$randomStr.$ext';
   }
@@ -90,8 +90,8 @@ class StorageConstants {
   }) {
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final randomStr = _generateRandomString();
-    final ext = fileExtension.startsWith('.') 
-        ? fileExtension.substring(1) 
+    final ext = fileExtension.startsWith('.')
+        ? fileExtension.substring(1)
         : fileExtension;
     return '$avatarsFolder/$userId-$timestamp-$randomStr.$ext';
   }
@@ -104,8 +104,8 @@ class StorageConstants {
     required String fileExtension,
   }) {
     final timestamp = DateTime.now().millisecondsSinceEpoch;
-    final ext = fileExtension.startsWith('.') 
-        ? fileExtension.substring(1) 
+    final ext = fileExtension.startsWith('.')
+        ? fileExtension.substring(1)
         : fileExtension;
     return '$comprobantesFolder/$oderId-$timestamp.$ext';
   }

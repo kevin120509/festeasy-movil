@@ -50,6 +50,9 @@ class _ProductoFormDialogState extends State<ProductoFormDialog> {
       text: widget.producto?.stock.toString() ?? '0',
     );
     selectedCategory = widget.producto?.categoria ?? 'General';
+    if (!categories.contains(selectedCategory)) {
+      categories.add(selectedCategory);
+    }
   }
 
   @override

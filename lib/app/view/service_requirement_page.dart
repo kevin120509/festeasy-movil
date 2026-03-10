@@ -8,11 +8,11 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:festeasy/services/client_direcciones_service.dart';
 
 /// Modelo para los datos del requerimiento de servicio.
 /// Estos datos se enviarán a la base de datos al buscar proveedores.
 class ServiceRequirementData {
-
   ServiceRequirementData({
     required this.categoryId,
     required this.categoryName,
@@ -38,9 +38,11 @@ class ServiceRequirementData {
 }
 
 class ServiceRequirementPage extends StatefulWidget {
-
   const ServiceRequirementPage({
-    required this.categoryId, required this.categoryName, required this.categoryIcon, super.key,
+    required this.categoryId,
+    required this.categoryName,
+    required this.categoryIcon,
+    super.key,
   });
   final String categoryId;
   final String categoryName;
@@ -53,6 +55,7 @@ class ServiceRequirementPage extends StatefulWidget {
 class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
   final TextEditingController addressController = TextEditingController();
   final TextEditingController guestsController = TextEditingController();
+  final TextEditingController eventNameController = TextEditingController();
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
   int? numberOfGuests;
@@ -282,6 +285,78 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
     }
   }
 
+  Future<void> _geocodeAddressAndMoveMap(String address) async {
+    try {
+      final locations = await locationFromAddress(address);
+      if (locations.isNotEmpty) {
+        final loc = locations.first;
+        if (mounted) {
+          setState(() {
+            selectedLatitude = loc.latitude;
+            selectedLongitude = loc.longitude;
+          });
+          _moveMapWhenReady(LatLng(loc.latitude, loc.longitude));
+        }
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _showSavedAddresses() async {
+    final dirs = await ClientDireccionesService.instance.loadDirecciones();
+    if (dirs.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No tienes direcciones guardadas')),
+      );
+      return;
+    }
+
+    if (!mounted) return;
+
+    showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Text(
+                  'Mis Direcciones',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ),
+              const Divider(height: 1),
+              ...dirs
+                  .map(
+                    (d) => ListTile(
+                      leading: const Icon(
+                        Icons.location_on,
+                        color: Color(0xFFE01D25),
+                      ),
+                      title: Text(d['titulo'] ?? ''),
+                      subtitle: Text(d['direccion'] ?? ''),
+                      onTap: () {
+                        setState(() {
+                          addressController.text = d['direccion'] ?? '';
+                          _geocodeAddressAndMoveMap(addressController.text);
+                        });
+                        Navigator.pop(context);
+                      },
+                    ),
+                  )
+                  .toList(),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -322,6 +397,8 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
   @override
   void dispose() {
     addressController.dispose();
+    guestsController.dispose();
+    eventNameController.dispose();
     if (_isMapReady) {
       _mapController.dispose();
     }
@@ -370,6 +447,9 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
               const SizedBox(height: 24),
               // Fecha y Hora
               _buildDateTimeRow(),
+              const SizedBox(height: 24),
+              // Nombre del Evento
+              _buildEventNameField(),
               const SizedBox(height: 24),
               // Número de invitados
               _buildGuestsField(),
@@ -513,6 +593,38 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
     );
   }
 
+  Widget _buildEventNameField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Nombre del Evento (Opcional)',
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: eventNameController,
+          textCapitalization: TextCapitalization.sentences,
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: const Color(0xFFF4F7F9),
+            hintText: 'Ej: Boda de Carlos y Ana',
+            hintStyle: const TextStyle(color: Colors.grey),
+            prefixIcon: const Icon(Icons.celebration, color: Color(0xFFE01D25)),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              vertical: 16,
+              horizontal: 12,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildLocationSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -545,6 +657,11 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
             fillColor: const Color(0xFFF4F7F9),
             hintText: 'Buscar dirección...',
             prefixIcon: const Icon(Icons.location_on, color: Color(0xFFE01D25)),
+            suffixIcon: IconButton(
+              icon: const Icon(Icons.bookmark, color: Color(0xFFE01D25)),
+              tooltip: 'Usar dirección guardada',
+              onPressed: _showSavedAddresses,
+            ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
@@ -722,6 +839,9 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
       category: widget.categoryId,
       categoryName: widget.categoryName,
       eventNumberOfGuests: numberOfGuests,
+      eventTitle: eventNameController.text.isNotEmpty
+          ? eventNameController.text
+          : null,
     );
 
     // Mostrar diálogo de carga

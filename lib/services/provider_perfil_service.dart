@@ -4,10 +4,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Modelo para el perfil del proveedor
 class ProviderPerfilData {
-
   ProviderPerfilData({
     required this.id,
-    required this.nombreNegocio, required this.creadoEn, required this.actualizadoEn, this.usuarioId,
+    required this.nombreNegocio,
+    required this.creadoEn,
+    required this.actualizadoEn,
+    this.usuarioId,
     this.descripcion,
     this.telefono,
     this.correoElectronico,
@@ -120,15 +122,19 @@ class ProviderPerfilService {
     String? categoriaPrincipalId,
   }) async {
     try {
-      final response = await _client.from('perfil_proveedor').insert({
-        'usuario_id': usuarioId,
-        'nombre_negocio': nombreNegocio,
-        'descripcion': descripcion,
-        'telefono': telefono,
-        'categoria_principal_id': categoriaPrincipalId,
-        'tipo_suscripcion_actual': 'basico',
-        'estado': 'active',
-      }).select().single();
+      final response = await _client
+          .from('perfil_proveedor')
+          .insert({
+            'usuario_id': usuarioId,
+            'nombre_negocio': nombreNegocio,
+            'descripcion': descripcion,
+            'telefono': telefono,
+            'categoria_principal_id': categoriaPrincipalId,
+            'tipo_suscripcion_actual': 'basico',
+            'estado': 'active',
+          })
+          .select()
+          .single();
 
       return ProviderPerfilData.fromMap(response);
     } catch (e) {
@@ -155,12 +161,15 @@ class ProviderPerfilService {
       if (nombreNegocio != null) updateData['nombre_negocio'] = nombreNegocio;
       if (descripcion != null) updateData['descripcion'] = descripcion;
       if (telefono != null) updateData['telefono'] = telefono;
-      if (correoElectronico != null) updateData['correo_electronico'] = correoElectronico;
+      if (correoElectronico != null)
+        updateData['correo_electronico'] = correoElectronico;
       if (avatarUrl != null) updateData['avatar_url'] = avatarUrl;
-      if (direccionFormato != null) updateData['direccion_formato'] = direccionFormato;
+      if (direccionFormato != null)
+        updateData['direccion_formato'] = direccionFormato;
       if (latitud != null) updateData['latitud'] = latitud;
       if (longitud != null) updateData['longitud'] = longitud;
-      if (radioCoberturaKm != null) updateData['radio_cobertura_km'] = radioCoberturaKm;
+      if (radioCoberturaKm != null)
+        updateData['radio_cobertura_km'] = radioCoberturaKm;
       if (categoriaPrincipalId != null) {
         updateData['categoria_principal_id'] = categoriaPrincipalId;
       }
@@ -204,15 +213,16 @@ class ProviderPerfilService {
   }) async {
     try {
       final filePath = 'provider_avatars/$usuarioId/$fileName';
-      
-      await _client.storage.from('avatars').uploadBinary(
-        filePath,
-        Uint8List.fromList(fileBytes),
-        fileOptions: const FileOptions(upsert: true),
-      );
 
-      final publicUrl =
-          _client.storage.from('avatars').getPublicUrl(filePath);
+      await _client.storage
+          .from('avatars')
+          .uploadBinary(
+            filePath,
+            Uint8List.fromList(fileBytes),
+            fileOptions: const FileOptions(upsert: true),
+          );
+
+      final publicUrl = _client.storage.from('avatars').getPublicUrl(filePath);
       return publicUrl;
     } catch (e) {
       throw Exception('Error subiendo avatar: $e');
@@ -222,8 +232,10 @@ class ProviderPerfilService {
   /// Obtiene todas las categorías disponibles
   Future<List<Map<String, dynamic>>> getCategorias() async {
     try {
-      final response =
-          await _client.from('categorias_servicio').select().eq('activa', true);
+      final response = await _client
+          .from('categorias_servicio')
+          .select()
+          .eq('activa', true);
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
       return [];

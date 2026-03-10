@@ -123,11 +123,7 @@ class _Header extends StatelessWidget {
               color: AppTheme.rojoPrimario,
               shape: BoxShape.circle,
             ),
-            child: const Icon(
-              Icons.public,
-              color: Colors.white,
-              size: 24,
-            ),
+            child: const Icon(Icons.public, color: Colors.white, size: 24),
           ),
           const Spacer(),
           TextButton(
@@ -188,9 +184,7 @@ class _HeroSection extends StatelessWidget {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(30),
-                borderSide: const BorderSide(
-                  color: AppTheme.rojoPrimario,
-                ),
+                borderSide: const BorderSide(color: AppTheme.rojoPrimario),
               ),
             ),
           ),
@@ -289,10 +283,7 @@ class _ProviderBanner extends StatelessWidget {
           const Text(
             '¿Ofreces servicios para eventos? Únete a FestEasy',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 16),
           SizedBox(
@@ -307,10 +298,7 @@ class _ProviderBanner extends StatelessWidget {
               },
               child: const Text(
                 'Registrar mi Negocio',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
             ),
           ),

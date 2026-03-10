@@ -5,9 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CartPage extends StatefulWidget {
-
   const CartPage({
-    required this.cartItems, required this.allItems, required this.providerName, required this.providerUserId, required this.categoryName, super.key,
+    required this.cartItems,
+    required this.allItems,
+    required this.providerName,
+    required this.providerUserId,
+    required this.categoryName,
+    super.key,
     this.initialAddress,
     this.initialDate,
     this.initialTime,
@@ -213,10 +217,7 @@ class _CartPageState extends State<CartPage> {
     children.add(const SizedBox(height: 12));
     children.add(_buildPaymentMethods());
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: children,
-    );
+    return ListView(padding: const EdgeInsets.all(16), children: children);
   }
 
   Widget _buildProviderCard(Map<String, dynamic> profile) {

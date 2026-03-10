@@ -1,10 +1,16 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class PagoData {
-
   PagoData({
     required this.id,
-    required this.clienteUsuarioId, required this.proveedorUsuarioId, required this.monto, required this.metodoPago, required this.estado, required this.creadoEn, required this.actualizadoEn, this.cotizacionId,
+    required this.clienteUsuarioId,
+    required this.proveedorUsuarioId,
+    required this.monto,
+    required this.metodoPago,
+    required this.estado,
+    required this.creadoEn,
+    required this.actualizadoEn,
+    this.cotizacionId,
     this.comprobanteUrl,
     this.motivoRechazo,
     this.solicitudId,
@@ -61,7 +67,10 @@ class PagoService {
   }
 
   Future<PagoData> createPago({
-    required String proveedorUsuarioId, required double monto, required String metodoPago, String? cotizacionId,
+    required String proveedorUsuarioId,
+    required double monto,
+    required String metodoPago,
+    String? cotizacionId,
     String? solicitudId,
     String? tipoPago,
   }) async {
@@ -119,10 +128,7 @@ class PagoService {
   ) async {
     final updated = await _client
         .from('pagos')
-        .update({
-          'comprobante_url': comprobanteUrl,
-          'estado': 'en_revision',
-        })
+        .update({'comprobante_url': comprobanteUrl, 'estado': 'en_revision'})
         .eq('id', pagoId)
         .select()
         .single();

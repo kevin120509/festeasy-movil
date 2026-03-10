@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 /// Representa un item en el carrito local
 class CartItemLocal {
-
   CartItemLocal({
     required this.packageId,
     required this.packageName,
@@ -48,7 +47,6 @@ class CartItemLocal {
 /// Datos de sesión compartidos durante el flujo de búsqueda y carrito
 /// Se usa como singleton para persistir datos entre pantallas
 class ServiceSessionData {
-
   /// Previene instanciación directa
   ServiceSessionData._internal();
 
@@ -65,6 +63,7 @@ class ServiceSessionData {
   double? latitude;
   double? longitude;
   int? numberOfGuests;
+  String? eventName;
 
   // Datos de categoría
   String? categoryId;
@@ -83,6 +82,7 @@ class ServiceSessionData {
     required String category,
     required String categoryName,
     int? eventNumberOfGuests,
+    String? eventTitle,
   }) {
     date = eventDate;
     time = eventTime;
@@ -92,6 +92,7 @@ class ServiceSessionData {
     categoryId = category;
     this.categoryName = categoryName;
     numberOfGuests = eventNumberOfGuests;
+    eventName = eventTitle;
     cartItems = [];
   }
 
@@ -200,6 +201,7 @@ class ServiceSessionData {
     longitude = null;
     categoryId = null;
     categoryName = null;
+    eventName = null;
     cartItems = [];
   }
 

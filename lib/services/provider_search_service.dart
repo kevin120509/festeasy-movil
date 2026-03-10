@@ -5,7 +5,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Modelo para proveedor encontrado en búsqueda
 class ProviderSearchResult {
-
   ProviderSearchResult({
     required this.perfilId,
     required this.usuarioId,
@@ -147,7 +146,10 @@ class ProviderSearchService {
       );
 
       return response
-          .map((item) => ProviderSearchResult.fromMap(item as Map<String, dynamic>))
+          .map(
+            (item) =>
+                ProviderSearchResult.fromMap(item as Map<String, dynamic>),
+          )
           .toList();
     } catch (e) {
       throw Exception('Error buscando proveedores: $e');
@@ -181,8 +183,7 @@ class ProviderSearchService {
       // Buscar proveedores con esa categoría
       final response = await client
           .from('perfil_proveedor')
-          .select(
-            '''
+          .select('''
             id,
             usuario_id,
             nombre_negocio,
@@ -191,8 +192,7 @@ class ProviderSearchService {
             direccion_formato,
             latitud,
             longitud
-            ''',
-          )
+            ''')
           .eq('categoria_principal_id', categoryUUID)
           .or('estado.eq.active,estado.eq.pending,estado.eq.draft');
 
@@ -216,7 +216,8 @@ class ProviderSearchService {
               ProviderSearchResult(
                 perfilId: item['id'] as String? ?? '',
                 usuarioId: item['usuario_id'] as String? ?? '',
-                nombreNegocio: item['nombre_negocio'] as String? ?? 'Sin nombre',
+                nombreNegocio:
+                    item['nombre_negocio'] as String? ?? 'Sin nombre',
                 descripcion: item['descripcion'] as String?,
                 avatarUrl: item['avatar_url'] as String?,
                 direccionFormato: item['direccion_formato'] as String?,
@@ -255,14 +256,23 @@ class ProviderSearchService {
   }
 
   /// Calcula distancia entre dos puntos usando la fórmula de Haversine
-  double _calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+  double _calculateDistance(
+    double lat1,
+    double lon1,
+    double lat2,
+    double lon2,
+  ) {
     const earthRadiusKm = 6371.0;
 
     final dLat = _toRad(lat2 - lat1);
     final dLon = _toRad(lon2 - lon1);
 
-    final a = (Math.sin(dLat / 2) * Math.sin(dLat / 2)) +
-        (Math.cos(_toRad(lat1)) * Math.cos(_toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2));
+    final a =
+        (Math.sin(dLat / 2) * Math.sin(dLat / 2)) +
+        (Math.cos(_toRad(lat1)) *
+            Math.cos(_toRad(lat2)) *
+            Math.sin(dLon / 2) *
+            Math.sin(dLon / 2));
 
     final c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return earthRadiusKm * c;
@@ -275,9 +285,9 @@ class ProviderSearchService {
 
 /// Modelo para los resultados de búsqueda de proveedores
 class ProviderResult {
-
   ProviderResult({
-    required this.title, this.placeId,
+    required this.title,
+    this.placeId,
     this.address,
     this.rating,
     this.reviews,

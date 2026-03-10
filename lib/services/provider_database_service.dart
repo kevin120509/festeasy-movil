@@ -29,7 +29,9 @@ class ProviderDatabaseService {
             tipo_suscripcion_actual,
             categoria_principal
           ''')
-          .or('usuario_id.in.(${ids.map((e) => '"$e"').join(',')}),id.in.(${ids.map((e) => '"$e"').join(',')})');
+          .or(
+            'usuario_id.in.(${ids.map((e) => '"$e"').join(',')}),id.in.(${ids.map((e) => '"$e"').join(',')})',
+          );
 
       final data = response as List<dynamic>;
 
@@ -412,10 +414,10 @@ class ProviderDatabaseService {
 
 /// Modelo de datos para un proveedor
 class ProviderData {
-
   ProviderData({
     required this.id,
-    required this.nombreNegocio, this.perfilId,
+    required this.nombreNegocio,
+    this.perfilId,
     this.usuarioId,
     this.descripcion,
     this.telefono,
@@ -452,11 +454,11 @@ class ProviderData {
 
 /// Modelo de datos para un paquete
 class PaqueteData {
-
   PaqueteData({
     required this.id,
     required this.nombre,
-    required this.precioBase, this.descripcion,
+    required this.precioBase,
+    this.descripcion,
     this.items = const [],
   });
   final String id;
@@ -468,7 +470,6 @@ class PaqueteData {
 
 /// Modelo de datos para un item de paquete
 class ItemPaquete {
-
   ItemPaquete({
     required this.id,
     required this.nombre,
@@ -483,7 +484,6 @@ class ItemPaquete {
 
 /// Modelo de datos para una categoría
 class CategoryData {
-
   CategoryData({
     required this.id,
     required this.nombre,
@@ -498,11 +498,12 @@ class CategoryData {
 
 /// Modelo de datos para una reseña
 class ResenaData {
-
   ResenaData({
     required this.id,
     required this.calificacion,
-    required this.creadoEn, required this.autorNombre, this.comentario,
+    required this.creadoEn,
+    required this.autorNombre,
+    this.comentario,
     this.autorAvatar,
   });
   final String id;

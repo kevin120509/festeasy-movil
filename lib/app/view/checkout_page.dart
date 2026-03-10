@@ -3,9 +3,17 @@ import 'package:festeasy/services/solicitud_service.dart';
 import 'package:flutter/material.dart';
 
 class CheckoutPage extends StatefulWidget {
-
   const CheckoutPage({
-    required this.cartItems, required this.allItems, required this.providerName, required this.providerUserId, required this.categoryName, required this.subtotal, required this.serviceFee, required this.taxes, required this.total, super.key,
+    required this.cartItems,
+    required this.allItems,
+    required this.providerName,
+    required this.providerUserId,
+    required this.categoryName,
+    required this.subtotal,
+    required this.serviceFee,
+    required this.taxes,
+    required this.total,
+    super.key,
     this.initialDate,
     this.initialTime,
     this.initialAddress,
@@ -108,7 +116,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
     if (widget.initialAddress != null && widget.initialAddress!.isNotEmpty) {
       address = widget.initialAddress!;
     }
-    if (widget.initialPaymentMethod != null && widget.initialPaymentMethod!.isNotEmpty) {
+    if (widget.initialPaymentMethod != null &&
+        widget.initialPaymentMethod!.isNotEmpty) {
       selectedPaymentMethod = widget.initialPaymentMethod!;
     }
   }
@@ -438,7 +447,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 ...widget.cartItems.entries.map((entry) {
                   final item = widget.allItems.firstWhere(
                     (e) => e['id'] == entry.key,
-                    orElse: () => <String, Object>{'name': 'Item', 'price': 0.0},
+                    orElse: () => <String, Object>{
+                      'name': 'Item',
+                      'price': 0.0,
+                    },
                   );
                   final price = (item['price'] as double) * entry.value;
                   return Padding(
@@ -452,7 +464,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
                             children: [
                               Text(
                                 item['name'] as String,
-                                style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 16),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 16,
+                                ),
                               ),
                               const Text(
                                 'Servicio Básico',
@@ -512,7 +527,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFE01D25),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(40)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(40),
+                ),
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 elevation: 6,
               ),
@@ -531,7 +548,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
                       children: [
                         Text(
                           'Confirmar Reservación y Pagar',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
                         ),
                         SizedBox(width: 8),
                         Icon(Icons.arrow_forward, color: Colors.white),

@@ -3,9 +3,12 @@ import 'dart:async';
 import 'package:festeasy/app/view/cart_list_page.dart';
 import 'package:festeasy/app/view/mis_eventos_page.dart';
 import 'package:festeasy/app/view/profile_page.dart';
+import 'package:festeasy/app/view/chat_list_page.dart';
+import 'package:festeasy/app/view/client_notifications_page.dart';
 import 'package:festeasy/app/view/provider_detail_page.dart';
 import 'package:festeasy/app/view/request_status_page.dart';
 import 'package:festeasy/app/view/service_requirement_page.dart';
+import 'package:festeasy/services/client_perfil_service.dart';
 import 'package:festeasy/services/favorite_service.dart';
 import 'package:festeasy/services/provider_database_service.dart';
 import 'package:festeasy/services/solicitud_service.dart';
@@ -35,16 +38,32 @@ class _ClientHomePageState extends State<ClientHomePage> {
 
   List<ProviderData> _nearbyProviders = [];
   bool _isLoadingProviders = true;
+  String? _avatarUrl;
 
   @override
   void initState() {
     super.initState();
+    _loadProfile();
     _startTicker();
     _loadActiveSolicitud();
     _loadCancelledSolicitudes();
     _loadNearbyProviders();
     _loadCartCount();
     _subscribeSolicitudesRealtime();
+  }
+
+  Future<void> _loadProfile() async {
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user != null) {
+        final perfil = await ClientPerfilService.instance.getPerfil(user.id);
+        if (mounted) {
+          setState(() {
+            _avatarUrl = perfil?.avatarUrl;
+          });
+        }
+      }
+    } catch (_) {}
   }
 
   Future<void> _loadCartCount() async {
@@ -231,7 +250,6 @@ class _ClientHomePageState extends State<ClientHomePage> {
                 _navigateToMisEventos();
               },
             ),
-            const ProfilePage(),
           ],
         ),
       ),
@@ -253,8 +271,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHeader(),
-            const SizedBox(height: 16),
-            _buildSearchBar(),
+
             const SizedBox(height: 24),
             _buildCategoriesSection(),
             if (_activeSolicitud != null) ...[
@@ -284,64 +301,68 @@ class _ClientHomePageState extends State<ClientHomePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Hola, ${widget.userName} 👋',
+                  'Bienvenido, \n ${widget.userName} 👋',
                   style: const TextStyle(
                     color: Color(0xFF010302),
                     fontWeight: FontWeight.w600,
                     fontSize: 22,
                   ),
                 ),
-                const SizedBox(height: 4),
-                const Row(
-                  children: [
-                    Icon(Icons.location_on, color: Color(0xFFE01D25), size: 16),
-                    SizedBox(width: 4),
-                    Flexible(
-                      child: Text(
-                        'Entregando en: Calle 60, Mérida...',
-                        style: TextStyle(fontSize: 13, color: Colors.grey),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
               ],
             ),
           ),
-          const CircleAvatar(
-            radius: 24,
-            backgroundColor: Color(0xFFFFE5E7),
-            child: Icon(Icons.person, color: Color(0xFFE01D25), size: 28),
+          IconButton(
+            icon: const Icon(
+              Icons.chat_bubble_outline,
+              color: Color(0xFFE01D25),
+            ),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const ChatListPage(isProvider: false),
+                ),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.notifications, color: Color(0xFFE01D25)),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const ClientNotificationsPage(),
+                ),
+              );
+            },
+          ),
+          const SizedBox(width: 8),
+          InkWell(
+            onTap: () {
+              Navigator.of(context)
+                  .push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const ProfilePage(),
+                    ),
+                  )
+                  .then((_) {
+                    // Refresh active requests logic if needed, but not strictly required
+                    if (mounted) {
+                      _loadProfile();
+                      setState(() {});
+                    }
+                  });
+            },
+            child: CircleAvatar(
+              radius: 24,
+              backgroundColor: const Color(0xFFFFE5E7),
+              backgroundImage: _avatarUrl != null
+                  ? NetworkImage(_avatarUrl!)
+                  : null,
+              child: _avatarUrl == null
+                  ? const Icon(Icons.person, color: Color(0xFFE01D25), size: 28)
+                  : null,
+            ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildSearchBar() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: GestureDetector(
-        onTap: () {
-          // Abre el teclado y sugiere categorías populares
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF4F7F9),
-            borderRadius: BorderRadius.circular(15),
-          ),
-          child: const Row(
-            children: [
-              Icon(Icons.search, color: Color(0xFFE01D25)),
-              SizedBox(width: 10),
-              Text(
-                '¿Qué servicio buscas hoy?',
-                style: TextStyle(color: Colors.grey, fontSize: 16),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -715,27 +736,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
     }
 
     if (_nearbyProviders.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 20),
-        child: Column(
-          children: [
-            Text(
-              'No tienes proveedores favoritos cerca',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-                color: Color(0xFF010302),
-              ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Explora las categorías o usa el buscador para encontrar proveedores y márcalos con ❤ para verlos aquí.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey),
-            ),
-          ],
-        ),
-      );
+      return const SizedBox.shrink();
     }
 
     return Column(
@@ -995,11 +996,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
                   ),
               ],
             ),
-            label: _activeSolicitud != null ? 'En espera' : 'Carrito',
-          ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Perfil',
+            label: 'Carrito',
           ),
         ],
       ),

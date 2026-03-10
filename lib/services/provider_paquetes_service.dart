@@ -1,17 +1,16 @@
-
 import 'package:festeasy/services/storage_constants.dart';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Modelo para items dentro de un paquete
 class ItemPaqueteData {
-
   ItemPaqueteData({
     required this.id,
     required this.paqueteId,
     required this.nombreItem,
     required this.cantidad,
-    required this.creadoEn, this.unidad,
+    required this.creadoEn,
+    this.unidad,
   });
   final String id;
   final String paqueteId;
@@ -43,13 +42,15 @@ class ItemPaqueteData {
 
 /// Modelo para paquetes/servicios del proveedor
 class PaqueteProveedorData {
-
   PaqueteProveedorData({
     required this.id,
     required this.proveedorUsuarioId,
     required this.categoriaServicioId,
     required this.nombre,
-    required this.precioBase, required this.creadoEn, required this.actualizadoEn, this.descripcion,
+    required this.precioBase,
+    required this.creadoEn,
+    required this.actualizadoEn,
+    this.descripcion,
     this.estado = 'borrador',
     this.tipoCobro = 'fijo',
     this.fotos = const [],
@@ -80,11 +81,21 @@ class PaqueteProveedorData {
 
     // Extraer tipo de cobro y fotos desde detallesJson
     final detallesJson = row['detalles_json'] as Map<String, dynamic>?;
-    final tipoCobro =
-        (detallesJson?['tipoCobro'] as String?) ?? 'fijo';
+    final tipoCobro = (detallesJson?['tipoCobro'] as String?) ?? 'fijo';
+
+    // Extraer fotos desde el formato antiguo o el nuevo formato 'imagenes'
     final fotosJson = detallesJson?['fotos'] as List?;
-    final fotos =
+    final List<String> fotos =
         fotosJson?.map((f) => f as String).toList() ?? [];
+
+    if (fotos.isEmpty && detallesJson?['imagenes'] != null) {
+      final imagenesJson = detallesJson!['imagenes'] as List;
+      for (var img in imagenesJson) {
+        if (img is Map && img['url'] != null) {
+          fotos.add(img['url'].toString());
+        }
+      }
+    }
 
     return PaqueteProveedorData(
       id: row['id'] as String,
@@ -145,7 +156,10 @@ class ProviderPaquetesService {
           .order('creado_en', ascending: false);
 
       return (response as List)
-          .map((item) => PaqueteProveedorData.fromMap(item as Map<String, dynamic>))
+          .map(
+            (item) =>
+                PaqueteProveedorData.fromMap(item as Map<String, dynamic>),
+          )
           .toList();
     } catch (e) {
       return [];
@@ -165,7 +179,10 @@ class ProviderPaquetesService {
           .order('creado_en', ascending: false);
 
       return (response as List)
-          .map((item) => PaqueteProveedorData.fromMap(item as Map<String, dynamic>))
+          .map(
+            (item) =>
+                PaqueteProveedorData.fromMap(item as Map<String, dynamic>),
+          )
           .toList();
     } catch (e) {
       return [];
@@ -197,7 +214,8 @@ class ProviderPaquetesService {
     required String proveedorUsuarioId,
     required String categoriaServicioId,
     required String nombre,
-    required double precioBase, String? descripcion,
+    required double precioBase,
+    String? descripcion,
     String tipoCobro = 'fijo',
     List<String> fotos = const [],
   }) async {
@@ -211,10 +229,7 @@ class ProviderPaquetesService {
             'descripcion': descripcion,
             'precio_base': precioBase,
             'estado': 'borrador',
-            'detalles_json': {
-              'tipoCobro': tipoCobro,
-              'fotos': fotos,
-            },
+            'detalles_json': {'tipoCobro': tipoCobro, 'fotos': fotos},
           })
           .select('*, items_paquete(*)')
           .single();
@@ -236,7 +251,7 @@ class ProviderPaquetesService {
   }) async {
     try {
       debugPrint('🔍 [updatePaquete] Actualizando paquete: $paqueteId');
-      
+
       final updateData = <String, dynamic>{};
       if (nombre != null) updateData['nombre'] = nombre;
       if (descripcion != null) updateData['descripcion'] = descripcion;
@@ -262,18 +277,12 @@ class ProviderPaquetesService {
 
   /// Publica un paquete (cambia estado a 'publicado')
   Future<PaqueteProveedorData> publishPaquete(String paqueteId) async {
-    return updatePaquete(
-      paqueteId: paqueteId,
-      estado: 'publicado',
-    );
+    return updatePaquete(paqueteId: paqueteId, estado: 'publicado');
   }
 
   /// Archiva un paquete (cambia estado a 'archivado')
   Future<PaqueteProveedorData> archivePaquete(String paqueteId) async {
-    return updatePaquete(
-      paqueteId: paqueteId,
-      estado: 'archivado',
-    );
+    return updatePaquete(paqueteId: paqueteId, estado: 'archivado');
   }
 
   /// Elimina un paquete (solo borradores)
@@ -325,8 +334,10 @@ class ProviderPaquetesService {
   /// Obtiene todas las categorías disponibles
   Future<List<Map<String, dynamic>>> getCategorias() async {
     try {
-      final response =
-          await _client.from('categorias_servicio').select().eq('activa', true);
+      final response = await _client
+          .from('categorias_servicio')
+          .select()
+          .eq('activa', true);
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
       return [];
@@ -334,7 +345,7 @@ class ProviderPaquetesService {
   }
 
   /// Sube una foto para un paquete
-  /// 
+  ///
   /// Estructura sincronizada con web:
   /// packages/{userId}-{timestamp}-{random}.{ext}
   Future<String?> uploadFotoPaquete({
@@ -344,23 +355,25 @@ class ProviderPaquetesService {
   }) async {
     try {
       // Extraer extensión del archivo
-      final ext = fileName.contains('.') 
-          ? fileName.split('.').last 
-          : 'jpg';
-      
+      final ext = fileName.contains('.') ? fileName.split('.').last : 'jpg';
+
       // Generar path usando la misma estructura que web
       final filePath = StorageConstants.getPaqueteFotoPath(
         userId: proveedorUsuarioId,
         fileExtension: ext,
       );
 
-      await _client.storage.from(StorageConstants.bucketName).uploadBinary(
-        filePath,
-        Uint8List.fromList(fileBytes),
-        fileOptions: const FileOptions(upsert: true),
-      );
+      await _client.storage
+          .from(StorageConstants.bucketName)
+          .uploadBinary(
+            filePath,
+            Uint8List.fromList(fileBytes),
+            fileOptions: const FileOptions(upsert: true),
+          );
 
-      final publicUrl = _client.storage.from(StorageConstants.bucketName).getPublicUrl(filePath);
+      final publicUrl = _client.storage
+          .from(StorageConstants.bucketName)
+          .getPublicUrl(filePath);
       return publicUrl;
     } catch (e) {
       debugPrint('❌ Error subiendo foto: $e');
@@ -369,17 +382,19 @@ class ProviderPaquetesService {
   }
 
   /// Elimina una foto usando su URL pública
-  Future<void> deleteFotoPaqueteByUrl({
-    required String fotoUrl,
-  }) async {
+  Future<void> deleteFotoPaqueteByUrl({required String fotoUrl}) async {
     try {
       // Usar StorageConstants para extraer el path de la URL
       final filePath = StorageConstants.extractPathFromUrl(fotoUrl);
       if (filePath == null) {
-        throw Exception('URL inválida: no contiene el bucket ${StorageConstants.bucketName}');
+        throw Exception(
+          'URL inválida: no contiene el bucket ${StorageConstants.bucketName}',
+        );
       }
-      
-      await _client.storage.from(StorageConstants.bucketName).remove([filePath]);
+
+      await _client.storage.from(StorageConstants.bucketName).remove([
+        filePath,
+      ]);
       debugPrint('✅ Foto eliminada por URL: $filePath');
     } catch (e) {
       debugPrint('❌ Error eliminando foto por URL: $e');

@@ -66,7 +66,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
     try {
       AuthResponse response;
-      
+
       if (isProvider) {
         // Registro como proveedor
         response = await AuthService.instance.signUpProviderWithEmail(
@@ -89,7 +89,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
       if (response.user != null) {
         _showSnackBar('¡Cuenta creada exitosamente!', Colors.green);
-        
+
         if (isProvider) {
           // Navegar a ProviderHomePage
           Navigator.of(context).pushReplacement(
@@ -101,9 +101,8 @@ class _RegisterPageState extends State<RegisterPage> {
           // Navegar a ClientHomePage
           Navigator.of(context).pushReplacement(
             MaterialPageRoute<void>(
-              builder: (context) => ClientHomePage(
-                userName: nameController.text.trim(),
-              ),
+              builder: (context) =>
+                  ClientHomePage(userName: nameController.text.trim()),
             ),
           );
         }
@@ -134,12 +133,9 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   void _showSnackBar(String message, Color color) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: color,
-      ),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message), backgroundColor: color));
   }
 
   @override
@@ -179,10 +175,7 @@ class _RegisterPageState extends State<RegisterPage> {
               const SizedBox(height: 8),
               const Text(
                 'Tu fiesta fácil y a un click de distancia',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFF7B7B7B),
-                ),
+                style: TextStyle(fontSize: 14, color: Color(0xFF7B7B7B)),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
@@ -200,8 +193,9 @@ class _RegisterPageState extends State<RegisterPage> {
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: Colors.white,
-                  hintText:
-                      isProvider ? 'Ej: DJ Eventos' : 'Tu nombre completo',
+                  hintText: isProvider
+                      ? 'Ej: DJ Eventos'
+                      : 'Tu nombre completo',
                   prefixIcon: const Icon(
                     Icons.person_outline,
                     color: Colors.red,

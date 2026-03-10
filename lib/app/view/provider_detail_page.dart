@@ -4,9 +4,13 @@ import 'package:festeasy/services/provider_database_service.dart';
 import 'package:flutter/material.dart';
 
 class ProviderDetailPage extends StatefulWidget {
-
   const ProviderDetailPage({
-    required this.providerId, required this.providerName, required this.category, required this.rating, required this.reviews, super.key,
+    required this.providerId,
+    required this.providerName,
+    required this.category,
+    required this.rating,
+    required this.reviews,
+    super.key,
     this.perfilId,
     this.usuarioId,
     this.address,
@@ -346,10 +350,7 @@ class _ProviderDetailPageState extends State<ProviderDetailPage>
                 style: const TextStyle(color: Colors.grey),
               ),
               const SizedBox(width: 16),
-              Text(
-                widget.category,
-                style: const TextStyle(color: Colors.grey),
-              ),
+              Text(widget.category, style: const TextStyle(color: Colors.grey)),
             ],
           ),
           const SizedBox(height: 14),
@@ -365,9 +366,7 @@ class _ProviderDetailPageState extends State<ProviderDetailPage>
   Widget _buildTabs() {
     return Container(
       decoration: const BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: Color(0xFFF4F7F9), width: 2),
-        ),
+        border: Border(bottom: BorderSide(color: Color(0xFFF4F7F9), width: 2)),
       ),
       child: TabBar(
         controller: _tabController,

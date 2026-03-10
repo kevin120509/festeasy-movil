@@ -1,3 +1,5 @@
+import 'package:festeasy/app/view/chat_bottom_sheet.dart';
+import 'package:festeasy/app/view/provider_cotizacion_page.dart';
 import 'package:festeasy/services/provider_solicitudes_service.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -170,6 +172,39 @@ class _ProviderSolicitudDetailPageState
     }
   }
 
+  void _openCotizacionBuilder() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => ProviderCotizacionPage(
+          solicitud: _solicitud,
+          itemsOriginales: _items,
+          onCotizacionEnviada: () {
+            widget.onStatusChanged?.call();
+            Navigator.of(context).pop();
+          },
+        ),
+      ),
+    );
+  }
+
+  void _showChatModal(BuildContext context) {
+    final baseName = _clienteNombre ?? _solicitud.clienteNombre ?? 'Cliente';
+    final eventName = _solicitud.tituloEvento ?? 'Evento';
+    final name = '$baseName - $eventName';
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => ChatBottomSheet(
+        solicitudId: _solicitud.id,
+        isProvider: true,
+        clienteNombre: name,
+        clienteAvatarUrl: null, // Si lo tienes puedes pasarlo
+      ),
+    );
+  }
+
   Future<String?> _showMotiveDialog() async {
     const motivos = [
       'Fecha no disponible',
@@ -211,6 +246,15 @@ class _ProviderSolicitudDetailPageState
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FFFF),
+      floatingActionButton: isPendiente
+          ? FloatingActionButton(
+              onPressed: () {
+                _showChatModal(context);
+              },
+              backgroundColor: const Color(0xFFE01D25),
+              child: const Icon(Icons.chat_bubble, color: Colors.white),
+            )
+          : null,
       appBar: AppBar(
         backgroundColor: Colors.white,
         foregroundColor: const Color(0xFF010302),
@@ -588,6 +632,26 @@ class _ProviderSolicitudDetailPageState
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
+                      onPressed: _isLoading ? null : _openCotizacionBuilder,
+                      icon: const Icon(Icons.edit_document),
+                      label: const Text(
+                        'Cotizar / Modificar',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF5D73BA),
+                        side: const BorderSide(color: Color(0xFF5D73BA)),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
                       onPressed: _isLoading ? null : _rechazarSolicitud,
                       icon: const Icon(Icons.cancel),
                       label: const Text(
@@ -605,6 +669,40 @@ class _ProviderSolicitudDetailPageState
                     ),
                   ),
                 ],
+              )
+            else if (_solicitud.isCotizacionEnviada)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.blue.shade200),
+                ),
+                child: const Column(
+                  children: [
+                    Icon(
+                      Icons.access_time_filled,
+                      color: Colors.blue,
+                      size: 48,
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Cotización Enviada',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Esperando respuesta del cliente',
+                      style: TextStyle(color: Colors.blue),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
               )
             // Botón para validar PIN cuando está reservado
             else if (_solicitud.isReservado)

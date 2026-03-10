@@ -1,7 +1,11 @@
-import 'package:festeasy/app/view/request_status_page.dart';
 import 'package:festeasy/services/solicitud_service.dart';
+import 'package:festeasy/app/view/request_status_page.dart';
+import 'package:festeasy/app/view/profile_page.dart';
+import 'package:festeasy/app/view/client_notifications_page.dart';
+import 'package:festeasy/services/client_perfil_service.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class MisEventosPage extends StatefulWidget {
   const MisEventosPage({super.key});
@@ -15,12 +19,28 @@ class _MisEventosPageState extends State<MisEventosPage>
   late TabController _tabController;
   List<SolicitudData> _solicitudes = [];
   bool _isLoading = true;
+  String? _avatarUrl;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _loadProfile();
     _loadSolicitudes();
+  }
+
+  Future<void> _loadProfile() async {
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user != null) {
+        final perfil = await ClientPerfilService.instance.getPerfil(user.id);
+        if (mounted) {
+          setState(() {
+            _avatarUrl = perfil?.avatarUrl;
+          });
+        }
+      }
+    } catch (_) {}
   }
 
   @override
@@ -58,7 +78,7 @@ class _MisEventosPageState extends State<MisEventosPage>
   }).toList();
 
   List<SolicitudData> get _proximas => _solicitudes.where((s) {
-    return s.estado == 'reservado' || 
+    return s.estado == 'reservado' ||
         s.estado == 'entregado_pendiente_liq' ||
         s.estado == 'en_progreso';
   }).toList();
@@ -87,6 +107,37 @@ class _MisEventosPageState extends State<MisEventosPage>
           ),
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications, color: Color(0xFFE01D25)),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const ClientNotificationsPage(),
+                ),
+              );
+            },
+          ),
+          IconButton(
+            icon: _avatarUrl != null
+                ? CircleAvatar(
+                    radius: 14,
+                    backgroundImage: NetworkImage(_avatarUrl!),
+                  )
+                : const Icon(Icons.person_outline, color: Color(0xFF010302)),
+            onPressed: () {
+              Navigator.of(context)
+                  .push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const ProfilePage(),
+                    ),
+                  )
+                  .then((_) {
+                    if (mounted) _loadProfile();
+                  });
+            },
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           labelColor: const Color(0xFFE01D25),
@@ -105,26 +156,34 @@ class _MisEventosPageState extends State<MisEventosPage>
                 valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE01D25)),
               ),
             )
-          : RefreshIndicator(
-              onRefresh: _loadSolicitudes,
-              color: const Color(0xFFE01D25),
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  _buildSolicitudesList(
+          : TabBarView(
+              controller: _tabController,
+              children: [
+                RefreshIndicator(
+                  onRefresh: _loadSolicitudes,
+                  color: const Color(0xFFE01D25),
+                  child: _buildSolicitudesList(
                     _activas,
                     emptyMessage: 'No tienes solicitudes activas',
                   ),
-                  _buildSolicitudesList(
+                ),
+                RefreshIndicator(
+                  onRefresh: _loadSolicitudes,
+                  color: const Color(0xFFE01D25),
+                  child: _buildSolicitudesList(
                     _proximas,
                     emptyMessage: 'No tienes eventos próximos',
                   ),
-                  _buildSolicitudesList(
+                ),
+                RefreshIndicator(
+                  onRefresh: _loadSolicitudes,
+                  color: const Color(0xFFE01D25),
+                  child: _buildSolicitudesList(
                     _historial,
                     emptyMessage: 'No tienes eventos en historial',
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
     );
   }
@@ -134,27 +193,34 @@ class _MisEventosPageState extends State<MisEventosPage>
     required String emptyMessage,
   }) {
     if (solicitudes.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.event_busy, size: 64, color: Colors.grey[400]),
-            const SizedBox(height: 16),
-            Text(
-              emptyMessage,
-              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: [
+          SizedBox(
+            height: MediaQuery.of(context).size.height * 0.6,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.event_busy, size: 64, color: Colors.grey[400]),
+                const SizedBox(height: 16),
+                Text(
+                  emptyMessage,
+                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: _loadSolicitudes,
+                  child: const Text('Actualizar'),
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
-            TextButton(
-              onPressed: _loadSolicitudes,
-              child: const Text('Actualizar'),
-            ),
-          ],
-        ),
+          ),
+        ],
       );
     }
 
     return ListView.builder(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
       itemCount: solicitudes.length,
       itemBuilder: (context, index) {

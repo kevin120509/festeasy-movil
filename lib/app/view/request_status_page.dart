@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:festeasy/app/view/chat_bottom_sheet.dart' as festeasy_chat;
 import 'package:festeasy/app/view/provider_detail_page_client.dart';
 import 'package:festeasy/services/provider_search_service.dart';
 import 'package:festeasy/services/solicitud_service.dart';
@@ -159,9 +160,15 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
 
     final nowUtc = DateTime.now().toUtc();
 
-    // Si la solicitud está pendiente de aprobación, cuenta 24h desde creadoEn
-    if (solicitud.estado == 'pendiente_aprobacion') {
+    // Si la solicitud está pendiente o se ha enviado una cotización, cuenta 24h
+    if (solicitud.isPendiente) {
       final deadline = solicitud.creadoEn.add(const Duration(hours: 24));
+      final diff = deadline.difference(nowUtc);
+      if (diff.isNegative) return Duration.zero;
+      return diff;
+    }
+    if (solicitud.isCotizacionEnviada) {
+      final deadline = solicitud.actualizadoEn.add(const Duration(hours: 24));
       final diff = deadline.difference(nowUtc);
       if (diff.isNegative) return Duration.zero;
       return diff;
@@ -335,6 +342,32 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
     }
   }
 
+  void _showChatModal(BuildContext context) {
+    if (_solicitud == null) return;
+
+    // Obtener información de la contraparte
+    final nombreBase =
+        (_solicitud!.providerName != null &&
+            _solicitud!.providerName!.isNotEmpty)
+        ? _solicitud!.providerName!
+        : 'Proveedor';
+
+    final tituloEvento = _solicitud!.tituloEvento ?? 'Evento';
+    final nombreCompleto = '$nombreBase - $tituloEvento';
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => festeasy_chat.ChatBottomSheet(
+        solicitudId: widget.solicitudId,
+        isProvider: false,
+        clienteNombre: nombreCompleto,
+        clienteAvatarUrl: null,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final solicitud = _solicitud;
@@ -342,6 +375,18 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FFFF),
+      floatingActionButton: (solicitud?.isPendiente == true ||
+                             solicitud?.isCotizacionEnviada == true ||
+                             solicitud?.estado == 'esperando_anticipo' ||
+                             solicitud?.estado == 'reservado' ||
+                             solicitud?.estado == 'entregado' ||
+                             solicitud?.estado == 'entregado_pendiente_liq')
+          ? FloatingActionButton(
+              onPressed: () => _showChatModal(context),
+              backgroundColor: const Color(0xFFE01D25),
+              child: const Icon(Icons.chat_bubble, color: Colors.white),
+            )
+          : null,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -408,10 +453,11 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              (solicitud?.estado ?? 'pendiente_aprobacion') ==
-                                      'pendiente_aprobacion'
+                              solicitud?.isPendiente == true
                                   ? 'Esperando respuesta del proveedor...\nTienes 24 horas disponibles para pagar el anticipo una vez que el proveedor acepte tu solicitud'
-                                  : 'Estado: ${solicitud?.estado.replaceAll('_', ' ') ?? ''}',
+                                  : solicitud?.isCotizacionEnviada == true
+                                      ? '¡Cotización recibida!\nRevisa los detalles y decide si aceptas para continuar.'
+                                      : 'Estado: ${solicitud?.estado.replaceAll('_', ' ') ?? ''}',
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 18,
@@ -419,6 +465,54 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
                               ),
                               textAlign: TextAlign.center,
                             ),
+                            if (solicitud?.isCotizacionEnviada == true)
+                              ElevatedButton(
+                                onPressed: () async {
+                                  try {
+                                    // Cambiar estado a esperando_anticipo para "Aceptar" la cotización
+                                    await SolicitudService.instance
+                                        .updateSolicitud(solicitud!.id, {
+                                          'estado': 'esperando_anticipo',
+                                          'expiracion_anticipo': DateTime.now()
+                                              .toUtc()
+                                              .add(const Duration(hours: 24))
+                                              .toIso8601String(),
+                                          'actualizado_en': DateTime.now()
+                                              .toUtc()
+                                              .toIso8601String(),
+                                        });
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Cotización aceptada. Ahora puedes pagar el anticipo.',
+                                          ),
+                                        ),
+                                      );
+                                      await _load();
+                                    }
+                                  } catch (e) {
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Error al aceptar cotización: $e',
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green,
+                                  foregroundColor: Colors.white,
+                                ),
+                                child: const Text('Aceptar Cotización'),
+                              ),
                             if (solicitud?.estado == 'esperando_anticipo')
                               Padding(
                                 padding: const EdgeInsets.only(top: 12),

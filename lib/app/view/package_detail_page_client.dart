@@ -7,9 +7,10 @@ import 'package:festeasy/services/provider_search_service.dart';
 import 'package:flutter/material.dart';
 
 class PackageDetailPageClient extends StatefulWidget {
-
   const PackageDetailPageClient({
-    required this.paquete, required this.provider, super.key,
+    required this.paquete,
+    required this.provider,
+    super.key,
   });
   final PaqueteProveedorData paquete;
   final ProviderSearchResult provider;
@@ -45,7 +46,7 @@ class _PackageDetailPageClientState extends State<PackageDetailPageClient> {
     // Guardar en la BD
     try {
       final cartService = CartService.instance;
-      
+
       // Crear o obtener carrito
       final carritoId = await cartService.createOrGetCart(
         categoryId: _sessionData.categoryId ?? '',
@@ -67,7 +68,9 @@ class _PackageDetailPageClientState extends State<PackageDetailPageClient> {
     // Mostrar confirmación
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('$_cantidad ${widget.paquete.nombre} agregado al carrito'),
+        content: Text(
+          '$_cantidad ${widget.paquete.nombre} agregado al carrito',
+        ),
         duration: const Duration(seconds: 2),
       ),
     );
@@ -127,7 +130,10 @@ class _PackageDetailPageClientState extends State<PackageDetailPageClient> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Detalle del Paquete', style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Detalle del Paquete',
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: const Color(0xFFE01D25),
         centerTitle: true,
         leading: IconButton(
@@ -143,7 +149,10 @@ class _PackageDetailPageClientState extends State<PackageDetailPageClient> {
                 child: Stack(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.shopping_cart, color: Colors.white),
+                      icon: const Icon(
+                        Icons.shopping_cart,
+                        color: Colors.white,
+                      ),
                       onPressed: _goToCart,
                     ),
                     Positioned(
@@ -155,7 +164,10 @@ class _PackageDetailPageClientState extends State<PackageDetailPageClient> {
                           color: Colors.red,
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                        constraints: const BoxConstraints(
+                          minWidth: 18,
+                          minHeight: 18,
+                        ),
                         child: Text(
                           _sessionData.cartItemCount.toString(),
                           style: const TextStyle(
@@ -258,10 +270,7 @@ class _PackageDetailPageClientState extends State<PackageDetailPageClient> {
                   if (widget.paquete.descripcion != null)
                     Text(
                       widget.paquete.descripcion!,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[700],
-                      ),
+                      style: TextStyle(fontSize: 14, color: Colors.grey[700]),
                     ),
                 ],
               ),
@@ -281,10 +290,7 @@ class _PackageDetailPageClientState extends State<PackageDetailPageClient> {
                   children: [
                     Text(
                       'Precio unitario',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     ),
                     Text(
                       '\$${widget.paquete.precioBase.toStringAsFixed(2)}',
@@ -428,7 +434,10 @@ class _PackageDetailPageClientState extends State<PackageDetailPageClient> {
                     ),
                     child: const Text(
                       'Añadir al Carrito',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -506,7 +515,9 @@ class _PackageDetailPageClientState extends State<PackageDetailPageClient> {
               margin: const EdgeInsets.symmetric(horizontal: 4),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: _currentPhotoIndex == index ? const Color(0xFFE01D25) : Colors.grey,
+                color: _currentPhotoIndex == index
+                    ? const Color(0xFFE01D25)
+                    : Colors.grey,
               ),
             ),
           ),
@@ -519,12 +530,25 @@ class _PackageDetailPageClientState extends State<PackageDetailPageClient> {
     final detalles = widget.paquete.detallesJson ?? {};
     final items = <Widget>[];
 
+    final ignoredKeys = [
+      'fotos',
+      'imagenes',
+      'cargos_adicionales',
+      'tipoCobro',
+    ];
+
     detalles.forEach((key, value) {
-      if (value != null && value.toString().isNotEmpty && key != 'fotos') {
+      if (value != null &&
+          value.toString().isNotEmpty &&
+          !ignoredKeys.contains(key)) {
         items.add(
           Row(
             children: [
-              const Icon(Icons.check_circle, size: 16, color: Color(0xFFE01D25)),
+              const Icon(
+                Icons.check_circle,
+                size: 16,
+                color: Color(0xFFE01D25),
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(

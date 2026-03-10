@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:festeasy/services/notification_service.dart';
 
 /// Servicio de autenticación para manejar login, registro y sesión de usuarios.
 class AuthService {
@@ -25,6 +26,14 @@ class AuthService {
         email: email,
         password: password,
       );
+
+      if (response.user != null) {
+        try {
+          await NotificationService.instance.initialize();
+        } catch (e) {
+          debugPrint('Error initializing notification service: $e');
+        }
+      }
 
       return response;
     } on AuthException catch (e) {
