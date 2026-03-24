@@ -22,6 +22,7 @@ class SolicitudData {
     this.pinValidacion,
     this.pinValidadoEn,
     this.providerName,
+    this.numeroInvitados,
   });
   final String id;
   final int numeroSolicitud;
@@ -42,6 +43,7 @@ class SolicitudData {
   final String? pinValidacion;
   final DateTime? pinValidadoEn;
   final String? providerName;
+  final int? numeroInvitados;
 
   static DateTime? _parseNullableDateTime(Object? value) {
     if (value == null) return null;
@@ -91,6 +93,7 @@ class SolicitudData {
       pinValidacion: row['pin_validacion'] as String?,
       pinValidadoEn: pinValidado,
       providerName: provName,
+      numeroInvitados: row['numero_invitados'] as int?,
     );
   }
   bool get isPendiente => estado == 'pendiente_aprobacion' && montoAnticipo == 0;
@@ -120,6 +123,7 @@ class SolicitudService {
     required Map<String, int> cartItems,
     required List<Map<String, dynamic>> allItems,
     String? tituloEvento,
+    int? numeroInvitados,
   }) async {
     final user = _user;
 
@@ -141,6 +145,7 @@ class SolicitudService {
           'monto_total': montoTotal,
           'monto_anticipo': 0,
           'monto_liquidacion': 0,
+          'numero_invitados': numeroInvitados,
           'estado': 'pendiente_aprobacion',
         })
         .select()
@@ -318,6 +323,7 @@ class SolicitudService {
             pinValidacion: data.pinValidacion,
             pinValidadoEn: data.pinValidadoEn,
             providerName: providerName,
+            numeroInvitados: data.numeroInvitados,
           ),
         );
       }

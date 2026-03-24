@@ -21,7 +21,6 @@ class _ProductoFormDialogState extends State<ProductoFormDialog> {
 
   String selectedCategory = 'General';
   bool isLoading = false;
-  XFile? imagenSeleccionada;
 
   final List<String> categories = [
     'General',
@@ -94,16 +93,6 @@ class _ProductoFormDialogState extends State<ProductoFormDialog> {
       final precio = double.tryParse(precioController.text) ?? 0;
       final stock = int.tryParse(stockController.text) ?? 0;
 
-      // Subir imagen si existe y es nueva
-      String? imagenUrl = widget.producto?.imagenUrl;
-      if (imagenSeleccionada != null &&
-          !imagenSeleccionada!.path.startsWith('http')) {
-        imagenUrl = await ProviderInventarioService.instance.uploadProductImage(
-          imageFile: File(imagenSeleccionada!.path),
-          proveedorId: user.id,
-        );
-      }
-
       if (widget.producto != null) {
         // Actualizar producto existente
         await ProviderInventarioService.instance.updateProducto(
@@ -115,7 +104,6 @@ class _ProductoFormDialogState extends State<ProductoFormDialog> {
           categoria: selectedCategory,
           precioUnitario: precio,
           stock: stock,
-          imagenUrl: imagenUrl,
         );
 
         if (mounted) {
@@ -132,7 +120,6 @@ class _ProductoFormDialogState extends State<ProductoFormDialog> {
           descripcion: descripcionController.text.isEmpty
               ? null
               : descripcionController.text,
-          imagenUrl: imagenUrl,
         );
 
         if (mounted) {
@@ -152,19 +139,6 @@ class _ProductoFormDialogState extends State<ProductoFormDialog> {
     }
   }
 
-  Future<void> _seleccionarImagen() async {
-    final picker = ImagePicker();
-    final image = await picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 80,
-      maxWidth: 1024,
-      maxHeight: 1024,
-    );
-
-    if (image != null) {
-      setState(() => imagenSeleccionada = image);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -241,129 +215,6 @@ class _ProductoFormDialogState extends State<ProductoFormDialog> {
               keyboardType: TextInputType.number,
               enabled: !isLoading,
             ),
-            const SizedBox(height: 24),
-            // Sección de imagen
-            Text(
-              'Imagen del Producto',
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
-            const SizedBox(height: 8),
-            // Mostrar imagen seleccionada o actual
-            if (imagenSeleccionada != null &&
-                !imagenSeleccionada!.path.startsWith('http'))
-              Stack(
-                children: [
-                  Container(
-                    width: double.infinity,
-                    height: 150,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey[300]!),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.file(
-                        File(imagenSeleccionada!.path),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 4,
-                    right: 4,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.2),
-                            blurRadius: 4,
-                          ),
-                        ],
-                      ),
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.delete,
-                          color: Colors.red,
-                          size: 20,
-                        ),
-                        onPressed: () =>
-                            setState(() => imagenSeleccionada = null),
-                        constraints: const BoxConstraints(
-                          minWidth: 32,
-                          minHeight: 32,
-                        ),
-                        padding: EdgeInsets.zero,
-                      ),
-                    ),
-                  ),
-                ],
-              )
-            else if (widget.producto?.imagenUrl != null)
-              Stack(
-                children: [
-                  Container(
-                    width: double.infinity,
-                    height: 150,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey[300]!),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        widget.producto!.imagenUrl!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Center(
-                            child: Icon(
-                              Icons.image_not_supported,
-                              size: 48,
-                              color: Colors.grey[400],
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 4,
-                    right: 4,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.2),
-                            blurRadius: 4,
-                          ),
-                        ],
-                      ),
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.edit,
-                          color: Colors.blue,
-                          size: 20,
-                        ),
-                        onPressed: _seleccionarImagen,
-                        constraints: const BoxConstraints(
-                          minWidth: 32,
-                          minHeight: 32,
-                        ),
-                        padding: EdgeInsets.zero,
-                      ),
-                    ),
-                  ),
-                ],
-              )
-            else
-              OutlinedButton.icon(
-                onPressed: _seleccionarImagen,
-                icon: const Icon(Icons.photo_library),
-                label: const Text('Seleccionar Imagen'),
-              ),
           ],
         ),
       ),

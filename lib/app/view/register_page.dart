@@ -5,8 +5,17 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class RegisterPage extends StatefulWidget {
-  const RegisterPage({super.key, this.isProvider = false});
+  const RegisterPage({
+    super.key, 
+    this.isProvider = false,
+    this.initialEmail,
+    this.initialName,
+    this.isSocial = false,
+  });
   final bool isProvider;
+  final String? initialEmail;
+  final String? initialName;
+  final bool isSocial;
 
   @override
   State<RegisterPage> createState() => _RegisterPageState();
@@ -26,6 +35,12 @@ class _RegisterPageState extends State<RegisterPage> {
   void initState() {
     super.initState();
     isProvider = widget.isProvider;
+    if (widget.initialEmail != null) {
+      emailController.text = widget.initialEmail!;
+    }
+    if (widget.initialName != null) {
+      nameController.text = widget.initialName!;
+    }
   }
 
   @override
@@ -41,12 +56,12 @@ class _RegisterPageState extends State<RegisterPage> {
     if (nameController.text.isEmpty ||
         emailController.text.isEmpty ||
         phoneController.text.isEmpty ||
-        passwordController.text.isEmpty) {
+        (!widget.isSocial && passwordController.text.isEmpty)) {
       _showSnackBar('Por favor completa todos los campos', Colors.orange);
       return;
     }
 
-    if (passwordController.text.length < 6) {
+    if (!widget.isSocial && passwordController.text.length < 6) {
       _showSnackBar(
         'La contraseña debe tener al menos 6 caracteres',
         Colors.orange,
@@ -65,53 +80,73 @@ class _RegisterPageState extends State<RegisterPage> {
     });
 
     try {
-      AuthResponse response;
-
-      if (isProvider) {
-        // Registro como proveedor
-        response = await AuthService.instance.signUpProviderWithEmail(
-          email: emailController.text.trim(),
-          password: passwordController.text,
-          nombreNegocio: nameController.text.trim(),
-          telefono: phoneController.text.trim(),
-        );
-      } else {
-        // Registro como cliente
-        response = await AuthService.instance.signUpClientWithEmail(
-          email: emailController.text.trim(),
-          password: passwordController.text,
+      if (widget.isSocial) {
+        // Registro social (comprobamos perfil)
+        await AuthService.instance.createProfileAfterSocialLogin(
           fullName: nameController.text.trim(),
           phone: phoneController.text.trim(),
+          isProvider: isProvider,
+          nombreNegocio: isProvider ? nameController.text.trim() : null,
         );
-      }
-
-      if (!mounted) return;
-
-      if (response.user != null) {
-        _showSnackBar('¡Cuenta creada exitosamente!', Colors.green);
-
+        
+        if (!mounted) return;
+        _showSnackBar('¡Cuenta configurada exitosamente!', Colors.green);
+        
         if (isProvider) {
-          // Navegar a ProviderHomePage
-          Navigator.of(context).pushReplacement(
+          Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute<void>(
               builder: (context) => const ProviderHomePage(),
             ),
+            (route) => false,
           );
         } else {
-          // Navegar a ClientHomePage
-          Navigator.of(context).pushReplacement(
+          Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute<void>(
-              builder: (context) =>
-                  ClientHomePage(userName: nameController.text.trim()),
+              builder: (context) => ClientHomePage(userName: nameController.text.trim()),
             ),
+            (route) => false,
           );
         }
-      } else if (response.user == null && response.session == null) {
-        // Si no hay usuario ni sesión, mostrar el mensaje de error de Supabase
-        _showSnackBar(
-          'No se pudo crear la cuenta. Revisa tus datos.',
-          Colors.red,
-        );
+      } else {
+        // Registro normal con email
+        AuthResponse response;
+        if (isProvider) {
+          response = await AuthService.instance.signUpProviderWithEmail(
+            email: emailController.text.trim(),
+            password: passwordController.text,
+            nombreNegocio: nameController.text.trim(),
+            telefono: phoneController.text.trim(),
+          );
+        } else {
+          response = await AuthService.instance.signUpClientWithEmail(
+            email: emailController.text.trim(),
+            password: passwordController.text,
+            fullName: nameController.text.trim(),
+            phone: phoneController.text.trim(),
+          );
+        }
+
+        if (!mounted) return;
+
+        if (response.user != null) {
+          _showSnackBar('¡Cuenta creada exitosamente!', Colors.green);
+          if (isProvider) {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute<void>(
+                builder: (context) => const ProviderHomePage(),
+              ),
+              (route) => false,
+            );
+          } else {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute<void>(
+                builder: (context) =>
+                    ClientHomePage(userName: nameController.text.trim()),
+              ),
+              (route) => false,
+            );
+          }
+        }
       }
     } on AuthException catch (e) {
       if (!mounted) return;
@@ -179,6 +214,63 @@ class _RegisterPageState extends State<RegisterPage> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
+              if (widget.isSocial) ...[
+                const Text(
+                  '¿Cómo quieres usar FestEasy?',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => setState(() => isProvider = false),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: !isProvider ? Colors.red : Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.red),
+                          ),
+                          child: Center(
+                            child: Text(
+                              'CLIENTE',
+                              style: TextStyle(
+                                color: !isProvider ? Colors.white : Colors.red,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => setState(() => isProvider = true),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: isProvider ? Colors.red : Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.red),
+                          ),
+                          child: Center(
+                            child: Text(
+                              'PROVEEDOR',
+                              style: TextStyle(
+                                color: isProvider ? Colors.white : Colors.red,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+              ],
               // Campo Nombre / Nombre del Negocio
               Align(
                 alignment: Alignment.centerLeft,
@@ -218,6 +310,7 @@ class _RegisterPageState extends State<RegisterPage> {
               const SizedBox(height: 6),
               TextField(
                 controller: emailController,
+                enabled: !widget.isSocial, // No permitir cambiar email si es social
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
                   filled: true,
@@ -258,41 +351,43 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
               ),
               const SizedBox(height: 16),
-              // Campo Contraseña
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Contraseña',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+              // Campo Contraseña (solo si no es social)
+              if (!widget.isSocial) ...[
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Contraseña',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 6),
-              TextField(
-                controller: passwordController,
-                obscureText: !showPassword,
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Colors.white,
-                  hintText: '••••••••••',
-                  prefixIcon: const Icon(Icons.lock_outline, color: Colors.red),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      showPassword ? Icons.visibility : Icons.visibility_off,
-                      color: Colors.grey,
+                const SizedBox(height: 6),
+                TextField(
+                  controller: passwordController,
+                  obscureText: !showPassword,
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.white,
+                    hintText: '••••••••••',
+                    prefixIcon: const Icon(Icons.lock_outline, color: Colors.red),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        showPassword ? Icons.visibility : Icons.visibility_off,
+                        color: Colors.grey,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          showPassword = !showPassword;
+                        });
+                      },
                     ),
-                    onPressed: () {
-                      setState(() {
-                        showPassword = !showPassword;
-                      });
-                    },
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
+              ],
               // Checkbox Términos
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -361,8 +456,8 @@ class _RegisterPageState extends State<RegisterPage> {
                         )
                       : Text(
                           isProvider
-                              ? 'Registrar mi Negocio'
-                              : 'Crear mi cuenta',
+                              ? (widget.isSocial ? 'Configurar mi Negocio' : 'Registrar mi Negocio')
+                              : (widget.isSocial ? 'Completar Registro' : 'Crear mi cuenta'),
                           style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -373,27 +468,28 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
               const SizedBox(height: 20),
               // Ya tienes cuenta
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text(
-                    '¿Ya tienes una cuenta? ',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).pop();
-                    },
-                    child: const Text(
-                      'Inicia sesión',
-                      style: TextStyle(
-                        color: Colors.red,
-                        fontWeight: FontWeight.bold,
+              if (!widget.isSocial)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      '¿Ya tienes una cuenta? ',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text(
+                        'Inicia sesión',
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
               const SizedBox(height: 32),
             ],
           ),

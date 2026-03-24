@@ -67,78 +67,156 @@ class _ProvidersListPageState extends State<ProvidersListPage> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : FutureBuilder<List<ProviderSearchResult>>(
-              future: _providersFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+      body: Column(
+        children: [
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : FutureBuilder<List<ProviderSearchResult>>(
+                    future: _providersFuture,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
 
-                if (snapshot.hasError) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.error, size: 48, color: Colors.red),
-                        const SizedBox(height: 16),
-                        Text('Error: ${snapshot.error}'),
-                        const SizedBox(height: 16),
+                      if (snapshot.hasError) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.error,
+                                size: 48,
+                                color: Colors.red,
+                              ),
+                              const SizedBox(height: 16),
+                              Text('Error: ${snapshot.error}'),
+                              const SizedBox(height: 16),
+                              ElevatedButton(
+                                onPressed: _loadProviders,
+                                child: const Text('Reintentar'),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      final providers = snapshot.data ?? [];
+
+                      if (providers.isEmpty) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.search_off,
+                                size: 48,
+                                color: Colors.grey,
+                              ),
+                              const SizedBox(height: 16),
+                              const Text(
+                                'No se encontraron proveedores',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Ubicación: ${_sessionData.address ?? 'No especificada'}',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              ElevatedButton(
+                                onPressed: _loadProviders,
+                                child: const Text('Reintentar'),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      return ListView.builder(
+                        itemCount: providers.length,
+                        padding: const EdgeInsets.all(12),
+                        itemBuilder: (context, index) {
+                          final provider = providers[index];
+                          return _buildProviderCard(context, provider);
+                        },
+                      );
+                    },
+                  ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, -5),
+                ),
+              ],
+            ),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFE01D25),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  elevation: 0,
+                ),
+                onPressed: () async {
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('¿Todo listo?'),
+                      content: const Text(
+                        'Serás redirigido al dashboard principal.',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text('Cancelar'),
+                        ),
                         ElevatedButton(
-                          onPressed: _loadProviders,
-                          child: const Text('Reintentar'),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                final providers = snapshot.data ?? [];
-
-                if (providers.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.search_off,
-                          size: 48,
-                          color: Colors.grey,
-                        ),
-                        const SizedBox(height: 16),
-                        const Text(
-                          'No se encontraron proveedores',
-                          style: TextStyle(fontSize: 16, color: Colors.grey),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Ubicación: ${_sessionData.address ?? 'No especificada'}',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFE01D25),
+                          ),
+                          onPressed: () => Navigator.pop(context, true),
+                          child: const Text(
+                            'Sí, todo listo',
+                            style: TextStyle(color: Colors.white),
                           ),
                         ),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: _loadProviders,
-                          child: const Text('Reintentar'),
-                        ),
                       ],
                     ),
                   );
-                }
 
-                return ListView.builder(
-                  itemCount: providers.length,
-                  padding: const EdgeInsets.all(12),
-                  itemBuilder: (context, index) {
-                    final provider = providers[index];
-                    return _buildProviderCard(context, provider);
-                  },
-                );
-              },
+                  if (confirm == true && mounted) {
+                    Navigator.of(context).popUntil((route) => route.isFirst);
+                  }
+                },
+                child: const Text(
+                  'Todo listo',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 18,
+                  ),
+                ),
+              ),
             ),
+          ),
+        ],
+      ),
     );
   }
 

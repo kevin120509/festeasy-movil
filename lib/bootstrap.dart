@@ -2,10 +2,10 @@ import 'dart:async';
 import 'dart:developer';
 
 import 'package:bloc/bloc.dart';
+import 'package:festeasy/services/stripe_service.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/widgets.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
-import 'package:firebase_core/firebase_core.dart';
 
 class AppBlocObserver extends BlocObserver {
   const AppBlocObserver();
@@ -40,13 +40,14 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdobG9zZ25vcGRtcm93aXlneGRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NDc5MTYsImV4cCI6MjA4NDAyMzkxNn0.QBuV39Q41gCxU4mpr_WTMPsWZXRjEHglyQPm6R8WjV8',
   );
 
+  // Inicializar Stripe
+  await StripeService.instance.init();
+
   FlutterError.onError = (details) {
     log(details.exceptionAsString(), stackTrace: details.stack);
   };
 
   Bloc.observer = const AppBlocObserver();
-
-  // Add cross-flavor configuration here
 
   runApp(await builder());
 }

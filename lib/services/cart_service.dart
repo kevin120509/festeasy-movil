@@ -20,15 +20,19 @@ class CartData {
 
   static CartData fromMap(Map<String, dynamic> row) {
     return CartData(
-      id: row['id'] as String,
-      clienteUsuarioId: row['cliente_usuario_id'] as String,
+      id: row['id'] as String? ?? '',
+      clienteUsuarioId: row['cliente_usuario_id'] as String? ?? '',
       fechaServicioDeseada: row['fecha_servicio_deseada'] != null
-          ? DateTime.parse(row['fecha_servicio_deseada'] as String)
+          ? DateTime.tryParse(row['fecha_servicio_deseada'] as String)
           : null,
       direccionServicio: row['direccion_servicio'] as String?,
-      estado: row['estado'] as String,
-      creadoEn: DateTime.parse(row['creado_en'] as String),
-      actualizadoEn: DateTime.parse(row['actualizado_en'] as String),
+      estado: row['estado'] as String? ?? 'activo',
+      creadoEn: row['creado_en'] != null 
+          ? DateTime.tryParse(row['creado_en'] as String) ?? DateTime.now()
+          : DateTime.now(),
+      actualizadoEn: row['actualizado_en'] != null
+          ? DateTime.tryParse(row['actualizado_en'] as String) ?? DateTime.now()
+          : DateTime.now(),
     );
   }
 }
@@ -73,18 +77,32 @@ class CartService {
     final user = _user;
 
     try {
-      // Buscar carrito activo existente
-      final existing = await _client
+      // Buscar carrito activo existente más reciente
+      final existingResult = await _client
           .from('carrito')
-          .select('id')
+          .select('id, fecha_servicio_deseada, direccion_servicio')
           .eq('cliente_usuario_id', user.id)
           .eq('estado', 'activo')
-          .maybeSingle();
+          .order('actualizado_en', ascending: false)
+          .limit(1);
 
-      if (existing != null) {
-        // Retorna el carrito existente
-        print('[CartService] Carrito existente encontrado: ${existing['id']}');
-        return existing['id'] as String;
+      if ((existingResult as List).isNotEmpty) {
+        final existing = (existingResult as List).first;
+        final existingDate = existing['fecha_servicio_deseada'] as String?;
+        final existingAddr = existing['direccion_servicio'] as String?;
+        
+        final newDateStr = fechaServicio != null 
+            ? fechaServicio.toString().split(' ')[0] 
+            : null;
+
+        // Si la fecha o dirección han cambiado significativamente, 
+        // asumimos que es una solicitud diferente y creamos un nuevo carrito.
+        if (existingDate == newDateStr && existingAddr == direccion) {
+          print('[CartService] Reutilizando carrito existente: ${existing['id']}');
+          return existing['id'] as String;
+        } else {
+          print('[CartService] Datos diferentes detectados. Creando nuevo carrito independiente.');
+        }
       }
 
       // Crea nuevo carrito
@@ -247,5 +265,66 @@ class CartService {
       'providerUserId': proveedorUsuarioId,
       'providerAvatarUrl': providerProfile?['avatar_url'] as String?,
     };
+  }
+
+  /// Obtiene todos los items del carrito activo para sincronizar con la sesión local
+  Future<List<Map<String, dynamic>>> getCartItemsForLocalSession() async {
+    final user = _user;
+
+    // Buscar carritos activos (TODOS)
+    final cartResultQuery = await _client
+        .from('carrito')
+        .select('id')
+        .eq('cliente_usuario_id', user.id)
+        .eq('estado', 'activo')
+        .order('creado_en', ascending: false);
+
+    if ((cartResultQuery as List).isEmpty) return [];
+    
+    final List<String> cartIds = (cartResultQuery as List).map((row) => row['id'] as String).toList();
+
+    // Obtener items con joins para todos los IDs
+    final itemsResponse = await _client.from('items_carrito').select('''
+          cantidad,
+          precio_unitario_momento,
+          paquete_id,
+          carrito_id,
+          paquetes_proveedor(
+            nombre,
+            precio_base,
+            proveedor_usuario_id
+          )
+          ''').filter('carrito_id', 'in', cartIds);
+
+    final items = itemsResponse as List<dynamic>;
+    final result = <Map<String, dynamic>>[];
+
+    for (final item in items) {
+      final p = item['paquetes_proveedor'] as Map<String, dynamic>?;
+      final providerId = p?['proveedor_usuario_id'] as String? ?? 'unk';
+
+      // Perfil del proveedor (opcional)
+      Map<String, dynamic>? profile;
+      if (providerId != 'unk') {
+        profile = await _client
+            .from('perfil_proveedor')
+            .select('nombre_negocio, avatar_url')
+            .eq('usuario_id', providerId)
+            .maybeSingle();
+      }
+
+      result.add({
+        'packageId': item['paquete_id'] ?? '',
+        'packageName': p?['nombre'] ?? 'Paquete no disponible (Borrador/Privado)',
+        'packagePrice': (item['precio_unitario_momento'] as num?)?.toDouble() ?? 0.0,
+        'quantity': item['cantidad'] ?? 1,
+        'providerUserId': providerId,
+        'providerName': profile?['nombre_negocio'] ?? 'Proveedor desconocido',
+        'providerAvatarUrl': profile?['avatar_url'] ?? '',
+        'carritoId': item['carrito_id'] as String,
+      });
+    }
+
+    return result;
   }
 }

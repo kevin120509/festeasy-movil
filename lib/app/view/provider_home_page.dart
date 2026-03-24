@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/services.dart';
 
 import 'package:festeasy/app/view/chat_list_page.dart';
 import 'package:festeasy/app/view/login_page.dart';
@@ -574,115 +575,150 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
     );
   }
 
+  Future<bool> _showExitConfirmation() async {
+    return await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cerrar aplicación'),
+        content: const Text('¿Estás seguro de que quieres salir de FestEasy?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFE01D25),
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Salir'),
+          ),
+        ],
+      ),
+    ) ?? false;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FFFF),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF010302),
-        title: const Text(
-          'Mi Negocio',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF010302),
-          ),
-        ),
-        centerTitle: true,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(
-              Icons.chat_bubble_outline,
-              color: Color(0xFFE01D25),
-            ),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const ChatListPage(isProvider: true),
-                ),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.notifications, color: Color(0xFFE01D25)),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const ProviderNotificationsPage(),
-                ),
-              );
-            },
-          ),
-          IconButton(
-            icon: _perfil?.avatarUrl != null
-                ? CircleAvatar(
-                    backgroundImage: NetworkImage(_perfil!.avatarUrl!),
-                    radius: 16,
-                  )
-                : const Icon(Icons.person, color: Color(0xFFE01D25)),
-            onPressed: () {
-              if (_perfil != null) {
-                _showAjustesDialog();
-              }
-            },
-          ),
-        ],
-      ),
-      body: IndexedStack(
-        index: _currentIndex,
-        children: [
-          _buildDashboardTab(),
-          _buildSolicitudesTab(),
-          _buildInventarioTab(),
-          _buildPaquetesTab(),
-          _buildCalendarioTab(),
-        ],
-      ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, -5),
-            ),
-          ],
-        ),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: (index) {
-            setState(() => _currentIndex = index);
-          },
-          type: BottomNavigationBarType.fixed,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, dynamic result) async {
+        if (didPop) return;
+        final shouldPop = await _showExitConfirmation();
+        if (shouldPop && context.mounted) {
+          SystemNavigator.pop();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8FFFF),
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
           backgroundColor: Colors.white,
-          selectedItemColor: const Color(0xFFE01D25),
-          unselectedItemColor: Colors.grey,
-          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
+          foregroundColor: const Color(0xFF010302),
+          title: const Text(
+            'Mi Negocio',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF010302),
+            ),
+          ),
+          centerTitle: true,
           elevation: 0,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.dashboard),
-              label: 'Inicio',
+          actions: [
+            IconButton(
+              icon: const Icon(
+                Icons.chat_bubble_outline,
+                color: Color(0xFFE01D25),
+              ),
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const ChatListPage(isProvider: true),
+                  ),
+                );
+              },
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.assignment),
-              label: 'Solicitudes',
+            IconButton(
+              icon: const Icon(Icons.notifications, color: Color(0xFFE01D25)),
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const ProviderNotificationsPage(),
+                  ),
+                );
+              },
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.inventory_2),
-              label: 'Inventario',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.shopping_bag),
-              label: 'Paquetes',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.calendar_month),
-              label: 'Calendario',
+            IconButton(
+              icon: _perfil?.avatarUrl != null
+                  ? CircleAvatar(
+                      backgroundImage: NetworkImage(_perfil!.avatarUrl!),
+                      radius: 16,
+                    )
+                  : const Icon(Icons.person, color: Color(0xFFE01D25)),
+              onPressed: () {
+                if (_perfil != null) {
+                  _showAjustesDialog();
+                }
+              },
             ),
           ],
+        ),
+        body: IndexedStack(
+          index: _currentIndex,
+          children: [
+            _buildDashboardTab(),
+            _buildSolicitudesTab(),
+            _buildInventarioTab(),
+            _buildPaquetesTab(),
+            _buildCalendarioTab(),
+          ],
+        ),
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, -5),
+              ),
+            ],
+          ),
+          child: BottomNavigationBar(
+            currentIndex: _currentIndex,
+            onTap: (index) {
+              setState(() => _currentIndex = index);
+            },
+            type: BottomNavigationBarType.fixed,
+            backgroundColor: Colors.white,
+            selectedItemColor: const Color(0xFFE01D25),
+            unselectedItemColor: Colors.grey,
+            selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
+            elevation: 0,
+            items: const [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.dashboard),
+                label: 'Inicio',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.assignment),
+                label: 'Solicitudes',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.inventory_2),
+                label: 'Inventario',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.shopping_bag),
+                label: 'Paquetes',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.calendar_month),
+                label: 'Calendario',
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1658,6 +1694,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                       }
                     },
                     backgroundColor: const Color(0xFFE01D25),
+                    foregroundColor: Colors.white,
                     icon: const Icon(Icons.add),
                     label: const Text('Nuevo'),
                   ),
@@ -1735,7 +1772,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                           crossAxisCount: 2,
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
-                          childAspectRatio: 0.45,
+                          childAspectRatio: 0.85,
                         ),
                     itemCount: ProviderInventarioService.filtrarProductos(
                       _productos,
@@ -1966,9 +2003,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                     MaterialPageRoute<void>(
                       builder: (context) => ProviderPaqueteDetailPage(
                         paquete: paquete,
-                        onPaqueteUpdated: () {
-                          setState(_loadPaquetes);
-                        },
+                        onPaqueteUpdated: _loadPaquetes,
                       ),
                     ),
                   );
@@ -2220,7 +2255,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
 
                 if (mounted) {
                   Navigator.pop(context);
-                  setState(_loadPaquetes);
+                  _loadPaquetes();
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Paquete actualizado'),
@@ -2265,7 +2300,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
 
                 if (mounted) {
                   Navigator.pop(context);
-                  setState(_loadPaquetes);
+                  _loadPaquetes();
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Paquete eliminado'),

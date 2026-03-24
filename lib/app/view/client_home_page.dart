@@ -13,7 +13,9 @@ import 'package:festeasy/services/favorite_service.dart';
 import 'package:festeasy/services/provider_database_service.dart';
 import 'package:festeasy/services/solicitud_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:festeasy/service_session_data.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ClientHomePage extends StatefulWidget {
@@ -26,6 +28,7 @@ class ClientHomePage extends StatefulWidget {
 
 class _ClientHomePageState extends State<ClientHomePage> {
   int _currentIndex = 0;
+  final GlobalKey<CartListPageState> _cartKey = GlobalKey<CartListPageState>();
   int cartCount = 0;
   SolicitudData? _activeSolicitud;
   List<SolicitudData> _cancelledSolicitudes = [];
@@ -50,6 +53,10 @@ class _ClientHomePageState extends State<ClientHomePage> {
     _loadNearbyProviders();
     _loadCartCount();
     _subscribeSolicitudesRealtime();
+    // Sincronizar carrito local con DB al iniciar
+    ServiceSessionData.getInstance().syncWithDatabase().then((_) {
+      if (mounted) setState(() {});
+    });
   }
 
   Future<void> _loadProfile() async {
@@ -234,26 +241,61 @@ class _ClientHomePageState extends State<ClientHomePage> {
         .subscribe();
   }
 
+  Future<bool> _showExitConfirmation() async {
+    return await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cerrar aplicación'),
+        content: const Text('¿Estás seguro de que quieres salir de FestEasy?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFE01D25),
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Salir'),
+          ),
+        ],
+      ),
+    ) ?? false;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FFFF),
-      body: SafeArea(
-        child: IndexedStack(
-          index: _currentIndex,
-          children: [
-            _buildHomeBody(),
-            const MisEventosPage(),
-            CartListPage(
-              onSolicitudesEnviadas: () {
-                _loadCartCount();
-                _navigateToMisEventos();
-              },
-            ),
-          ],
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, dynamic result) async {
+        if (didPop) return;
+        final shouldPop = await _showExitConfirmation();
+        if (shouldPop && context.mounted) {
+          SystemNavigator.pop();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8FFFF),
+        body: SafeArea(
+          child: IndexedStack(
+            index: _currentIndex,
+            children: [
+              _buildHomeBody(),
+              const MisEventosPage(),
+              CartListPage(
+                key: _cartKey,
+                onSolicitudesEnviadas: () {
+                  _loadCartCount();
+                  _navigateToMisEventos();
+                },
+              ),
+            ],
+          ),
         ),
+        bottomNavigationBar: _buildBottomNavBar(),
       ),
-      bottomNavigationBar: _buildBottomNavBar(),
     );
   }
 
@@ -428,7 +470,12 @@ class _ClientHomePageState extends State<ClientHomePage> {
                         categoryIcon: cat['icon']! as IconData,
                       ),
                     ),
-                  );
+                  ).then((_) {
+                    _loadCartCount();
+                    if (_currentIndex == 2) {
+                      _cartKey.currentState?.loadCart();
+                    }
+                  });
                 },
                 child: Container(
                   padding: const EdgeInsets.all(8),
@@ -794,10 +841,13 @@ class _ClientHomePageState extends State<ClientHomePage> {
                             descripcion: provider.descripcion,
                           ),
                         ),
-                      )
-                      .then(
-                        (_) => _loadNearbyProviders(),
-                      ); // Recargar al volver
+                      ).then((_) {
+                        _loadNearbyProviders();
+                        _loadCartCount();
+                        if (_currentIndex == 2) {
+                          _cartKey.currentState?.loadCart();
+                        }
+                      });
                 },
                 child: Container(
                   width: 160,
@@ -941,6 +991,11 @@ class _ClientHomePageState extends State<ClientHomePage> {
           setState(() {
             _currentIndex = index;
           });
+          // Si cambia a la pestaña de carrito, refrescar datos
+          if (index == 2) {
+            _cartKey.currentState?.loadCart();
+            _loadCartCount();
+          }
         },
         items: [
           const BottomNavigationBarItem(

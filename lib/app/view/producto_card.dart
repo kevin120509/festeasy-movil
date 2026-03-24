@@ -56,146 +56,65 @@ class ProductoCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Imagen con badges
-          Stack(
-            children: [
-              Container(
-                width: double.infinity,
-                height: 200,
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(12),
-                  ),
-                ),
-                child: producto.imagenUrl != null
-                    ? Image.network(
-                        producto.imagenUrl!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Center(
-                            child: Icon(
-                              Icons.image_not_supported,
-                              size: 48,
-                              color: Colors.grey[400],
-                            ),
-                          );
-                        },
-                      )
-                    : Center(
-                        child: Icon(
-                          Icons.inventory_2,
-                          size: 64,
-                          color: Colors.grey[400],
-                        ),
-                      ),
-              ),
-              // Badge de stock
-              Positioned(
-                top: 8,
-                left: 8,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _getEstadoStockColor(),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    _getEstadoStockLabel(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ),
-              // Badge de destacado
-              if (producto.destacado)
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: Colors.amber,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 4,
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.star,
-                      color: Colors.white,
-                      size: 18,
-                    ),
-                  ),
-                ),
-              // Botón de destacar
-              Positioned(
-                bottom: 8,
-                right: 8,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.2),
-                        blurRadius: 4,
-                      ),
-                    ],
-                  ),
-                  child: IconButton(
-                    icon: Icon(
-                      producto.destacado ? Icons.star : Icons.star_border,
-                      color: producto.destacado ? Colors.amber : Colors.grey,
-                      size: 24,
-                    ),
-                    onPressed: () => onToggleDestacado(!producto.destacado),
-                    constraints: const BoxConstraints(
-                      minWidth: 40,
-                      minHeight: 40,
-                    ),
-                    padding: EdgeInsets.zero,
-                  ),
-                ),
-              ),
-            ],
-          ),
           // Contenido
           Padding(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Categoría
-                Text(
-                  producto.categoria.toUpperCase(),
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.5,
-                  ),
+                // Categoría y Badge de Stock
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      producto.categoria.toUpperCase(),
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _getEstadoStockColor().withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        _getEstadoStockLabel(),
+                        style: TextStyle(
+                          color: _getEstadoStockColor(),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 9,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 8),
-                // Nombre
-                Text(
-                  producto.nombre,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                    color: Color(0xFF010302),
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                // Nombre y Destacado
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        producto.nombre,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: Color(0xFF010302),
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (producto.destacado)
+                      const Icon(Icons.star, color: Colors.amber, size: 18),
+                  ],
                 ),
                 const SizedBox(height: 4),
                 // Descripción
@@ -204,10 +123,10 @@ class ProductoCard extends StatelessWidget {
                   Text(
                     producto.descripcion!,
                     style: TextStyle(color: Colors.grey[600], fontSize: 11),
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 // Precio y Stock
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -228,7 +147,7 @@ class ProductoCard extends StatelessWidget {
                           '\$${producto.precioUnitario.toStringAsFixed(2)}',
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
-                            fontSize: 13,
+                            fontSize: 14,
                             color: Color(0xFF010302),
                           ),
                         ),
@@ -249,8 +168,8 @@ class ProductoCard extends StatelessWidget {
                         Text(
                           producto.stock.toString(),
                           style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
                             color: Color(0xFF00A878),
                           ),
                         ),

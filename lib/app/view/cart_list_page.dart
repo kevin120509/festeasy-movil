@@ -1,15 +1,13 @@
-import 'package:festeasy/services/cart_service.dart';
-import 'package:festeasy/services/solicitud_service.dart';
-import 'package:festeasy/app/view/profile_page.dart';
+import 'package:festeasy/app/view/cart_page.dart';
 import 'package:festeasy/app/view/client_notifications_page.dart';
-import 'package:festeasy/services/client_perfil_service.dart';
-import 'package:festeasy/services/client_direcciones_service.dart';
+import 'package:festeasy/app/view/profile_page.dart';
 import 'package:festeasy/service_session_data.dart';
+import 'package:festeasy/services/cart_service.dart';
+import 'package:festeasy/services/client_perfil_service.dart';
+import 'package:festeasy/services/solicitud_service.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Modelo para item del carrito con info del proveedor
 class CartItemWithProvider {
   CartItemWithProvider({
     required this.itemId,
@@ -19,6 +17,7 @@ class CartItemWithProvider {
     required this.cantidad,
     required this.proveedorUsuarioId,
     required this.proveedorNombre,
+    required this.carritoId,
     this.proveedorAvatarUrl,
   });
   final String itemId;
@@ -29,53 +28,30 @@ class CartItemWithProvider {
   final String proveedorUsuarioId;
   final String proveedorNombre;
   final String? proveedorAvatarUrl;
+  final String carritoId;
 }
 
 class CartListPage extends StatefulWidget {
-  const CartListPage({super.key, this.onSolicitudesEnviadas});
-
-  /// Callback que se ejecuta cuando se envían solicitudes exitosamente
+  const CartListPage({super.key, this.onSolicitudesEnviadas, this.isStandalone = false});
   final VoidCallback? onSolicitudesEnviadas;
+  final bool isStandalone;
 
   @override
-  State<CartListPage> createState() => _CartListPageState();
+  State<CartListPage> createState() => CartListPageState();
 }
 
-class _CartListPageState extends State<CartListPage> {
+class CartListPageState extends State<CartListPage> {
   List<CartItemWithProvider> _allItems = [];
-  CartData? _activeCart;
   bool _isLoading = true;
-  bool _isSending = false;
   String? _avatarUrl;
-
-  // Datos del evento (compartidos entre todos los proveedores)
-  DateTime _fechaServicio = DateTime.now().add(const Duration(days: 7));
-  TimeOfDay _horaServicio = const TimeOfDay(hour: 14, minute: 0);
-  String _direccion = '';
-  late TextEditingController _direccionController;
-  int? _numeroInvitados;
-  late TextEditingController _invitadosController;
-  late TextEditingController _eventNameController;
+  Map<String, dynamic>? _activeCartInfo;
+  Map<String, Map<String, dynamic>> _cartsMap = {};
 
   @override
   void initState() {
     super.initState();
-    _direccionController = TextEditingController();
-    _invitadosController = TextEditingController();
-    _eventNameController = TextEditingController();
-
-    // Intenta prellenar desde la sesión
-    final sessionData = ServiceSessionData.getInstance();
-    if (sessionData.eventName != null) {
-      _eventNameController.text = sessionData.eventName!;
-    }
-    if (sessionData.numberOfGuests != null) {
-      _numeroInvitados = sessionData.numberOfGuests;
-      _invitadosController.text = _numeroInvitados.toString();
-    }
-
     _loadProfile();
-    _loadCart();
+    loadCart();
   }
 
   Future<void> _loadProfile() async {
@@ -83,392 +59,94 @@ class _CartListPageState extends State<CartListPage> {
       final user = Supabase.instance.client.auth.currentUser;
       if (user != null) {
         final perfil = await ClientPerfilService.instance.getPerfil(user.id);
-        if (mounted) {
+        if (perfil != null && mounted) {
           setState(() {
-            _avatarUrl = perfil?.avatarUrl;
+            _avatarUrl = perfil.avatarUrl;
           });
         }
       }
     } catch (_) {}
   }
 
-  @override
-  void dispose() {
-    _direccionController.dispose();
-    _invitadosController.dispose();
-    _eventNameController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _loadCart() async {
+  Future<void> loadCart() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
 
     try {
-      final client = Supabase.instance.client;
-      final user = client.auth.currentUser;
+      final user = Supabase.instance.client.auth.currentUser;
       if (user == null) {
         setState(() => _isLoading = false);
         return;
       }
 
-      // Obtener carrito activo
-      final cartResult = await client
+      // Obtener todos los carritos activos
+      final cartsListQuery = await Supabase.instance.client
           .from('carrito')
           .select()
           .eq('cliente_usuario_id', user.id)
-          .eq('estado', 'activo')
-          .maybeSingle();
+          .eq('estado', 'activo');
 
-      if (cartResult == null) {
-        setState(() {
-          _activeCart = null;
-          _allItems = [];
-          _isLoading = false;
-        });
-        return;
+      final cartsMap = <String, Map<String, dynamic>>{};
+      for (final c in (cartsListQuery as List)) {
+        cartsMap[c['id'] as String] = c as Map<String, dynamic>;
       }
 
-      _activeCart = CartData.fromMap(cartResult);
-
-      // Cargar datos del evento del carrito
-      if (_activeCart!.fechaServicioDeseada != null) {
-        _fechaServicio = _activeCart!.fechaServicioDeseada!;
-      }
-      if (_activeCart!.direccionServicio != null) {
-        _direccion = _activeCart!.direccionServicio!;
-        _direccionController.text = _direccion;
-      }
-
-      // Obtener items del carrito con info del paquete y proveedor
-      final itemsResult = await client
-          .from('items_carrito')
-          .select('''
-            id,
-            cantidad,
-            precio_unitario_momento,
-            paquete_id,
-            paquetes_proveedor(
-              id,
-              nombre,
-              precio_base,
-              proveedor_usuario_id
-            )
-          ''')
-          .eq('carrito_id', _activeCart!.id);
-
+      // Obtener items usando el servicio robusto (que ya trae carritoId)
+      final itemsForSession = await CartService.instance.getCartItemsForLocalSession();
+      
       final items = <CartItemWithProvider>[];
-
-      for (final item in (itemsResult as List)) {
-        final paquete = item['paquetes_proveedor'] as Map<String, dynamic>?;
-        if (paquete == null) continue;
-
-        final proveedorUsuarioId = paquete['proveedor_usuario_id'] as String;
-
-        // Obtener perfil del proveedor
-        final providerProfile = await client
-            .from('perfil_proveedor')
-            .select('nombre_negocio, avatar_url')
-            .eq('usuario_id', proveedorUsuarioId)
-            .maybeSingle();
-
+      for (final i in itemsForSession) {
         items.add(
           CartItemWithProvider(
-            itemId: item['id'] as String,
-            paqueteId: paquete['id'] as String,
-            paqueteNombre: paquete['nombre'] as String? ?? 'Paquete',
-            precioUnitario:
-                (item['precio_unitario_momento'] as num?)?.toDouble() ??
-                (paquete['precio_base'] as num?)?.toDouble() ??
-                0,
-            cantidad: item['cantidad'] as int? ?? 1,
-            proveedorUsuarioId: proveedorUsuarioId,
-            proveedorNombre:
-                providerProfile?['nombre_negocio'] as String? ?? 'Proveedor',
-            proveedorAvatarUrl: providerProfile?['avatar_url'] as String?,
+            itemId: i['packageId'], 
+            paqueteId: i['packageId'],
+            paqueteNombre: i['packageName'],
+            precioUnitario: i['packagePrice'],
+            cantidad: i['quantity'],
+            proveedorUsuarioId: i['providerUserId'],
+            proveedorNombre: i['providerName'],
+            proveedorAvatarUrl: i['providerAvatarUrl'],
+            carritoId: i['carritoId'],
           ),
         );
       }
 
-      setState(() {
-        _allItems = items;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _allItems = items;
+          _cartsMap = cartsMap;
+          _isLoading = false;
+        });
+      }
+
+      if (mounted) {
+        setState(() {
+          _allItems = items;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       debugPrint('Error cargando carrito: $e');
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al cargar carrito: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
-  // Agrupar items por proveedor
   Map<String, List<CartItemWithProvider>> get _itemsByProvider {
     final grouped = <String, List<CartItemWithProvider>>{};
     for (final item in _allItems) {
-      grouped.putIfAbsent(item.proveedorUsuarioId, () => []).add(item);
+      // Agrupamos por combinación de carrito y proveedor
+      final key = '${item.carritoId}_${item.proveedorUsuarioId}';
+      grouped.putIfAbsent(key, () => []).add(item);
     }
     return grouped;
-  }
-
-  // Total general
-  double get _totalGeneral {
-    return _allItems.fold(
-      0,
-      (sum, item) => sum + (item.precioUnitario * item.cantidad),
-    );
-  }
-
-  // Total por proveedor
-  double _totalByProvider(String proveedorId) {
-    return _allItems
-        .where((i) => i.proveedorUsuarioId == proveedorId)
-        .fold(0, (sum, item) => sum + (item.precioUnitario * item.cantidad));
-  }
-
-  Future<void> _updateItemQuantity(String itemId, int newQuantity) async {
-    if (newQuantity < 1) {
-      await _removeItem(itemId);
-      return;
-    }
-
-    try {
-      final client = Supabase.instance.client;
-      await client
-          .from('items_carrito')
-          .update({'cantidad': newQuantity})
-          .eq('id', itemId);
-
-      setState(() {
-        final index = _allItems.indexWhere((i) => i.itemId == itemId);
-        if (index != -1) {
-          final old = _allItems[index];
-          _allItems[index] = CartItemWithProvider(
-            itemId: old.itemId,
-            paqueteId: old.paqueteId,
-            paqueteNombre: old.paqueteNombre,
-            precioUnitario: old.precioUnitario,
-            cantidad: newQuantity,
-            proveedorUsuarioId: old.proveedorUsuarioId,
-            proveedorNombre: old.proveedorNombre,
-            proveedorAvatarUrl: old.proveedorAvatarUrl,
-          );
-        }
-      });
-    } catch (e) {
-      debugPrint('Error actualizando cantidad: $e');
-    }
-  }
-
-  Future<void> _removeItem(String itemId) async {
-    try {
-      final client = Supabase.instance.client;
-      await client.from('items_carrito').delete().eq('id', itemId);
-
-      setState(() {
-        _allItems.removeWhere((i) => i.itemId == itemId);
-      });
-    } catch (e) {
-      debugPrint('Error eliminando item: $e');
-    }
-  }
-
-  Future<void> _sendAllSolicitudes() async {
-    if (_allItems.isEmpty) return;
-    if (_direccion.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Por favor ingresa la dirección del evento'),
-        ),
-      );
-      return;
-    }
-
-    setState(() => _isSending = true);
-
-    try {
-      final providers = _itemsByProvider;
-      var successCount = 0;
-      var errorCount = 0;
-
-      final serviceDateTime = DateTime(
-        _fechaServicio.year,
-        _fechaServicio.month,
-        _fechaServicio.day,
-        _horaServicio.hour,
-        _horaServicio.minute,
-      );
-
-      for (final entry in providers.entries) {
-        final providerUserId = entry.key;
-        final items = entry.value;
-        final providerName = items.first.proveedorNombre;
-
-        // Calcular total para este proveedor
-        final total = items.fold<double>(
-          0,
-          (sum, item) => sum + (item.precioUnitario * item.cantidad),
-        );
-
-        // Preparar datos para SolicitudService
-        final cartItems = <String, int>{};
-        final allItemsData = <Map<String, dynamic>>[];
-
-        for (final item in items) {
-          cartItems[item.paqueteId] = item.cantidad;
-          allItemsData.add({
-            'id': item.paqueteId,
-            'name': item.paqueteNombre,
-            'price': item.precioUnitario,
-          });
-        }
-
-        try {
-          final titulo = _eventNameController.text.isNotEmpty
-              ? _numeroInvitados != null
-                    ? '${_eventNameController.text.trim()} - $providerName ($_numeroInvitados invitados)'
-                    : '${_eventNameController.text.trim()} - $providerName'
-              : _numeroInvitados != null
-              ? 'Evento - $providerName ($_numeroInvitados invitados)'
-              : 'Evento - $providerName';
-
-          await SolicitudService.instance.createSolicitud(
-            providerUserId: providerUserId,
-            address: _direccion,
-            serviceDateLocal: serviceDateTime,
-            tituloEvento: titulo,
-            montoTotal: total,
-            cartItems: cartItems,
-            allItems: allItemsData,
-          );
-          successCount++;
-        } catch (e) {
-          debugPrint('Error enviando solicitud a $providerName: $e');
-          errorCount++;
-        }
-      }
-
-      // Marcar carrito como convertido
-      if (_activeCart != null && successCount > 0) {
-        await CartService.instance.convertCart(_activeCart!.id);
-      }
-
-      if (mounted) {
-        if (successCount > 0) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                errorCount > 0
-                    ? '$successCount solicitudes enviadas, $errorCount fallidas'
-                    : '¡$successCount solicitudes enviadas exitosamente!',
-              ),
-              backgroundColor: errorCount > 0 ? Colors.orange : Colors.green,
-            ),
-          );
-
-          // Limpiar estado local
-          setState(() {
-            _allItems = [];
-            _activeCart = null;
-          });
-
-          // Notificar al padre para actualizar badge y navegar a Mis Eventos
-          widget.onSolicitudesEnviadas?.call();
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('No se pudo enviar ninguna solicitud'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isSending = false);
-      }
-    }
-  }
-
-  Future<void> _selectDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _fechaServicio,
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-    if (picked != null) {
-      setState(() => _fechaServicio = picked);
-    }
-  }
-
-  Future<void> _selectTime() async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: _horaServicio,
-    );
-    if (picked != null) {
-      setState(() => _horaServicio = picked);
-    }
-  }
-
-  Future<void> _showSavedAddresses() async {
-    final dirs = await ClientDireccionesService.instance.loadDirecciones();
-    if (dirs.isEmpty) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No tienes direcciones guardadas')),
-      );
-      return;
-    }
-
-    if (!mounted) return;
-
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Padding(
-                padding: EdgeInsets.all(16),
-                child: Text(
-                  'Mis Direcciones',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ),
-              const Divider(height: 1),
-              ...dirs
-                  .map(
-                    (d) => ListTile(
-                      leading: const Icon(
-                        Icons.location_on,
-                        color: Color(0xFFE01D25),
-                      ),
-                      title: Text(d['titulo'] ?? ''),
-                      subtitle: Text(d['direccion'] ?? ''),
-                      onTap: () {
-                        setState(() {
-                          _direccion = d['direccion'] ?? '';
-                          _direccionController.text = _direccion;
-                        });
-                        Navigator.pop(context);
-                      },
-                    ),
-                  )
-                  .toList(),
-            ],
-          ),
-        );
-      },
-    );
   }
 
   @override
@@ -478,93 +156,51 @@ class _CartListPageState extends State<CartListPage> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        automaticallyImplyLeading: false,
-        foregroundColor: const Color(0xFF010302), // Added foregroundColor
+        automaticallyImplyLeading: widget.isStandalone,
+        leading: widget.isStandalone ? IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF010302)),
+          onPressed: () => Navigator.of(context).pop(),
+        ) : null,
         title: const Text(
           'Mi Carrito',
-          style: TextStyle(
-            color: Color(0xFF010302),
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
+          style: TextStyle(color: Color(0xFF010302), fontWeight: FontWeight.bold, fontSize: 20),
         ),
         centerTitle: true,
         actions: [
-          IconButton(
+          if (!widget.isStandalone) IconButton(
             icon: const Icon(Icons.notifications, color: Color(0xFFE01D25)),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const ClientNotificationsPage(),
-                ),
-              );
-            },
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ClientNotificationsPage())),
           ),
-          IconButton(
+          if (!widget.isStandalone) IconButton(
             icon: _avatarUrl != null
-                ? CircleAvatar(
-                    radius: 14,
-                    backgroundImage: NetworkImage(_avatarUrl!),
-                  )
+                ? CircleAvatar(radius: 14, backgroundImage: NetworkImage(_avatarUrl!))
                 : const Icon(Icons.person_outline, color: Color(0xFF010302)),
-            onPressed: () {
-              Navigator.of(context)
-                  .push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => const ProfilePage(),
-                    ),
-                  )
-                  .then((_) {
-                    if (mounted) _loadProfile();
-                  });
-            },
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ProfilePage())).then((_) => _loadProfile()),
           ),
         ],
       ),
       body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE01D25)),
-              ),
-            )
+          ? const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE01D25))))
           : _allItems.isEmpty
-          ? _buildEmptyCart()
-          : _buildCartContent(),
+              ? _buildEmptyCart()
+              : _buildCartDashboard(),
     );
   }
 
   Widget _buildEmptyCart() {
     return RefreshIndicator(
-      onRefresh: _loadCart,
+      onRefresh: loadCart,
       color: const Color(0xFFE01D25),
       child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
         children: [
           SizedBox(
             height: MediaQuery.of(context).size.height * 0.6,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.shopping_cart_outlined,
-                  size: 80,
-                  color: Colors.grey[400],
-                ),
+                Icon(Icons.shopping_cart_outlined, size: 80, color: Colors.grey[400]),
                 const SizedBox(height: 16),
-                Text(
-                  'Tu carrito está vacío',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Agrega paquetes de proveedores\npara planificar tu evento',
-                  style: TextStyle(color: Colors.grey[500]),
-                  textAlign: TextAlign.center,
-                ),
+                const Text('Tu carrito está vacío', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey)),
               ],
             ),
           ),
@@ -573,487 +209,132 @@ class _CartListPageState extends State<CartListPage> {
     );
   }
 
-  Widget _buildCartContent() {
-    final dateFormat = DateFormat('dd MMM yyyy', 'es');
-    final providers = _itemsByProvider;
+  Widget _buildCartDashboard() {
+    final groups = _itemsByProvider;
+    return RefreshIndicator(
+      onRefresh: loadCart,
+      color: const Color(0xFFE01D25),
+      child: ListView.separated(
+        padding: const EdgeInsets.all(16),
+        itemCount: groups.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 16),
+        itemBuilder: (context, index) {
+          final entry = groups.entries.elementAt(index);
+          return _buildProviderSummaryCard(entry.key, entry.value);
+        },
+      ),
+    );
+  }
 
-    return Column(
-      children: [
-        Expanded(
-          child: RefreshIndicator(
-            onRefresh: _loadCart,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Datos del evento
-                  _buildEventDataCard(dateFormat),
-                  const SizedBox(height: 20),
+  Widget _buildProviderSummaryCard(String key, List<CartItemWithProvider> items) {
+    final first = items.first;
+    final totalItems = items.fold(0, (sum, i) => sum + i.cantidad);
+    final totalAmount = items.fold(0.0, (sum, i) => sum + (i.precioUnitario * i.cantidad));
+    
+    final cartInfo = _cartsMap[first.carritoId];
+    final eventName = cartInfo?['nombre_evento'] as String? ?? ServiceSessionData.getInstance().eventName ?? 'Evento sin nombre';
 
-                  // Items agrupados por proveedor
-                  Text(
-                    'Proveedores (${providers.length})',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  ...providers.entries.map(
-                    (entry) => _buildProviderCard(entry.key, entry.value),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Resumen total
-                  _buildTotalCard(),
-
-                  const SizedBox(height: 100), // Espacio para el botón flotante
-                ],
-              ),
-            ),
-          ),
+    return GestureDetector(
+      onTap: () => _goToProviderCheckout(first.proveedorUsuarioId, items, first.carritoId),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+          ],
         ),
-
-        // Botón de enviar
-        _buildSendButton(),
-      ],
-    );
-  }
-
-  Widget _buildEventDataCard(DateFormat dateFormat) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              Icon(Icons.event, color: Color(0xFFE01D25)),
-              SizedBox(width: 8),
-              Text(
-                'Datos del Evento',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-          const Divider(height: 24),
-
-          // Fecha
-          InkWell(
-            onTap: _selectDate,
-            child: Row(
-              children: [
-                Icon(Icons.calendar_today, size: 20, color: Colors.grey[600]),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Fecha',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                      ),
-                      Text(
-                        dateFormat.format(_fechaServicio),
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                    ],
-                  ),
-                ),
-                const Icon(Icons.edit, size: 18, color: Colors.grey),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Hora
-          InkWell(
-            onTap: _selectTime,
-            child: Row(
-              children: [
-                Icon(Icons.access_time, size: 20, color: Colors.grey[600]),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Hora',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                      ),
-                      Text(
-                        _horaServicio.format(context),
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                    ],
-                  ),
-                ),
-                const Icon(Icons.edit, size: 18, color: Colors.grey),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Nombre del Evento (Opcional)
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Icon(Icons.celebration, size: 20, color: Colors.grey[600]),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Nombre del Evento',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                    ),
-                    TextField(
-                      controller: _eventNameController,
-                      textCapitalization: TextCapitalization.sentences,
-                      decoration: const InputDecoration(
-                        hintText: 'Ej. Boda de Carlos y Ana (Opcional)',
-                        border: InputBorder.none,
-                        isDense: true,
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Número de Invitados (Opcional)
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Icon(Icons.people, size: 20, color: Colors.grey[600]),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Número de Invitados',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                    ),
-                    TextField(
-                      controller: _invitadosController,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        hintText: 'Ej. 50 (Opcional)',
-                        border: InputBorder.none,
-                        isDense: true,
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                      onChanged: (value) =>
-                          _numeroInvitados = int.tryParse(value),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Dirección
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(Icons.location_on, size: 20, color: Colors.grey[600]),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Dirección',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                    ),
-                    TextField(
-                      decoration: InputDecoration(
-                        hintText: 'Ingresa la dirección del evento',
-                        border: InputBorder.none,
-                        isDense: true,
-                        contentPadding: EdgeInsets.zero,
-                        suffixIcon: IconButton(
-                          icon: const Icon(
-                            Icons.bookmark,
-                            color: Color(0xFFE01D25),
-                          ),
-                          tooltip: 'Usar dirección guardada',
-                          onPressed: _showSavedAddresses,
-                        ),
-                      ),
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                      onChanged: (value) => _direccion = value,
-                      controller: _direccionController,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProviderCard(
-    String proveedorId,
-    List<CartItemWithProvider> items,
-  ) {
-    final providerName = items.first.proveedorNombre;
-    final providerAvatar = items.first.proveedorAvatarUrl;
-    final total = _totalByProvider(proveedorId);
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Header del proveedor
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: const BoxDecoration(
-              color: Color(0xFFFFF5F5),
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(16),
-                topRight: Radius.circular(16),
-              ),
-            ),
-            child: Row(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
                 CircleAvatar(
-                  radius: 20,
+                  radius: 25,
                   backgroundColor: const Color(0xFFFFE5E7),
-                  backgroundImage: providerAvatar != null
-                      ? NetworkImage(providerAvatar)
-                      : null,
-                  child: providerAvatar == null
-                      ? const Icon(
-                          Icons.store,
-                          color: Color(0xFFE01D25),
-                          size: 20,
-                        )
-                      : null,
+                  backgroundImage: first.proveedorAvatarUrl != null ? NetworkImage(first.proveedorAvatarUrl!) : null,
+                  child: first.proveedorAvatarUrl == null ? const Icon(Icons.person, color: Color(0xFFE01D25)) : null,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Text(
-                    providerName,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(first.proveedorNombre, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text(eventName, style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                    ],
                   ),
                 ),
-                Text(
-                  '\$${total.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: Color(0xFFE01D25),
-                  ),
-                ),
+                const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
               ],
             ),
-          ),
-
-          // Items
-          ...items.map(_buildItemRow),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildItemRow(CartItemWithProvider item) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            const Divider(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  item.paqueteNombre,
-                  style: const TextStyle(fontWeight: FontWeight.w500),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Total parcial', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                    Text('\$${totalAmount.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFFE01D25))),
+                  ],
                 ),
-                Text(
-                  '\$${item.precioUnitario.toStringAsFixed(2)} c/u',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(color: const Color(0xFFFFE5E7), borderRadius: BorderRadius.circular(20)),
+                  child: Text('$totalItems items', style: const TextStyle(color: Color(0xFFE01D25), fontWeight: FontWeight.bold, fontSize: 12)),
                 ),
               ],
             ),
-          ),
-          // Controles de cantidad
-          Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.remove_circle_outline),
-                color: Colors.grey,
-                iconSize: 24,
-                onPressed: () =>
-                    _updateItemQuantity(item.itemId, item.cantidad - 1),
-              ),
-              Text(
-                '${item.cantidad}',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.add_circle_outline),
-                color: const Color(0xFFE01D25),
-                iconSize: 24,
-                onPressed: () =>
-                    _updateItemQuantity(item.itemId, item.cantidad + 1),
-              ),
-            ],
-          ),
-          // Subtotal
-          SizedBox(
-            width: 70,
-            child: Text(
-              '\$${(item.precioUnitario * item.cantidad).toStringAsFixed(0)}',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-              textAlign: TextAlign.right,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTotalCard() {
-    final providers = _itemsByProvider;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE01D25), width: 2),
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Total General',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              Text(
-                '\$${_totalGeneral.toStringAsFixed(2)} MXN',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFFE01D25),
-                ),
-              ),
-            ],
-          ),
-          const Divider(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '${providers.length} proveedor(es)',
-                style: TextStyle(color: Colors.grey[600]),
-              ),
-              Text(
-                '${_allItems.length} item(s)',
-                style: TextStyle(color: Colors.grey[600]),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSendButton() {
-    final providers = _itemsByProvider;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        child: SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: _isSending ? null : _sendAllSolicitudes,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFE01D25),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
-              ),
-              elevation: 0,
-            ),
-            child: _isSending
-                ? const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  )
-                : Text(
-                    'Enviar ${providers.length} Solicitud(es)',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-          ),
+          ],
         ),
       ),
     );
+  }
+
+  void _goToProviderCheckout(String providerId, List<CartItemWithProvider> items, String carritoId) {
+    final cartInfo = _cartsMap[carritoId];
+    if (cartInfo == null) return;
+
+    final cartItemsMap = <String, int>{};
+    final allItemsList = <Map<String, dynamic>>[];
+    for (final i in items) {
+      cartItemsMap[i.paqueteId] = i.cantidad;
+      allItemsList.add({'id': i.paqueteId, 'name': i.paqueteNombre, 'price': i.precioUnitario, 'description': ''});
+    }
+
+    final dateStr = cartInfo['fecha_servicio_deseada'] as String?;
+    final timeStr = cartInfo['hora_servicio_deseada'] as String?;
+
+    Navigator.of(context).push(
+      MaterialPageRoute<bool?>(
+        builder: (context) => CartPage(
+          cartItems: cartItemsMap,
+          allItems: allItemsList,
+          providerName: items.first.proveedorNombre,
+          providerUserId: providerId,
+          categoryName: cartInfo['nombre_evento'] ?? 'Servicio',
+          initialAddress: cartInfo['direccion_servicio'],
+          initialDate: dateStr != null ? DateTime.parse(dateStr) : null,
+          initialTime: _parseTime(timeStr),
+          carritoId: carritoId,
+          initialGuests: cartInfo['numero_invitados'] as int?,
+        ),
+      ),
+    ).then((result) {
+      loadCart();
+      if (result == true) {
+        widget.onSolicitudesEnviadas?.call();
+      }
+    });
+  }
+
+  TimeOfDay? _parseTime(String? timeStr) {
+    if (timeStr == null || !timeStr.contains(':')) return null;
+    try {
+      final parts = timeStr.split(':');
+      return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+    } catch (_) { return null; }
   }
 }

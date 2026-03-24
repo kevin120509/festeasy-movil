@@ -1,7 +1,9 @@
 import 'package:festeasy/app/view/request_status_page.dart';
+import 'package:festeasy/service_session_data.dart';
 import 'package:festeasy/services/cart_service.dart';
 import 'package:festeasy/services/solicitud_service.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CartPage extends StatefulWidget {
@@ -16,6 +18,7 @@ class CartPage extends StatefulWidget {
     this.initialDate,
     this.initialTime,
     this.carritoId,
+    this.initialGuests,
   });
   final Map<String, int> cartItems;
   final List<Map<String, dynamic>> allItems;
@@ -26,6 +29,7 @@ class CartPage extends StatefulWidget {
   final DateTime? initialDate;
   final TimeOfDay? initialTime;
   final String? carritoId;
+  final int? initialGuests;
 
   @override
   State<CartPage> createState() => _CartPageState();
@@ -39,6 +43,10 @@ class _CartPageState extends State<CartPage> {
   Map<String, dynamic>? _providerProfile;
   bool _isSubmitting = false;
   String selectedPaymentMethod = 'Tarjeta';
+  String eventName = '';
+  int? guests;
+  final TextEditingController _eventController = TextEditingController();
+  final TextEditingController _guestsController = TextEditingController();
   final List<Map<String, Object>> paymentMethods = [
     {
       'id': 'Tarjeta',
@@ -67,6 +75,12 @@ class _CartPageState extends State<CartPage> {
     address = widget.initialAddress ?? '';
     if (widget.initialDate != null) selectedDate = widget.initialDate!;
     if (widget.initialTime != null) selectedTime = widget.initialTime!;
+    
+    eventName = ServiceSessionData.getInstance().eventName ?? widget.categoryName;
+    guests = ServiceSessionData.getInstance().numberOfGuests ?? widget.initialGuests;
+    _eventController.text = eventName;
+    _guestsController.text = guests?.toString() ?? '';
+
     _fetchProviderProfile();
   }
 
@@ -117,7 +131,7 @@ class _CartPageState extends State<CartPage> {
         (e) => e['id'] == entry.key,
         orElse: () => <String, Object>{'price': 0.0},
       );
-      total += (item['price'] as double) * entry.value;
+      total += ((item['price'] as num?)?.toDouble() ?? 0.0) * entry.value;
     }
     return total;
   }
@@ -139,7 +153,7 @@ class _CartPageState extends State<CartPage> {
         ),
         centerTitle: true,
         title: const Text(
-          'Tu Carrito',
+          'Detalles del Pedido',
           style: TextStyle(
             color: Color(0xFF010302),
             fontWeight: FontWeight.bold,
@@ -148,10 +162,38 @@ class _CartPageState extends State<CartPage> {
         ),
         actions: [
           TextButton(
-            onPressed: () {
-              setState(() {
-                cartItems.clear();
-              });
+            onPressed: () async {
+              final confirm = await _showConfirmDialog(
+                '¿Vaciar carrito?',
+                'Se eliminarán todos los productos de este proveedor.',
+              );
+              if (confirm != true) return;
+
+              if (widget.carritoId != null) {
+                try {
+                  await Supabase.instance.client
+                      .from('items_carrito')
+                      .delete()
+                      .eq('carrito_id', widget.carritoId!)
+                      .filter('paquete_id', 'in', cartItems.keys.toList());
+                  
+                  ServiceSessionData.getInstance().clearCartForProvider(widget.providerUserId);
+                  setState(() {
+                    cartItems.clear();
+                  });
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error al vaciar: $e')),
+                    );
+                  }
+                }
+              } else {
+                ServiceSessionData.getInstance().clearCartForProvider(widget.providerUserId);
+                setState(() {
+                  cartItems.clear();
+                });
+              }
             },
             child: const Text(
               'Vaciar',
@@ -167,7 +209,22 @@ class _CartPageState extends State<CartPage> {
           ? _buildEmptyCart()
           : Column(
               children: [
-                Expanded(child: _buildCartList()),
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      if (_providerProfile != null) ...[
+                        _buildProviderCard(_providerProfile!),
+                        const SizedBox(height: 16),
+                      ],
+                      _buildServiceDetailsEditor(),
+                      const SizedBox(height: 16),
+                      ..._buildCartItemsList(),
+                      const SizedBox(height: 16),
+                      _buildPaymentMethods(),
+                    ],
+                  ),
+                ),
                 _buildCostSummary(),
               ],
             ),
@@ -190,15 +247,9 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
-  Widget _buildCartList() {
+  List<Widget> _buildCartItemsList() {
     final cartEntries = cartItems.entries.toList();
-    final children = <Widget>[];
-    if (_providerProfile != null) {
-      children.add(_buildProviderCard(_providerProfile!));
-      children.add(const SizedBox(height: 16));
-    }
-    children.add(_buildServiceDetailsEditor());
-    children.add(const SizedBox(height: 16));
+    final itemsWidgets = <Widget>[];
 
     for (final entry in cartEntries) {
       final item = widget.allItems.firstWhere(
@@ -210,14 +261,10 @@ class _CartPageState extends State<CartPage> {
           'price': 0.0,
         },
       );
-      children.add(_buildCartItem(item, entry.value));
-      children.add(const SizedBox(height: 14));
+      itemsWidgets.add(_buildCartItem(item, entry.value));
+      itemsWidgets.add(const SizedBox(height: 14));
     }
-
-    children.add(const SizedBox(height: 12));
-    children.add(_buildPaymentMethods());
-
-    return ListView(padding: const EdgeInsets.all(16), children: children);
+    return itemsWidgets;
   }
 
   Widget _buildProviderCard(Map<String, dynamic> profile) {
@@ -268,43 +315,71 @@ class _CartPageState extends State<CartPage> {
 
   Widget _buildServiceDetailsEditor() {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 4)),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
             'Detalles del Servicio',
-            style: TextStyle(fontWeight: FontWeight.bold),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
+          // Nombre del Evento y URL
+          TextField(
+            controller: _eventController,
+            decoration: InputDecoration(
+              labelText: 'Nombre del Evento',
+              prefixIcon: const Icon(Icons.celebration, color: Color(0xFFE01D25), size: 18),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            ),
+            onChanged: (val) {
+              eventName = val;
+              ServiceSessionData.getInstance().eventName = val;
+            },
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _guestsController,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              labelText: 'Número de Invitados (Opcional)',
+              prefixIcon: const Icon(Icons.people, color: Color(0xFFE01D25), size: 18),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            ),
+            onChanged: (val) {
+              guests = int.tryParse(val);
+              ServiceSessionData.getInstance().numberOfGuests = guests;
+            },
+          ),
+          const SizedBox(height: 16),
           Row(
             children: [
               Expanded(
                 child: GestureDetector(
                   onTap: _pickDate,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 12,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(color: Colors.grey.shade200),
                     ),
                     child: Row(
                       children: [
-                        const Icon(
-                          Icons.calendar_today,
-                          color: Color(0xFFE01D25),
-                        ),
+                        const Icon(Icons.calendar_today, color: Color(0xFFE01D25), size: 18),
                         const SizedBox(width: 8),
                         Flexible(
                           child: Text(
                             '${selectedDate.day} ${_monthName(selectedDate.month)}, ${selectedDate.year}',
+                            style: const TextStyle(fontSize: 13),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -318,21 +393,19 @@ class _CartPageState extends State<CartPage> {
                 child: GestureDetector(
                   onTap: _pickTime,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 12,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(color: Colors.grey.shade200),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.schedule, color: Color(0xFFE01D25)),
+                        const Icon(Icons.schedule, color: Color(0xFFE01D25), size: 18),
                         const SizedBox(width: 8),
                         Flexible(
                           child: Text(
                             selectedTime.format(context),
+                            style: const TextStyle(fontSize: 13),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -346,7 +419,7 @@ class _CartPageState extends State<CartPage> {
           const SizedBox(height: 12),
           const Text(
             'Dirección del Evento',
-            style: TextStyle(color: Colors.grey),
+            style: TextStyle(color: Colors.grey, fontSize: 13),
           ),
           const SizedBox(height: 8),
           GestureDetector(
@@ -361,19 +434,18 @@ class _CartPageState extends State<CartPage> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.location_on, color: Color(0xFFE01D25)),
+                  const Icon(Icons.location_on, color: Color(0xFFE01D25), size: 18),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      address.isNotEmpty
-                          ? address
-                          : 'Toca para agregar dirección',
+                      address.isNotEmpty ? address : 'Toca para agregar dirección',
                       style: TextStyle(
                         color: address.isNotEmpty ? Colors.black : Colors.grey,
+                        fontSize: 13,
                       ),
                     ),
                   ),
-                  Icon(Icons.edit, color: Colors.grey.shade400, size: 18),
+                  Icon(Icons.edit, color: Colors.grey.shade400, size: 16),
                 ],
               ),
             ),
@@ -508,7 +580,7 @@ class _CartPageState extends State<CartPage> {
   }
 
   Widget _buildCartItem(Map<String, dynamic> item, int qty) {
-    final price = item['price'] as double;
+    final price = (item['price'] as num?)?.toDouble() ?? 0.0;
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -590,7 +662,15 @@ class _CartPageState extends State<CartPage> {
     return Row(
       children: [
         GestureDetector(
-          onTap: () {
+          onTap: () async {
+            if (qty == 1) {
+              final confirm = await _showConfirmDialog(
+                '¿Eliminar producto?',
+                '¿Estás seguro de que quieres quitar este item del carrito?',
+              );
+              if (confirm != true) return;
+            }
+
             setState(() {
               if (qty > 1) {
                 cartItems[itemId] = qty - 1;
@@ -598,6 +678,38 @@ class _CartPageState extends State<CartPage> {
                 cartItems.remove(itemId);
               }
             });
+            ServiceSessionData.getInstance().updateCartItemQuantity(itemId, (cartItems[itemId] ?? 0));
+            // Sincronizar con DB
+            if (widget.carritoId != null) {
+              final newQty = cartItems[itemId] ?? 0;
+              if (newQty > 0) {
+                CartService.instance.addItemToCart(
+                  carritoId: widget.carritoId!,
+                  paqueteId: itemId,
+                  cantidad: newQty,
+                  precioUnitario: 0.0,
+                ).catchError((e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error al actualizar: $e'), backgroundColor: Colors.red),
+                    );
+                  }
+                });
+              } else {
+                // Eliminar del carrito
+                Supabase.instance.client.from('items_carrito')
+                    .delete()
+                    .eq('carrito_id', widget.carritoId!)
+                    .eq('paquete_id', itemId)
+                    .catchError((e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Error al eliminar: $e'), backgroundColor: Colors.red),
+                        );
+                      }
+                    });
+              }
+            }
           },
           child: Container(
             padding: const EdgeInsets.all(6),
@@ -620,6 +732,22 @@ class _CartPageState extends State<CartPage> {
             setState(() {
               cartItems[itemId] = qty + 1;
             });
+            ServiceSessionData.getInstance().updateCartItemQuantity(itemId, qty + 1);
+            // Sincronizar con DB
+            if (widget.carritoId != null) {
+              CartService.instance.addItemToCart(
+                carritoId: widget.carritoId!,
+                paqueteId: itemId,
+                cantidad: qty + 1,
+                precioUnitario: 0.0,
+              ).catchError((e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error al actualizar: $e'), backgroundColor: Colors.red),
+                  );
+                }
+              });
+            }
           },
           child: Container(
             padding: const EdgeInsets.all(6),
@@ -750,7 +878,7 @@ class _CartPageState extends State<CartPage> {
         providerUserId: widget.providerUserId,
         address: address,
         serviceDateLocal: serviceDateTime,
-        tituloEvento: widget.categoryName,
+        tituloEvento: eventName,
         montoTotal: total,
         cartItems: cartItems,
         allItems: widget.allItems,
@@ -767,12 +895,10 @@ class _CartPageState extends State<CartPage> {
         }
       }
 
-      // Volver al ClientHomePage (hacer pop de CartPage y las pantallas intermedias)
-      // Contamos las rutas: CartPage -> ProviderDetailPage -> ClientHomePage
-      Navigator.of(context).pop(); // Sale de CartPage
-      Navigator.of(context).pop(); // Sale de ProviderDetailPage (si existe)
+      // Volver a la pantalla anterior (Detalles del Carrito) informando éxito
+      Navigator.of(context).pop(true);
 
-      // Ahora push RequestStatusPage encima del ClientHomePage
+      // Ahora push RequestStatusPage encima del Dashboard
       Navigator.of(context).push(
         MaterialPageRoute<void>(
           builder: (context) => RequestStatusPage(solicitudId: solicitud.id),
@@ -798,6 +924,24 @@ class _CartPageState extends State<CartPage> {
           style: const TextStyle(fontWeight: FontWeight.w500),
         ),
       ],
+    );
+  }
+
+
+  Future<bool?> _showConfirmDialog(String title, String content) {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(content),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Confirmar', style: TextStyle(color: Color(0xFFE01D25))),
+          ),
+        ],
+      ),
     );
   }
 }

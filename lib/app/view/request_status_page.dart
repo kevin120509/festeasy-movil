@@ -4,6 +4,7 @@ import 'package:festeasy/app/view/chat_bottom_sheet.dart' as festeasy_chat;
 import 'package:festeasy/app/view/provider_detail_page_client.dart';
 import 'package:festeasy/services/provider_search_service.dart';
 import 'package:festeasy/services/solicitud_service.dart';
+import 'package:festeasy/services/stripe_service.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -47,7 +48,22 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
 
   void _startTicker() {
     _ticker?.cancel();
-    _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
+    _ticker = Timer.periodic(const Duration(seconds: 1), (_) async {
+      final remaining = _remaining();
+      if (remaining == Duration.zero &&
+          _solicitud != null &&
+          (_solicitud!.isPendiente ||
+              _solicitud!.isCotizacionEnviada ||
+              _solicitud!.estado == 'esperando_anticipo')) {
+        // Intentar cancelar automáticamente si el tiempo se agotó y estaba en un estado expirable
+        try {
+          debugPrint('⏳ [Auto-Cancel] El tiempo se agotó para la solicitud ${widget.solicitudId}');
+          await SolicitudService.instance.cancelSolicitud(widget.solicitudId);
+          await _load();
+        } catch (e) {
+          debugPrint('❌ [Auto-Cancel] Error: $e');
+        }
+      }
       if (mounted) setState(() {});
     });
   }
@@ -275,26 +291,39 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
   }
 
   Future<void> _payAnticipo() async {
-    if (_isPayingAnticipo) return;
+    if (_isPayingAnticipo || _solicitud == null) return;
 
     setState(() {
       _isPayingAnticipo = true;
     });
 
     try {
-      // Simular pago del anticipo - genera PIN y actualiza estado a "reservado"
-      await SolicitudService.instance.simularPagoAnticipo(widget.solicitudId);
+      final montoTotal = _solicitud!.montoTotal;
+      final anticipo = montoTotal * 0.5;
 
-      if (!mounted) return;
-      await _load();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            '¡Anticipo pagado! Tu reserva está confirmada. Se ha generado un PIN de seguridad.',
-          ),
-        ),
+      // 1. Procesar pago real con Stripe
+      final success = await StripeService.instance.processPayment(
+        amount: anticipo,
+        currency: 'mxn',
+        description: 'Anticipo: ${_solicitud!.tituloEvento ?? "Servicio"}',
+        solicitudId: widget.solicitudId,
       );
+
+      if (success) {
+        // 2. Si el pago fue exitoso, actualizar estado en DB
+        await SolicitudService.instance.simularPagoAnticipo(widget.solicitudId);
+
+        if (!mounted) return;
+        await _load();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              '¡Anticipo pagado! Tu reserva está confirmada. Se ha generado un PIN de seguridad.',
+            ),
+          ),
+        );
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -309,26 +338,39 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
   }
 
   Future<void> _payLiquidacion() async {
-    if (_isPayingLiquidacion) return;
+    if (_isPayingLiquidacion || _solicitud == null) return;
 
     setState(() {
       _isPayingLiquidacion = true;
     });
 
     try {
-      // Simular pago de la liquidación - actualiza estado a "finalizado"
-      await SolicitudService.instance.simularPagoLiquidacion(
-        widget.solicitudId,
+      final montoTotal = _solicitud!.montoTotal;
+      final liquidacion = montoTotal * 0.5;
+
+      // 1. Procesar pago real con Stripe
+      final success = await StripeService.instance.processPayment(
+        amount: liquidacion,
+        currency: 'mxn',
+        description: 'Liquidación: ${_solicitud!.tituloEvento ?? "Servicio"}',
+        solicitudId: widget.solicitudId,
       );
 
-      if (!mounted) return;
-      await _load();
+      if (success) {
+        // 2. Si el pago fue exitoso, actualizar estado en DB
+        await SolicitudService.instance.simularPagoLiquidacion(
+          widget.solicitudId,
+        );
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('¡Liquidación pagada! El servicio ha sido completado.'),
-        ),
-      );
+        if (!mounted) return;
+        await _load();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('¡Liquidación pagada! El servicio ha sido completado.'),
+          ),
+        );
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(

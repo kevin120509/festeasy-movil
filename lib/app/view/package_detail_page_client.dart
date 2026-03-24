@@ -1,5 +1,6 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:festeasy/app/view/cart_page.dart';
+import 'package:festeasy/app/view/cart_list_page.dart';
 import 'package:festeasy/service_session_data.dart';
 import 'package:festeasy/services/cart_service.dart';
 import 'package:festeasy/services/provider_paquetes_service.dart';
@@ -53,6 +54,7 @@ class _PackageDetailPageClientState extends State<PackageDetailPageClient> {
         fechaServicio: _sessionData.date,
         direccion: _sessionData.address,
       );
+      _sessionData.carritoId = carritoId;
 
       // Agregar item al carrito
       await cartService.addItemToCart(
@@ -62,68 +64,39 @@ class _PackageDetailPageClientState extends State<PackageDetailPageClient> {
         precioUnitario: widget.paquete.precioBase,
       );
     } catch (e) {
-      // Ignorar errores de BD
+      debugPrint('[PackageDetailPage] ERROR guardando en DB: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('No se pudo guardar en la base de datos: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
 
     // Mostrar confirmación
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          '$_cantidad ${widget.paquete.nombre} agregado al carrito',
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '$_cantidad ${widget.paquete.nombre} agregado al carrito',
+          ),
+          duration: const Duration(seconds: 2),
         ),
-        duration: const Duration(seconds: 2),
-      ),
-    );
-
-    // Volver a la página anterior después de 1 segundo
-    Future.delayed(const Duration(seconds: 1), () {
-      if (mounted) {
-        Navigator.pop(context);
-      }
-    });
+      );
+    }
+    setState(() {});
   }
 
   void _goToCart() {
-    // Convertir items agrupados por proveedor a formato de CartPage
-    // Para esta fase, vamos a mostrar solo los items del proveedor actual
-    final groupedItems = _sessionData.getCartItemsGroupedByProvider();
-    final currentProviderItems = groupedItems[widget.provider.usuarioId] ?? [];
-
-    if (currentProviderItems.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No hay items en el carrito')),
-      );
-      return;
-    }
-
-    // Construir cartItems Map (paquete_id -> cantidad)
-    final cartItems = <String, int>{};
-    final allItems = <Map<String, dynamic>>[];
-
-    for (final item in currentProviderItems) {
-      cartItems[item.packageId] = item.quantity;
-      allItems.add({
-        'id': item.packageId,
-        'name': item.packageName,
-        'price': item.packagePrice,
-        'description': '',
-      });
-    }
-
     Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (context) => CartPage(
-          cartItems: cartItems,
-          allItems: allItems,
-          providerName: widget.provider.nombreNegocio,
-          providerUserId: widget.provider.usuarioId,
-          categoryName: _sessionData.categoryName ?? 'Servicio',
-          initialAddress: _sessionData.address,
-          initialDate: _sessionData.date,
-          initialTime: _sessionData.time,
-        ),
+      MaterialPageRoute<bool?>(
+        builder: (context) => CartListPage(isStandalone: true),
       ),
-    );
+    ).then((_) {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
@@ -141,56 +114,42 @@ class _PackageDetailPageClientState extends State<PackageDetailPageClient> {
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
-          // Badge con cantidad de items en carrito
-          if (_sessionData.hasCartItems())
-            Padding(
-              padding: const EdgeInsets.all(8),
-              child: Center(
-                child: Stack(
-                  children: [
-                    IconButton(
-                      icon: const Icon(
-                        Icons.shopping_cart,
-                        color: Colors.white,
-                      ),
-                      onPressed: _goToCart,
-                    ),
-                    Positioned(
-                      right: 0,
-                      top: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: Colors.red,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        constraints: const BoxConstraints(
-                          minWidth: 18,
-                          minHeight: 18,
-                        ),
-                        child: Text(
-                          _sessionData.cartItemCount.toString(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
-                  ],
+          IconButton(
+            icon: Stack(
+              children: [
+                const Icon(
+                  Icons.shopping_cart,
+                  color: Colors.white,
                 ),
-              ),
-            )
-          else
-            const Padding(
-              padding: EdgeInsets.all(8),
-              child: IconButton(
-                icon: Icon(Icons.shopping_cart, color: Colors.white),
-                onPressed: null,
-              ),
+                if (_sessionData.hasCartItems())
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 16,
+                        minHeight: 16,
+                      ),
+                      child: Text(
+                        _sessionData.cartItemCount.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
             ),
+            onPressed: _goToCart,
+          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -305,23 +264,6 @@ class _PackageDetailPageClientState extends State<PackageDetailPageClient> {
               ),
             ),
             const SizedBox(height: 16),
-            // Detalles del paquete
-            if (widget.paquete.detallesJson != null &&
-                (widget.paquete.detallesJson! as Map).isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Detalles incluidos',
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                    const SizedBox(height: 8),
-                    ..._buildDetallesList(),
-                  ],
-                ),
-              ),
             const SizedBox(height: 24),
             // Selector de cantidad
             Padding(

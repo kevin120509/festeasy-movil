@@ -280,11 +280,10 @@ class ProviderSolicitudesService {
         final itemsToInsert = extraItems.map((item) {
           return {
             'solicitud_id': solicitudId,
-            'paquete_id': item['id'], // Assuming id is the inventory product id
+            'paquete_id': null, // Es un producto de inventario, no un paquete oficial
             'nombre_paquete_snapshot': item['nombre'],
             'cantidad': item['cantidad'],
             'precio_unitario': item['precio'],
-            // Optionally flag it as an extra item if we had a column, but we just insert it.
           };
         }).toList();
 

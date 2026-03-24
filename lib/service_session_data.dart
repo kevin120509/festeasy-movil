@@ -1,3 +1,4 @@
+import 'package:festeasy/services/cart_service.dart';
 import 'package:flutter/material.dart';
 
 /// Representa un item en el carrito local
@@ -64,6 +65,7 @@ class ServiceSessionData {
   double? longitude;
   int? numberOfGuests;
   String? eventName;
+  String? carritoId; 
 
   // Datos de categoría
   String? categoryId;
@@ -93,7 +95,6 @@ class ServiceSessionData {
     this.categoryName = categoryName;
     numberOfGuests = eventNumberOfGuests;
     eventName = eventTitle;
-    cartItems = [];
   }
 
   /// Agrega un item al carrito
@@ -162,6 +163,31 @@ class ServiceSessionData {
     );
   }
 
+  void updateCartItemQuantity(String packageId, int newQuantity) {
+    if (newQuantity <= 0) {
+      cartItems.removeWhere((item) => item.packageId == packageId);
+    } else {
+      final index = cartItems.indexWhere((item) => item.packageId == packageId);
+      if (index != -1) {
+        final old = cartItems[index];
+        cartItems[index] = CartItemLocal(
+          packageId: old.packageId,
+          packageName: old.packageName,
+          packagePrice: old.packagePrice,
+          quantity: newQuantity,
+          providerUserId: old.providerUserId,
+          providerName: old.providerName,
+          providerAvatarUrl: old.providerAvatarUrl,
+        );
+      }
+    }
+  }
+
+  void clearCart() {
+    cartItems.clear();
+    carritoId = null;
+  }
+
   /// Obtiene los items agrupados por proveedor
   /// Retorna un Map<providerUserId, List<CartItemLocal>>
   Map<String, List<CartItemLocal>> getCartItemsGroupedByProvider() {
@@ -187,9 +213,10 @@ class ServiceSessionData {
     return cartItems.fold(0, (sum, item) => sum + item.quantity);
   }
 
-  /// Limpia el carrito
-  void clearCart() {
-    cartItems = [];
+
+  /// Limpia items del carrito para un proveedor específico (LOCAL)
+  void clearCartForProvider(String providerUserId) {
+    cartItems.removeWhere((i) => i.providerUserId == providerUserId);
   }
 
   /// Limpia toda la sesión
@@ -210,8 +237,25 @@ class ServiceSessionData {
     return date != null && time != null && address != null;
   }
 
-  /// Retorna true si hay items en el carrito
   bool hasCartItems() {
     return cartItems.isNotEmpty;
+  }
+
+  /// Sincroniza el carrito local con la base de datos
+  Future<void> syncWithDatabase() async {
+    try {
+      final items = await CartService.instance.getCartItemsForLocalSession();
+      cartItems = items.map((i) => CartItemLocal(
+        packageId: i['packageId'],
+        packageName: i['packageName'],
+        packagePrice: i['packagePrice'],
+        quantity: i['quantity'],
+        providerUserId: i['providerUserId'],
+        providerName: i['providerName'],
+        providerAvatarUrl: i['providerAvatarUrl'],
+      )).toList();
+    } catch (e) {
+      debugPrint('Error sincronizando carrito: \$e');
+    }
   }
 }

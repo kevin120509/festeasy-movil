@@ -28,6 +28,38 @@ class _ProviderPaqueteDetailPageState extends State<ProviderPaqueteDetailPage> {
     _paquete = widget.paquete;
   }
 
+  Future<void> _toggleEstado() async {
+    try {
+      PaqueteProveedorData updated;
+      if (_paquete.isPublished) {
+        // Desactivar -> Archivar
+        updated = await ProviderPaquetesService.instance.archivePaquete(_paquete.id);
+      } else {
+        // Activar -> Publicar
+        updated = await ProviderPaquetesService.instance.publishPaquete(_paquete.id);
+      }
+
+      if (mounted) {
+        setState(() => _paquete = updated);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              _paquete.isPublished ? 'Paquete Activado' : 'Paquete Desactivado',
+            ),
+            backgroundColor: _paquete.isPublished ? Colors.green : Colors.grey[700],
+          ),
+        );
+        widget.onPaqueteUpdated?.call();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al cambiar estado: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
   void _editPaquete() {
     final nombreController = TextEditingController(text: _paquete.nombre);
     final descriptionController = TextEditingController(
@@ -134,6 +166,117 @@ class _ProviderPaqueteDetailPageState extends State<ProviderPaqueteDetailPage> {
     );
   }
 
+  /// Selecciona una foto de la galería
+  Future<XFile?> _pickImage() async {
+    try {
+      final picker = ImagePicker();
+      final image = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+        maxWidth: 1024,
+        maxHeight: 1024,
+      );
+      return image;
+    } catch (e) {
+      debugPrint('Error picking image: $e');
+      return null;
+    }
+  }
+
+  /// Sube una foto a Supabase y retorna la URL
+  Future<String?> _uploadPhotoToSupabase({required XFile imageFile}) async {
+    try {
+      final user = AuthService.instance.currentUser;
+      if (user == null) return null;
+
+      final fileBytes = await imageFile.readAsBytes();
+      final photoUrl = await ProviderPaquetesService.instance.uploadFotoPaquete(
+        proveedorUsuarioId: user.id,
+        fileBytes: fileBytes,
+        fileName: imageFile.name,
+      );
+      return photoUrl;
+    } catch (e) {
+      debugPrint('Error uploading photo: $e');
+      return null;
+    }
+  }
+
+  void _editFotos() {
+    final fotosActuales = List<String>.from(_paquete.fotos);
+    final fotosNuevas = <XFile>[];
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Editar Fotos'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (fotosActuales.isNotEmpty)
+                  ...fotosActuales.asMap().entries.map((entry) => Stack(
+                    children: [
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        height: 100,
+                        width: double.infinity,
+                        child: Image.network(entry.value, fit: BoxFit.cover),
+                      ),
+                      Positioned(
+                        right: 0,
+                        child: IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () => setState(() => fotosActuales.removeAt(entry.key)),
+                        ),
+                      ),
+                    ],
+                  )),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    final img = await _pickImage();
+                    if (img != null) setState(() => fotosNuevas.add(img));
+                  },
+                  icon: const Icon(Icons.add_a_photo),
+                  label: const Text('Agregar Foto'),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  final urlsNuevas = <String>[];
+                  for (final f in fotosNuevas) {
+                    final url = await _uploadPhotoToSupabase(imageFile: f);
+                    if (url != null) urlsNuevas.add(url);
+                  }
+                  final todas = [...fotosActuales, ...urlsNuevas];
+                  final updated = await ProviderPaquetesService.instance.updateFotosPaquete(
+                    paqueteId: _paquete.id,
+                    fotos: todas,
+                  );
+                  if (mounted) {
+                    Navigator.pop(context);
+                    this.setState(() => _paquete = updated);
+                    widget.onPaqueteUpdated?.call();
+                  }
+                } catch (e) {
+                  debugPrint('Error: $e');
+                }
+              },
+              child: const Text('Guardar'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _deletePaquete() {
     showDialog(
       context: context,
@@ -188,364 +331,6 @@ class _ProviderPaqueteDetailPageState extends State<ProviderPaqueteDetailPage> {
     );
   }
 
-  /// Selecciona una foto de la galería
-  Future<XFile?> _pickImage() async {
-    try {
-      final picker = ImagePicker();
-      final image = await picker.pickImage(
-        source: ImageSource.gallery,
-        imageQuality: 80,
-        maxWidth: 1024,
-        maxHeight: 1024,
-      );
-      return image;
-    } catch (e) {
-      debugPrint('Error picking image: $e');
-      return null;
-    }
-  }
-
-  /// Sube una foto a Supabase y retorna la URL
-  Future<String?> _uploadPhotoToSupabase({required XFile imageFile}) async {
-    try {
-      final user = AuthService.instance.currentUser;
-      if (user == null) return null;
-
-      final fileBytes = await imageFile.readAsBytes();
-      final fileSizeBytes = fileBytes.length;
-      final fileSizeMB = fileSizeBytes / (1024 * 1024);
-
-      if (fileSizeMB > 5) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${imageFile.name} excede 5MB'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-        throw Exception('${imageFile.name} excede el límite de 5MB');
-      }
-
-      final photoUrl = await ProviderPaquetesService.instance.uploadFotoPaquete(
-        proveedorUsuarioId: user.id,
-        fileBytes: fileBytes,
-        fileName: imageFile.name,
-      );
-
-      return photoUrl;
-    } catch (e) {
-      debugPrint('Error uploading photo: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error subiendo foto: $e')));
-      }
-      return null;
-    }
-  }
-
-  void _editFotos() {
-    final fotosActuales = List<String>.from(_paquete.fotos);
-    final fotosNuevas = <XFile>[];
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text('Editar Fotos'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Fotos actuales
-                if (fotosActuales.isNotEmpty)
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Fotos Actuales',
-                        style: Theme.of(context).textTheme.titleSmall,
-                      ),
-                      const SizedBox(height: 8),
-                      ...fotosActuales.asMap().entries.map((entry) {
-                        final url = entry.value;
-                        final index = entry.key;
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey[300]!),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Stack(
-                                children: [
-                                  Container(
-                                    width: double.infinity,
-                                    height: 150,
-                                    color: Colors.grey[200],
-                                    child: Image.network(
-                                      url,
-                                      fit: BoxFit.cover,
-                                      errorBuilder:
-                                          (context, error, stackTrace) {
-                                            return Center(
-                                              child: Icon(
-                                                Icons.image_not_supported,
-                                                size: 48,
-                                                color: Colors.grey[400],
-                                              ),
-                                            );
-                                          },
-                                    ),
-                                  ),
-                                  Positioned(
-                                    top: 4,
-                                    right: 4,
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        shape: BoxShape.circle,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withOpacity(
-                                              0.2,
-                                            ),
-                                            blurRadius: 4,
-                                          ),
-                                        ],
-                                      ),
-                                      child: IconButton(
-                                        icon: const Icon(
-                                          Icons.delete,
-                                          color: Colors.red,
-                                          size: 20,
-                                        ),
-                                        onPressed: () {
-                                          setState(() {
-                                            fotosActuales.removeAt(index);
-                                          });
-                                        },
-                                        constraints: const BoxConstraints(
-                                          minWidth: 32,
-                                          minHeight: 32,
-                                        ),
-                                        padding: EdgeInsets.zero,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      }),
-                      const SizedBox(height: 16),
-                    ],
-                  ),
-
-                // Nuevas fotos a agregar
-                if (fotosNuevas.isNotEmpty)
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Nuevas Fotos',
-                        style: Theme.of(context).textTheme.titleSmall,
-                      ),
-                      const SizedBox(height: 8),
-                      ...fotosNuevas.asMap().entries.map((entry) {
-                        final image = entry.value;
-                        final index = entry.key;
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey[300]!),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Stack(
-                                children: [
-                                  Container(
-                                    width: double.infinity,
-                                    height: 150,
-                                    color: Colors.grey[200],
-                                    child: Image.file(
-                                      File(image.path),
-                                      fit: BoxFit.cover,
-                                      errorBuilder:
-                                          (context, error, stackTrace) {
-                                            return Center(
-                                              child: Icon(
-                                                Icons.image_not_supported,
-                                                size: 48,
-                                                color: Colors.grey[400],
-                                              ),
-                                            );
-                                          },
-                                    ),
-                                  ),
-                                  Positioned(
-                                    top: 4,
-                                    right: 4,
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        shape: BoxShape.circle,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withOpacity(
-                                              0.2,
-                                            ),
-                                            blurRadius: 4,
-                                          ),
-                                        ],
-                                      ),
-                                      child: IconButton(
-                                        icon: const Icon(
-                                          Icons.delete,
-                                          color: Colors.red,
-                                          size: 20,
-                                        ),
-                                        onPressed: () {
-                                          setState(() {
-                                            fotosNuevas.removeAt(index);
-                                          });
-                                        },
-                                        constraints: const BoxConstraints(
-                                          minWidth: 32,
-                                          minHeight: 32,
-                                        ),
-                                        padding: EdgeInsets.zero,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      }),
-                      const SizedBox(height: 8),
-                    ],
-                  ),
-
-                // Botón agregar fotos
-                OutlinedButton.icon(
-                  onPressed: fotosActuales.length + fotosNuevas.length < 5
-                      ? () async {
-                          final image = await _pickImage();
-                          if (image != null) {
-                            setState(() {
-                              fotosNuevas.add(image);
-                            });
-                          }
-                        }
-                      : null,
-                  icon: const Icon(Icons.add_photo_alternate),
-                  label: Text(
-                    'Agregar más (${fotosActuales.length + fotosNuevas.length}/5)',
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancelar'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                try {
-                  // Eliminar fotos que fueron removidas
-                  final fotosAEliminar = _paquete.fotos
-                      .where((foto) => !fotosActuales.contains(foto))
-                      .toList();
-
-                  if (fotosAEliminar.isNotEmpty && mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Eliminando fotos...'),
-                        duration: Duration(seconds: 30),
-                      ),
-                    );
-                  }
-
-                  for (final foto in fotosAEliminar) {
-                    try {
-                      await ProviderPaquetesService.instance
-                          .deleteFotoPaqueteByUrl(fotoUrl: foto);
-                    } catch (e) {
-                      debugPrint('Error eliminando foto: $e');
-                    }
-                  }
-
-                  // Subir nuevas fotos
-                  final fotosUrlsNuevas = <String>[];
-                  if (fotosNuevas.isNotEmpty && mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Subiendo fotos...'),
-                        duration: Duration(seconds: 60),
-                      ),
-                    );
-                  }
-
-                  for (final foto in fotosNuevas) {
-                    final url = await _uploadPhotoToSupabase(imageFile: foto);
-                    if (url != null) {
-                      fotosUrlsNuevas.add(url);
-                    }
-                  }
-
-                  // Combinar fotos actuales con nuevas
-                  final todasLasFotos = [...fotosActuales, ...fotosUrlsNuevas];
-
-                  // Actualizar paquete
-                  final updated = await ProviderPaquetesService.instance
-                      .updateFotosPaquete(
-                        paqueteId: _paquete.id,
-                        fotos: todasLasFotos,
-                      );
-
-                  if (mounted) {
-                    // Cerrar diálogo primero
-                    Navigator.pop(context);
-
-                    // Actualizar estado del paquete para que se vea reflejado
-                    setState(() => _paquete = updated);
-
-                    // Mostrar mensaje de éxito
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Fotos actualizadas exitosamente'),
-                        backgroundColor: Colors.green,
-                      ),
-                    );
-
-                    // Llamar callback después de cerrar el diálogo
-                    Future.microtask(() => widget.onPaqueteUpdated?.call());
-                  }
-                } catch (e) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text('Error: $e')));
-                  }
-                }
-              },
-              child: const Text('Guardar'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -572,39 +357,13 @@ class _ProviderPaqueteDetailPageState extends State<ProviderPaqueteDetailPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // FOTOS
             if (_paquete.fotos.isNotEmpty)
               SizedBox(
                 height: 250,
                 child: PageView.builder(
                   itemCount: _paquete.fotos.length,
                   itemBuilder: (context, index) {
-                    return Container(
-                      color: Colors.grey[200],
-                      child: Image.network(
-                        _paquete.fotos[index],
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.image_not_supported,
-                                  size: 48,
-                                  color: Colors.grey[400],
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Imagen no disponible',
-                                  style: TextStyle(color: Colors.grey[500]),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                    );
+                    return Image.network(_paquete.fotos[index], fit: BoxFit.cover);
                   },
                 ),
               )
@@ -612,30 +371,7 @@ class _ProviderPaqueteDetailPageState extends State<ProviderPaqueteDetailPage> {
               Container(
                 height: 200,
                 color: const Color(0xFFF4F7F9),
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(50),
-                        ),
-                        child: Icon(
-                          Icons.image,
-                          size: 40,
-                          color: Colors.grey[400],
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Sin fotos',
-                        style: TextStyle(color: Colors.grey[500]),
-                      ),
-                    ],
-                  ),
-                ),
+                child: const Center(child: Icon(Icons.image, size: 50, color: Colors.grey)),
               ),
             const SizedBox(height: 20),
             Padding(
@@ -688,31 +424,61 @@ class _ProviderPaqueteDetailPageState extends State<ProviderPaqueteDetailPage> {
                             ],
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _paquete.isPublished
-                                ? Colors.green[50]
-                                : _paquete.isDraft
-                                ? Colors.orange[50]
-                                : Colors.grey[100],
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            _paquete.estado,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 12,
-                              color: _paquete.isPublished
-                                  ? Colors.green[700]
-                                  : _paquete.isDraft
-                                  ? Colors.orange[700]
-                                  : Colors.grey[700],
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _paquete.isPublished
+                                    ? Colors.green[50]
+                                    : _paquete.isDraft
+                                    ? Colors.orange[50]
+                                    : Colors.grey[100],
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                _paquete.estado,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 12,
+                                  color: _paquete.isPublished
+                                      ? Colors.green[700]
+                                      : _paquete.isDraft
+                                      ? Colors.orange[700]
+                                      : Colors.grey[700],
+                                ),
+                              ),
                             ),
-                          ),
+                            const SizedBox(width: 8),
+                            SizedBox(
+                              height: 32,
+                              child: TextButton.icon(
+                                onPressed: _toggleEstado,
+                                style: TextButton.styleFrom(
+                                  backgroundColor: _paquete.isPublished ? Colors.red.withOpacity(0.1) : Colors.green.withOpacity(0.1),
+                                  foregroundColor: _paquete.isPublished ? Colors.red : Colors.green,
+                                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                icon: Icon(
+                                  _paquete.isPublished ? Icons.pause : Icons.play_arrow,
+                                  size: 16,
+                                ),
+                                label: Text(
+                                  _paquete.isPublished ? 'Desactivar' : 'Activar',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -949,75 +715,73 @@ class _ProviderPaqueteDetailPageState extends State<ProviderPaqueteDetailPage> {
                   if (_paquete.items != null && _paquete.items!.isNotEmpty)
                     const SizedBox(height: 20),
 
-                  // BOTONES DE ACCIÓN
-                  Column(
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: _editPaquete,
-                              icon: const Icon(Icons.edit, size: 18),
-                              label: const Text(
-                                'Editar',
-                                style: TextStyle(fontWeight: FontWeight.w600),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFE01D25),
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: _editPaquete,
+                                icon: const Icon(Icons.edit, size: 18),
+                                label: const Text(
+                                  'Editar Datos',
+                                  style: TextStyle(fontWeight: FontWeight.w600),
                                 ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: _editFotos,
-                              icon: const Icon(Icons.image, size: 18),
-                              label: const Text(
-                                'Fotos',
-                                style: TextStyle(fontWeight: FontWeight.w600),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blue,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFE01D25),
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton.icon(
-                          onPressed: _deletePaquete,
-                          icon: const Icon(Icons.delete, size: 18),
-                          label: const Text(
-                            'Eliminar',
-                            style: TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.red,
-                            side: const BorderSide(color: Colors.red),
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: _editFotos,
+                                icon: const Icon(Icons.image, size: 18),
+                                label: const Text(
+                                  'Fotos',
+                                  style: TextStyle(fontWeight: FontWeight.w600),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: _deletePaquete,
+                            icon: const Icon(Icons.delete, size: 18),
+                            label: const Text(
+                              'Eliminar Paquete',
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.red,
+                              side: const BorderSide(color: Colors.red),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 24),
                 ],

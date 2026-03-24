@@ -47,12 +47,13 @@ class _LoginPageState extends State<LoginPage> {
         final role = await AuthService.instance.getUserRole();
 
         if (role == 'provider') {
-          // Navegar a dashboard del proveedor
+          // Navegar a dashboard del proveedor y limpiar stack
           if (mounted) {
-            Navigator.of(context).pushReplacement(
+            Navigator.of(context).pushAndRemoveUntil(
               MaterialPageRoute<void>(
                 builder: (context) => const ProviderHomePage(),
               ),
+              (route) => false,
             );
           }
         } else if (role == 'client') {
@@ -63,10 +64,11 @@ class _LoginPageState extends State<LoginPage> {
               emailController.text.split('@').first;
 
           if (mounted) {
-            Navigator.of(context).pushReplacement(
+            Navigator.of(context).pushAndRemoveUntil(
               MaterialPageRoute<void>(
                 builder: (context) => ClientHomePage(userName: userName),
               ),
+              (route) => false,
             );
           }
         } else {
@@ -98,6 +100,75 @@ class _LoginPageState extends State<LoginPage> {
       return 'Demasiados intentos. Espera un momento';
     }
     return 'Error: $error';
+  }
+
+  Future<void> _handleGoogleLogin() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final response = await AuthService.instance.signInWithGoogle();
+
+      if (response.user != null) {
+        // Detectar el rol del usuario
+        final role = await AuthService.instance.getUserRole();
+
+        if (role == 'provider') {
+          if (mounted) {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute<void>(
+                builder: (context) => const ProviderHomePage(),
+              ),
+              (route) => false,
+            );
+          }
+        } else if (role == 'client') {
+          final profile = await AuthService.instance.getClientProfile();
+          final userName = (profile?['nombre_completo'] as String?) ??
+              (response.user!.userMetadata?['full_name'] as String?) ??
+              'Usuario';
+
+          if (mounted) {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute<void>(
+                builder: (context) => ClientHomePage(userName: userName),
+              ),
+              (route) => false,
+            );
+          }
+        } else {
+          // SI NO TIENE ROL (CUENTA NUEVA CON GOOGLE)
+          // Redirigir a registro con los datos de Google
+          if (mounted) {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (context) => RegisterPage(
+                  initialEmail: response.user!.email,
+                  initialName:
+                      response.user!.userMetadata?['full_name'] as String?,
+                  isSocial: true,
+                ),
+              ),
+            );
+          }
+        }
+      }
+    } on AuthException catch (e) {
+      if (!e.message.contains('Cancelado')) {
+        _showErrorSnackBar(_getErrorMessage(e.message));
+      }
+    } catch (e) {
+      if (!e.toString().contains('Cancelado')) {
+        _showErrorSnackBar('Error al iniciar sesión con Google');
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
   }
 
   void _showErrorSnackBar(String message) {
@@ -320,32 +391,13 @@ class _LoginPageState extends State<LoginPage> {
                           icon: const Icon(
                             Icons.g_mobiledata,
                             color: Colors.red,
-                            size: 24,
+                            size: 32,
                           ),
-                          label: const Text('Google'),
-                          onPressed: () {
-                            // TODO: Implementar login con Google
-                            _showErrorSnackBar('Login con Google próximamente');
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.black,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          label: const Text(
+                            'Entrar con Google',
+                            style: TextStyle(fontWeight: FontWeight.bold),
                           ),
-                          icon: const Icon(Icons.apple, color: Colors.white),
-                          label: const Text('Apple'),
-                          onPressed: () {
-                            // TODO: Implementar login con Apple
-                            _showErrorSnackBar('Login con Apple próximamente');
-                          },
+                          onPressed: isLoading ? null : _handleGoogleLogin,
                         ),
                       ),
                     ],

@@ -48,8 +48,12 @@ class ChatService {
                 nombreContraparte =
                     (clienteInfo['nombre_completo'] as String?) ?? 'Cliente';
                 avatarContraparte = clienteInfo['avatar_url'] as String?;
+              } else {
+                debugPrint('⚠️ No se encontró perfil para el cliente $clienteId');
               }
-            } catch (_) {}
+            } catch (e) {
+              debugPrint('❌ Error obteniendo perfil de cliente: $e');
+            }
           }
         } else {
           final provId = sol['proveedor_usuario_id'] as String?;
@@ -57,15 +61,17 @@ class ChatService {
             try {
               final provInfo = await _client
                   .from('perfil_proveedor')
-                  .select('nombre_negocio, logo_url')
+                  .select('nombre_negocio, avatar_url')
                   .eq('usuario_id', provId)
                   .maybeSingle();
               if (provInfo != null) {
                 nombreContraparte =
                     (provInfo['nombre_negocio'] as String?) ?? 'Proveedor';
-                avatarContraparte = provInfo['logo_url'] as String?;
+                avatarContraparte = provInfo['avatar_url'] as String?;
               }
-            } catch (_) {}
+            } catch (e) {
+              debugPrint('Error obteniendo perfil de proveedor: $e');
+            }
           }
         }
 
