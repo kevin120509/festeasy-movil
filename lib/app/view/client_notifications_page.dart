@@ -190,7 +190,7 @@ class _ClientNotificationsPageState extends State<ClientNotificationsPage> {
   Color _getColorForEstado(String estado) {
     switch (estado) {
       case 'pendiente_aprobacion':
-        return const Color(0xFFE01D25); // Rojo principal
+        return const Color(0xFF8D72C2); // Rojo principal
       case 'esperando_anticipo':
       case 'reservado':
       case 'en_progreso':
@@ -220,7 +220,7 @@ class _ClientNotificationsPageState extends State<ClientNotificationsPage> {
       body: _isLoading
           ? const Center(
               child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE01D25)),
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF8D72C2)),
               ),
             )
           : SafeArea(
@@ -471,7 +471,7 @@ class _ClientNotificationsPageState extends State<ClientNotificationsPage> {
                               width: 8,
                               height: 8,
                               decoration: const BoxDecoration(
-                                color: Color(0xFFE01D25),
+                                color: Color(0xFF8D72C2),
                                 shape: BoxShape.circle,
                               ),
                             )

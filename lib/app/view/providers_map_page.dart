@@ -73,7 +73,7 @@ class _ProvidersMapPageState extends State<ProvidersMapPage> {
                     ),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? const Color(0xFFE01D25)
+                          ? const Color(0xFF8D72C2)
                           : Colors.white,
                       borderRadius: BorderRadius.circular(8),
                       boxShadow: [
@@ -97,7 +97,7 @@ class _ProvidersMapPageState extends State<ProvidersMapPage> {
                   Icon(
                     Icons.location_pin,
                     color: isSelected
-                        ? const Color(0xFFE01D25)
+                        ? const Color(0xFF8D72C2)
                         : (provider.isPlus ? Colors.orange : Colors.blue),
                     size: 30,
                   ),
@@ -228,7 +228,7 @@ class _ProvidersMapPageState extends State<ProvidersMapPage> {
                     children: [
                       const Icon(
                         Icons.location_on,
-                        color: Color(0xFFE01D25),
+                        color: Color(0xFF8D72C2),
                         size: 16,
                       ),
                       const SizedBox(width: 6),
@@ -282,7 +282,7 @@ class _ProvidersMapPageState extends State<ProvidersMapPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE01D25)),
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF8D72C2)),
               ),
               SizedBox(height: 16),
               Text(
@@ -379,13 +379,13 @@ class _ProvidersMapPageState extends State<ProvidersMapPage> {
                           onPressed: _loadProviders,
                           icon: const Icon(
                             Icons.refresh,
-                            color: Color(0xFFE01D25),
+                            color: Color(0xFF8D72C2),
                             size: 16,
                           ),
                           label: const Text(
                             'Actualizar',
                             style: TextStyle(
-                              color: Color(0xFFE01D25),
+                              color: Color(0xFF8D72C2),
                               fontSize: 12,
                             ),
                           ),
@@ -400,7 +400,7 @@ class _ProvidersMapPageState extends State<ProvidersMapPage> {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFE5E7),
+                        color: const Color(0xFFF0E6FF),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
@@ -409,14 +409,14 @@ class _ProvidersMapPageState extends State<ProvidersMapPage> {
                           const Icon(
                             Icons.filter_alt,
                             size: 14,
-                            color: Color(0xFFE01D25),
+                            color: Color(0xFF8D72C2),
                           ),
                           const SizedBox(width: 4),
                           Flexible(
                             child: Text(
                               'Categoría: ${widget.categoryName}',
                               style: const TextStyle(
-                                color: Color(0xFFE01D25),
+                                color: Color(0xFF8D72C2),
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -437,7 +437,7 @@ class _ProvidersMapPageState extends State<ProvidersMapPage> {
                     ? const Center(
                         child: CircularProgressIndicator(
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            Color(0xFFE01D25),
+                            Color(0xFF8D72C2),
                           ),
                         ),
                       )
@@ -461,7 +461,7 @@ class _ProvidersMapPageState extends State<ProvidersMapPage> {
                             ElevatedButton(
                               onPressed: _loadProviders,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFE01D25),
+                                backgroundColor: const Color(0xFF8D72C2),
                               ),
                               child: const Text(
                                 'Reintentar',
@@ -481,13 +481,13 @@ class _ProvidersMapPageState extends State<ProvidersMapPage> {
                               Container(
                                 padding: const EdgeInsets.all(20),
                                 decoration: const BoxDecoration(
-                                  color: Color(0xFFFFE5E7),
+                                  color: Color(0xFFF0E6FF),
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(
                                   Icons.store_mall_directory_outlined,
                                   size: 48,
-                                  color: Color(0xFFE01D25),
+                                  color: Color(0xFF8D72C2),
                                 ),
                               ),
                               const SizedBox(height: 20),
@@ -515,9 +515,9 @@ class _ProvidersMapPageState extends State<ProvidersMapPage> {
                                 icon: const Icon(Icons.arrow_back),
                                 label: const Text('Elegir otra categoría'),
                                 style: OutlinedButton.styleFrom(
-                                  foregroundColor: const Color(0xFFE01D25),
+                                  foregroundColor: const Color(0xFF8D72C2),
                                   side: const BorderSide(
-                                    color: Color(0xFFE01D25),
+                                    color: Color(0xFF8D72C2),
                                   ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
@@ -597,10 +597,10 @@ class _ProvidersMapPageState extends State<ProvidersMapPage> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isSelected ? const Color(0xFFFFE5E7) : Colors.white,
+        color: isSelected ? const Color(0xFFF0E6FF) : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isSelected ? const Color(0xFFE01D25) : Colors.grey.shade200,
+          color: isSelected ? const Color(0xFF8D72C2) : Colors.grey.shade200,
           width: isSelected ? 2 : 1,
         ),
         boxShadow: [
@@ -674,7 +674,7 @@ class _ProvidersMapPageState extends State<ProvidersMapPage> {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFE01D25),
+                          color: const Color(0xFF8D72C2),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: const Text(

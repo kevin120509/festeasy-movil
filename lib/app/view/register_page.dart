@@ -150,10 +150,10 @@ class _RegisterPageState extends State<RegisterPage> {
       }
     } on AuthException catch (e) {
       if (!mounted) return;
-      _showSnackBar('AuthException: ${e.message}', Colors.red);
+      _showSnackBar('AuthException: ${e.message}', const Color(0xFF8D72C2));
     } catch (e) {
       if (!mounted) return;
-      _showSnackBar('Error: $e', Colors.red);
+      _showSnackBar('Error: $e', const Color(0xFF8D72C2));
     } finally {
       if (mounted) {
         setState(() {
@@ -202,7 +202,7 @@ class _RegisterPageState extends State<RegisterPage> {
               const SizedBox(height: 16),
               // Logo de la app
               Image.asset(
-                'assets/icons/logo.jpeg',
+                'assets/icons/logo.png',
                 width: 200,
                 height: 100,
                 fit: BoxFit.contain,
@@ -228,15 +228,15 @@ class _RegisterPageState extends State<RegisterPage> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           decoration: BoxDecoration(
-                            color: !isProvider ? Colors.red : Colors.white,
+                            color: !isProvider ? const Color(0xFF8D72C2) : Colors.white,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.red),
+                            border: Border.all(color: const Color(0xFF8D72C2)),
                           ),
                           child: Center(
                             child: Text(
                               'CLIENTE',
                               style: TextStyle(
-                                color: !isProvider ? Colors.white : Colors.red,
+                                color: !isProvider ? Colors.white : const Color(0xFF8D72C2),
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -251,15 +251,15 @@ class _RegisterPageState extends State<RegisterPage> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           decoration: BoxDecoration(
-                            color: isProvider ? Colors.red : Colors.white,
+                            color: isProvider ? const Color(0xFF8D72C2) : Colors.white,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.red),
+                            border: Border.all(color: const Color(0xFF8D72C2)),
                           ),
                           child: Center(
                             child: Text(
                               'PROVEEDOR',
                               style: TextStyle(
-                                color: isProvider ? Colors.white : Colors.red,
+                                color: isProvider ? Colors.white : const Color(0xFF8D72C2),
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -290,7 +290,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       : 'Tu nombre completo',
                   prefixIcon: const Icon(
                     Icons.person_outline,
-                    color: Colors.red,
+                    color: const Color(0xFF8D72C2),
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
@@ -316,7 +316,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   filled: true,
                   fillColor: Colors.white,
                   hintText: 'ejemplo@correo.com',
-                  prefixIcon: const Icon(Icons.mail_outline, color: Colors.red),
+                  prefixIcon: const Icon(Icons.mail_outline, color: const Color(0xFF8D72C2)),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide.none,
@@ -342,7 +342,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   hintText: '300 000 0000',
                   prefixIcon: const Icon(
                     Icons.phone_android,
-                    color: Colors.red,
+                    color: const Color(0xFF8D72C2),
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
@@ -368,7 +368,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     filled: true,
                     fillColor: Colors.white,
                     hintText: '••••••••••',
-                    prefixIcon: const Icon(Icons.lock_outline, color: Colors.red),
+                    prefixIcon: const Icon(Icons.lock_outline, color: const Color(0xFF8D72C2)),
                     suffixIcon: IconButton(
                       icon: Icon(
                         showPassword ? Icons.visibility : Icons.visibility_off,
@@ -399,7 +399,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         acceptedTerms = v ?? false;
                       });
                     },
-                    activeColor: Colors.red,
+                    activeColor: const Color(0xFF8D72C2),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(5),
                     ),
@@ -415,7 +415,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             TextSpan(
                               text: 'términos y condiciones',
                               style: TextStyle(
-                                color: Colors.red,
+                                color: const Color(0xFF8D72C2),
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -435,7 +435,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 width: double.infinity,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
+                    backgroundColor: const Color(0xFF8D72C2),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(24),
                     ),
@@ -483,7 +483,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       child: const Text(
                         'Inicia sesión',
                         style: TextStyle(
-                          color: Colors.red,
+                          color: const Color(0xFF8D72C2),
                           fontWeight: FontWeight.bold,
                         ),
                       ),

@@ -80,7 +80,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFE01D25),
+              backgroundColor: const Color(0xFF8D72C2),
             ),
             onPressed: () => Navigator.pop(context, true),
             child: const Text(
@@ -117,7 +117,7 @@ class _ProfilePageState extends State<ProfilePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('El nombre no puede estar vacío'),
-          backgroundColor: Colors.red,
+          backgroundColor: const Color(0xFF8D72C2),
         ),
       );
       return;
@@ -162,7 +162,7 @@ class _ProfilePageState extends State<ProfilePage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error guardando cambios: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: const Color(0xFF8D72C2),
           ),
         );
       }
@@ -226,7 +226,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           : IconButton(
                               icon: const Icon(
                                 Icons.my_location,
-                                color: Color(0xFFE01D25),
+                                color: Color(0xFF8D72C2),
                               ),
                               tooltip: 'Usar ubicación actual',
                               onPressed: () async {
@@ -288,7 +288,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFE01D25),
+                    backgroundColor: const Color(0xFF8D72C2),
                   ),
                   onPressed: () async {
                     if (tituloCtrl.text.trim().isEmpty ||
@@ -345,7 +345,7 @@ class _ProfilePageState extends State<ProfilePage> {
       body: _isLoading
           ? const Center(
               child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE01D25)),
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF8D72C2)),
               ),
             )
           : SingleChildScrollView(
@@ -371,7 +371,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             shape: BoxShape.circle,
                             color: Colors.grey[200],
                             border: Border.all(
-                              color: const Color(0xFFE01D25),
+                              color: const Color(0xFF8D72C2),
                               width: 2,
                             ),
                           ),
@@ -413,7 +413,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             child: Container(
                               padding: const EdgeInsets.all(8),
                               decoration: const BoxDecoration(
-                                color: Color(0xFFE01D25),
+                                color: Color(0xFF8D72C2),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
@@ -466,7 +466,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         onPressed: _isSaving ? null : () => _addOrEditAddress(),
                         icon: const Icon(
                           Icons.add_circle,
-                          color: Color(0xFFE01D25),
+                          color: Color(0xFF8D72C2),
                         ),
                       ),
                     ],
@@ -492,12 +492,12 @@ class _ProfilePageState extends State<ProfilePage> {
                           leading: Container(
                             padding: const EdgeInsets.all(10),
                             decoration: const BoxDecoration(
-                              color: Color(0xFFFFE5E7),
+                              color: Color(0xFFF0E6FF),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
                               Icons.location_on,
-                              color: Color(0xFFE01D25),
+                              color: Color(0xFF8D72C2),
                               size: 20,
                             ),
                           ),
@@ -522,7 +522,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               IconButton(
                                 icon: const Icon(
                                   Icons.delete,
-                                  color: Colors.red,
+                                  color: const Color(0xFF8D72C2),
                                   size: 20,
                                 ),
                                 onPressed: _isSaving
@@ -548,7 +548,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     const Center(
                       child: CircularProgressIndicator(
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          Color(0xFFE01D25),
+                          Color(0xFF8D72C2),
                         ),
                       ),
                     )
@@ -560,7 +560,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           child: ElevatedButton(
                             onPressed: _guardarCambios,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFE01D25),
+                              backgroundColor: const Color(0xFF8D72C2),
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -614,12 +614,12 @@ class _ProfilePageState extends State<ProfilePage> {
                                 onPressed: _signOut,
                                 icon: const Icon(
                                   Icons.logout,
-                                  color: Colors.red,
+                                  color: const Color(0xFF8D72C2),
                                 ),
                                 label: const Text(
                                   'Cerrar Sesión',
                                   style: TextStyle(
-                                    color: Colors.red,
+                                    color: const Color(0xFF8D72C2),
                                     fontSize: 16,
                                   ),
                                 ),
@@ -630,7 +630,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
-                                  side: const BorderSide(color: Colors.red),
+                                  side: const BorderSide(color: const Color(0xFF8D72C2)),
                                 ),
                               ),
                             ),

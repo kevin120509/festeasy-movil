@@ -177,7 +177,7 @@ class _ProviderSetupPageState extends State<ProviderSetupPage> {
       debugPrint('Error in _completeSetup: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Error: $e'), backgroundColor: const Color(0xFF8D72C2)),
         );
       }
     } finally {

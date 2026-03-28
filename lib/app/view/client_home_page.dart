@@ -254,7 +254,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFE01D25),
+              backgroundColor: const Color(0xFF8D72C2),
               foregroundColor: Colors.white,
             ),
             onPressed: () => Navigator.of(context).pop(true),
@@ -301,7 +301,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
 
   Widget _buildHomeBody() {
     return RefreshIndicator(
-      color: const Color(0xFFE01D25),
+      color: const Color(0xFF8D72C2),
       onRefresh: () async {
         _loadActiveSolicitud();
         _loadCancelledSolicitudes();
@@ -356,7 +356,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
           IconButton(
             icon: const Icon(
               Icons.chat_bubble_outline,
-              color: Color(0xFFE01D25),
+              color: Color(0xFF8D72C2),
             ),
             onPressed: () {
               Navigator.of(context).push(
@@ -367,7 +367,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.notifications, color: Color(0xFFE01D25)),
+            icon: const Icon(Icons.notifications, color: Color(0xFF8D72C2)),
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -395,12 +395,12 @@ class _ClientHomePageState extends State<ClientHomePage> {
             },
             child: CircleAvatar(
               radius: 24,
-              backgroundColor: const Color(0xFFFFE5E7),
+              backgroundColor: const Color(0xFFF0E6FF),
               backgroundImage: _avatarUrl != null
                   ? NetworkImage(_avatarUrl!)
                   : null,
               child: _avatarUrl == null
-                  ? const Icon(Icons.person, color: Color(0xFFE01D25), size: 28)
+                  ? const Icon(Icons.person, color: Color(0xFF8D72C2), size: 28)
                   : null,
             ),
           ),
@@ -480,7 +480,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
                 child: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFE5E7),
+                    color: const Color(0xFFF0E6FF),
                     borderRadius: BorderRadius.circular(18),
                   ),
                   child: Column(
@@ -488,7 +488,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
                     children: [
                       Icon(
                         cat['icon']! as IconData,
-                        color: const Color(0xFFE01D25),
+                        color: const Color(0xFF8D72C2),
                         size: 32,
                       ),
                       const SizedBox(height: 6),
@@ -544,14 +544,14 @@ class _ClientHomePageState extends State<ClientHomePage> {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [Color(0xFFE01D25), Color(0xFFFF5F6D)],
+              colors: [Color(0xFF8D72C2), Color(0xFFFF5F6D)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFE01D25).withOpacity(0.3),
+                color: const Color(0xFF8D72C2).withOpacity(0.3),
                 blurRadius: 12,
                 offset: const Offset(0, 6),
               ),
@@ -614,7 +614,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
                     Text(
                       '$hours:$minutes:$seconds',
                       style: const TextStyle(
-                        color: Color(0xFFE01D25),
+                        color: Color(0xFF8D72C2),
                         fontWeight: FontWeight.w900,
                         fontSize: 18,
                         fontFamily: 'monospace',
@@ -718,7 +718,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
               ),
               IconButton(
                 onPressed: () => _deleteCancelledSolicitud(solicitud.id),
-                icon: const Icon(Icons.delete_outline, color: Colors.red),
+                icon: const Icon(Icons.delete_outline, color: const Color(0xFF8D72C2)),
                 tooltip: 'Eliminar',
               ),
             ],
@@ -740,7 +740,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
             child: const Text('Cancelar'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF8D72C2)),
             onPressed: () => Navigator.pop(context, true),
             child: const Text(
               'Eliminar',
@@ -776,7 +776,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
         child: Padding(
           padding: EdgeInsets.all(20),
           child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE01D25)),
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF8D72C2)),
           ),
         ),
       );
@@ -953,7 +953,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
                           ),
                           child: const Icon(
                             Icons.favorite,
-                            color: Color(0xFFE01D25),
+                            color: Color(0xFF8D72C2),
                             size: 16,
                           ),
                         ),
@@ -985,7 +985,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
         backgroundColor: const Color(0xFFF8FFFF),
         currentIndex: _currentIndex,
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFFE01D25),
+        selectedItemColor: const Color(0xFF8D72C2),
         unselectedItemColor: Colors.grey,
         onTap: (index) {
           setState(() {
@@ -1018,7 +1018,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
                     child: Container(
                       padding: const EdgeInsets.all(4),
                       decoration: const BoxDecoration(
-                        color: Color(0xFFE01D25),
+                        color: Color(0xFF8D72C2),
                         shape: BoxShape.circle,
                       ),
                       child: Text(

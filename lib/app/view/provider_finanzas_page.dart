@@ -97,7 +97,7 @@ class _MisFinanzasPageState extends State<MisFinanzasPage> {
       builder: (context, child) {
         return Theme(
           data: ThemeData.light().copyWith(
-            colorScheme: const ColorScheme.light(primary: Color(0xFFE01D25)),
+            colorScheme: const ColorScheme.light(primary: Color(0xFF8D72C2)),
           ),
           child: child!,
         );
@@ -209,7 +209,7 @@ class _MisFinanzasPageState extends State<MisFinanzasPage> {
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFE01D25),
+                  backgroundColor: const Color(0xFF8D72C2),
                 ),
                 onPressed: () async {
                   if (formKey.currentState!.validate()) {
@@ -261,7 +261,7 @@ class _MisFinanzasPageState extends State<MisFinanzasPage> {
             child: const Text('Cancelar'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF8D72C2)),
             onPressed: () => Navigator.pop(context, true),
             child: const Text(
               'Eliminar',
@@ -284,7 +284,7 @@ class _MisFinanzasPageState extends State<MisFinanzasPage> {
       return const Scaffold(
         body: Center(
           child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE01D25)),
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF8D72C2)),
           ),
         ),
       );
@@ -317,7 +317,7 @@ class _MisFinanzasPageState extends State<MisFinanzasPage> {
       ),
       body: RefreshIndicator(
         onRefresh: _loadData,
-        color: const Color(0xFFE01D25),
+        color: const Color(0xFF8D72C2),
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
@@ -423,7 +423,7 @@ class _MisFinanzasPageState extends State<MisFinanzasPage> {
                               'TOTAL EGRESOS',
                               totalGastos,
                               Icons.arrow_downward_outlined,
-                              Colors.red,
+                              const Color(0xFF8D72C2),
                               width,
                             ),
                             _buildKpiCard(
@@ -615,7 +615,7 @@ class _MisFinanzasPageState extends State<MisFinanzasPage> {
       chartSections.add(
         PieChartSectionData(
           value: monto,
-          color: colores[cat] ?? Colors.redAccent,
+          color: colores[cat] ?? const Color(0xFF8D72C2),
           title:
               '$cat\n${((monto / _gastos.fold(0.0, (p, e) => p + e.monto)) * 100).toStringAsFixed(1)}%',
           radius: 60,
@@ -765,7 +765,7 @@ class _MisFinanzasPageState extends State<MisFinanzasPage> {
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 14,
-                                    color: Color(0xFFE01D25),
+                                    color: Color(0xFF8D72C2),
                                   ),
                                 ),
                               ],
@@ -835,12 +835,12 @@ class _MisFinanzasPageState extends State<MisFinanzasPage> {
                                   icon: const Icon(
                                     Icons.delete,
                                     size: 16,
-                                    color: Colors.red,
+                                    color: const Color(0xFF8D72C2),
                                   ),
                                   label: const Text(
                                     'Eliminar',
                                     style: TextStyle(
-                                      color: Colors.red,
+                                      color: const Color(0xFF8D72C2),
                                       fontSize: 13,
                                       fontWeight: FontWeight.bold,
                                     ),

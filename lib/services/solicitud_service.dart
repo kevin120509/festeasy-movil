@@ -145,7 +145,7 @@ class SolicitudService {
           'monto_total': montoTotal,
           'monto_anticipo': 0,
           'monto_liquidacion': 0,
-          'numero_invitados': numeroInvitados,
+          // 'numero_invitados': numeroInvitados, // Eliminado por error de esquema en DB
           'estado': 'pendiente_aprobacion',
         })
         .select()

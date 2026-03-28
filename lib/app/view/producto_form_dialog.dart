@@ -68,7 +68,7 @@ class _ProductoFormDialogState extends State<ProductoFormDialog> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('El nombre es requerido'),
-          backgroundColor: Colors.red,
+          backgroundColor: const Color(0xFF8D72C2),
         ),
       );
       return;
@@ -78,7 +78,7 @@ class _ProductoFormDialogState extends State<ProductoFormDialog> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('El precio es requerido'),
-          backgroundColor: Colors.red,
+          backgroundColor: const Color(0xFF8D72C2),
         ),
       );
       return;
@@ -129,7 +129,7 @@ class _ProductoFormDialogState extends State<ProductoFormDialog> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Error: $e'), backgroundColor: const Color(0xFF8D72C2)),
         );
       }
     } finally {
@@ -226,7 +226,7 @@ class _ProductoFormDialogState extends State<ProductoFormDialog> {
         ElevatedButton(
           onPressed: isLoading ? null : _guardarProducto,
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFE01D25),
+            backgroundColor: const Color(0xFF8D72C2),
           ),
           child: isLoading
               ? const SizedBox(

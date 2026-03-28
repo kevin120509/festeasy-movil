@@ -85,7 +85,7 @@ class _ProviderDetailPageClientState extends State<ProviderDetailPageClient> {
           'Detalles del Proveedor',
           style: TextStyle(color: Colors.white),
         ),
-        backgroundColor: const Color(0xFFE01D25),
+        backgroundColor: const Color(0xFF8D72C2),
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -198,14 +198,14 @@ class _ProviderDetailPageClientState extends State<ProviderDetailPageClient> {
                           const Icon(
                             Icons.location_on,
                             size: 16,
-                            color: Color(0xFFE01D25),
+                            color: Color(0xFF8D72C2),
                           ),
                           const SizedBox(width: 4),
                           Text(
                             '${provider.distanciaKm!.toStringAsFixed(1)} km de distancia',
                             style: const TextStyle(
                               fontSize: 12,
-                              color: Color(0xFFE01D25),
+                              color: Color(0xFF8D72C2),
                             ),
                           ),
                         ],
@@ -238,7 +238,7 @@ class _ProviderDetailPageClientState extends State<ProviderDetailPageClient> {
                 const Icon(
                   Icons.location_on,
                   size: 16,
-                  color: Color(0xFFE01D25),
+                  color: Color(0xFF8D72C2),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -273,7 +273,7 @@ class _ProviderDetailPageClientState extends State<ProviderDetailPageClient> {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                const Icon(Icons.error, size: 48, color: Colors.red),
+                const Icon(Icons.error, size: 48, color: const Color(0xFF8D72C2)),
                 const SizedBox(height: 12),
                 Text('Error: ${snapshot.error}'),
               ],
@@ -380,7 +380,7 @@ class _ProviderDetailPageClientState extends State<ProviderDetailPageClient> {
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFFE01D25),
+                          color: Color(0xFF8D72C2),
                         ),
                       ),
                       ElevatedButton.icon(
@@ -388,7 +388,7 @@ class _ProviderDetailPageClientState extends State<ProviderDetailPageClient> {
                         icon: const Icon(Icons.arrow_forward, size: 16),
                         label: const Text('Ver'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFE01D25),
+                          backgroundColor: const Color(0xFF8D72C2),
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(
                             horizontal: 12,

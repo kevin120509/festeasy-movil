@@ -31,7 +31,7 @@ class ProductoCard extends StatelessWidget {
     final estado = producto.getEstadoStock();
     switch (estado) {
       case EstadoStock.sinStock:
-        return Colors.red;
+        return const Color(0xFF8D72C2);
       case EstadoStock.stockBajo:
         return Colors.orange;
       case EstadoStock.stockAlto:
@@ -200,8 +200,8 @@ class ProductoCard extends StatelessWidget {
                           onPressed: onDelete,
                           style: OutlinedButton.styleFrom(
                             padding: EdgeInsets.zero,
-                            foregroundColor: Colors.red,
-                            side: const BorderSide(color: Colors.red),
+                            foregroundColor: const Color(0xFF8D72C2),
+                            side: const BorderSide(color: const Color(0xFF8D72C2)),
                           ),
                           child: const Icon(Icons.delete, size: 16),
                         ),

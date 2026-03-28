@@ -60,7 +60,7 @@ class _ProvidersListPageState extends State<ProvidersListPage> {
           'Proveedores de ${_sessionData.categoryName ?? 'Servicios'}',
           style: const TextStyle(color: Colors.white),
         ),
-        backgroundColor: const Color(0xFFE01D25),
+        backgroundColor: const Color(0xFF8D72C2),
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -87,7 +87,7 @@ class _ProvidersListPageState extends State<ProvidersListPage> {
                               const Icon(
                                 Icons.error,
                                 size: 48,
-                                color: Colors.red,
+                                color: const Color(0xFF8D72C2),
                               ),
                               const SizedBox(height: 16),
                               Text('Error: ${snapshot.error}'),
@@ -166,7 +166,7 @@ class _ProvidersListPageState extends State<ProvidersListPage> {
               width: double.infinity,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFE01D25),
+                  backgroundColor: const Color(0xFF8D72C2),
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
@@ -189,7 +189,7 @@ class _ProvidersListPageState extends State<ProvidersListPage> {
                         ),
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFE01D25),
+                            backgroundColor: const Color(0xFF8D72C2),
                           ),
                           onPressed: () => Navigator.pop(context, true),
                           child: const Text(
@@ -300,14 +300,14 @@ class _ProvidersListPageState extends State<ProvidersListPage> {
                               const Icon(
                                 Icons.location_on,
                                 size: 14,
-                                color: Color(0xFFE01D25),
+                                color: Color(0xFF8D72C2),
                               ),
                               const SizedBox(width: 4),
                               Text(
                                 '${provider.distanciaKm!.toStringAsFixed(1)} km',
                                 style: const TextStyle(
                                   fontSize: 12,
-                                  color: Color(0xFFE01D25),
+                                  color: Color(0xFF8D72C2),
                                 ),
                               ),
                             ],

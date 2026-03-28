@@ -18,7 +18,7 @@ class HomePage extends StatelessWidget {
               const SizedBox(height: 80),
               // Logo de la app
               Image.asset(
-                'assets/icons/logo.jpeg',
+                'assets/icons/logo.png',
                 width: 280,
                 height: 140,
                 fit: BoxFit.contain,
@@ -42,7 +42,7 @@ class HomePage extends StatelessWidget {
                       width: double.infinity,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
+                          backgroundColor: const Color(0xFF8D72C2),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(28),
                           ),
@@ -71,7 +71,7 @@ class HomePage extends StatelessWidget {
                       width: double.infinity,
                       child: OutlinedButton(
                         style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Colors.red, width: 2),
+                          side: const BorderSide(color: const Color(0xFF8D72C2), width: 2),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(28),
                           ),
@@ -90,7 +90,7 @@ class HomePage extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
-                            color: Colors.red,
+                            color: const Color(0xFF8D72C2),
                           ),
                         ),
                       ),
@@ -120,7 +120,7 @@ class _Header extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: const BoxDecoration(
-              color: AppTheme.rojoPrimario,
+              color: AppTheme.purpuraPrimario,
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.public, color: Colors.white, size: 24),
@@ -172,7 +172,7 @@ class _HeroSection extends StatelessWidget {
               hintText: '¿Qué servicio buscas hoy?',
               prefixIcon: const Icon(
                 Icons.search,
-                color: AppTheme.rojoPrimario,
+                color: AppTheme.purpuraPrimario,
               ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(30),
@@ -184,7 +184,7 @@ class _HeroSection extends StatelessWidget {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(30),
-                borderSide: const BorderSide(color: AppTheme.rojoPrimario),
+                borderSide: const BorderSide(color: AppTheme.purpuraPrimario),
               ),
             ),
           ),

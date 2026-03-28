@@ -3,20 +3,20 @@ import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   static const Color blancoGlacial = Color(0xFFF8FFFF);
-  static const Color rojoPrimario = Color(0xFFE01D25);
+  static const Color purpuraPrimario = Color(0xFF8D72C2);
   static const Color negroAzabache = Color(0xFF010302);
   static const Color grisTecnico = Color(0xFFF4F7F9);
-  static const Color rosaAcento = Color(0xFFFFE5E7);
+  static const Color lavandaAcento = Color(0xFFF0E6FF);
 
   static ThemeData get theme {
     return ThemeData(
       useMaterial3: true,
       scaffoldBackgroundColor: blancoGlacial,
-      primaryColor: rojoPrimario,
+      primaryColor: purpuraPrimario,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: rojoPrimario,
-        primary: rojoPrimario,
-        secondary: rosaAcento,
+        seedColor: purpuraPrimario,
+        primary: purpuraPrimario,
+        secondary: lavandaAcento,
         surface: blancoGlacial,
         onSurface: negroAzabache,
         surfaceContainer: grisTecnico,
@@ -33,7 +33,7 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: rojoPrimario,
+          backgroundColor: purpuraPrimario,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),

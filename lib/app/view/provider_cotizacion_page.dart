@@ -130,7 +130,7 @@ class _ProviderCotizacionPageState extends State<ProviderCotizacionPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Error: $e'), backgroundColor: const Color(0xFF8D72C2)),
         );
       }
     } finally {
@@ -161,10 +161,10 @@ class _ProviderCotizacionPageState extends State<ProviderCotizacionPage> {
                   const Row(
                     children: [
                       CircleAvatar(
-                        backgroundColor: Color(0xFFFFE5E7),
+                        backgroundColor: Color(0xFFF0E6FF),
                         child: Icon(
                           Icons.architecture,
-                          color: Color(0xFFE01D25),
+                          color: Color(0xFF8D72C2),
                         ),
                       ),
                       SizedBox(width: 12),
@@ -213,7 +213,7 @@ class _ProviderCotizacionPageState extends State<ProviderCotizacionPage> {
                       children: [
                         const Row(
                           children: [
-                            Icon(Icons.inventory_2, color: Color(0xFFE01D25)),
+                            Icon(Icons.inventory_2, color: Color(0xFF8D72C2)),
                             SizedBox(width: 8),
                             Text(
                               'Paquete Base',
@@ -365,7 +365,7 @@ class _ProviderCotizacionPageState extends State<ProviderCotizacionPage> {
                               children: [
                                 Icon(
                                   Icons.shopping_cart,
-                                  color: Color(0xFFE01D25),
+                                  color: Color(0xFF8D72C2),
                                 ),
                                 SizedBox(width: 8),
                                 Text(
@@ -432,7 +432,7 @@ class _ProviderCotizacionPageState extends State<ProviderCotizacionPage> {
                                   IconButton(
                                     icon: const Icon(
                                       Icons.remove_circle_outline,
-                                      color: Colors.red,
+                                      color: const Color(0xFF8D72C2),
                                     ),
                                     onPressed: () => _removeExtraItem(e.key),
                                   ),
@@ -471,7 +471,7 @@ class _ProviderCotizacionPageState extends State<ProviderCotizacionPage> {
                       children: [
                         const Row(
                           children: [
-                            Icon(Icons.notes, color: Color(0xFFE01D25)),
+                            Icon(Icons.notes, color: Color(0xFF8D72C2)),
                             SizedBox(width: 8),
                             Text(
                               'Notas para el cliente',
@@ -557,7 +557,7 @@ class _ProviderCotizacionPageState extends State<ProviderCotizacionPage> {
                                 subtitle: Text(
                                   '\$${p.precioUnitario.toStringAsFixed(2)} - Stock: ${p.stock}',
                                   style: const TextStyle(
-                                    color: Color(0xFFE01D25),
+                                    color: Color(0xFF8D72C2),
                                     fontWeight: FontWeight.bold,
                                     fontSize: 11,
                                   ),
@@ -640,7 +640,7 @@ class _ProviderCotizacionPageState extends State<ProviderCotizacionPage> {
               child: ElevatedButton(
                 onPressed: _isLoading ? null : _enviarCotizacion,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFE01D25),
+                  backgroundColor: const Color(0xFF8D72C2),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),

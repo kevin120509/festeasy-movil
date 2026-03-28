@@ -253,7 +253,7 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
             child: const Text('Cancelar'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF8D72C2)),
             onPressed: () => Navigator.pop(context, true),
             child: const Text(
               'Eliminar',
@@ -425,7 +425,7 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
                              solicitud?.estado == 'entregado_pendiente_liq')
           ? FloatingActionButton(
               onPressed: () => _showChatModal(context),
-              backgroundColor: const Color(0xFFE01D25),
+              backgroundColor: const Color(0xFF8D72C2),
               child: const Icon(Icons.chat_bubble, color: Colors.white),
             )
           : null,
@@ -449,12 +449,12 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
       body: _isLoading
           ? const Center(
               child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE01D25)),
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF8D72C2)),
               ),
             )
           : RefreshIndicator(
               onRefresh: _load,
-              color: const Color(0xFFE01D25),
+              color: const Color(0xFF8D72C2),
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -475,7 +475,7 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
                             Text(
                               _formatHHMMSS(remaining),
                               style: const TextStyle(
-                                color: Color(0xFFE01D25),
+                                color: Color(0xFF8D72C2),
                                 fontWeight: FontWeight.w900,
                                 fontSize: 56,
                                 height: 1,
@@ -661,14 +661,14 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
                                     width: 40,
                                     height: 40,
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFFFE5E7),
+                                      color: const Color(0xFFF0E6FF),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Center(
                                       child: Text(
                                         'x$cantidad',
                                         style: const TextStyle(
-                                          color: Color(0xFFE01D25),
+                                          color: Color(0xFF8D72C2),
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
@@ -687,7 +687,7 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
                                     '\$${(precio * cantidad).toStringAsFixed(2)}',
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      color: Color(0xFFE01D25),
+                                      color: Color(0xFF8D72C2),
                                     ),
                                   ),
                                 ],
@@ -723,7 +723,7 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
                       width: double.infinity,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFE01D25),
+                          backgroundColor: const Color(0xFF8D72C2),
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(30),
@@ -814,10 +814,10 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
                               width: double.infinity,
                               padding: const EdgeInsets.all(20),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFE01D25).withOpacity(0.1),
+                                color: const Color(0xFF8D72C2).withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: const Color(0xFFE01D25),
+                                  color: const Color(0xFF8D72C2),
                                   width: 2,
                                 ),
                               ),
@@ -825,7 +825,7 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
                                 children: [
                                   const Icon(
                                     Icons.lock,
-                                    color: Color(0xFFE01D25),
+                                    color: Color(0xFF8D72C2),
                                     size: 32,
                                   ),
                                   const SizedBox(height: 8),
@@ -834,7 +834,7 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 12,
-                                      color: Color(0xFFE01D25),
+                                      color: Color(0xFF8D72C2),
                                       letterSpacing: 1.5,
                                     ),
                                   ),
@@ -845,7 +845,7 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
                                       fontWeight: FontWeight.bold,
                                       fontSize: 40,
                                       letterSpacing: 12,
-                                      color: Color(0xFFE01D25),
+                                      color: Color(0xFF8D72C2),
                                     ),
                                   ),
                                   const SizedBox(height: 8),
@@ -993,7 +993,7 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
                                 )
                               : const Icon(
                                   Icons.delete_outline,
-                                  color: Colors.red,
+                                  color: const Color(0xFF8D72C2),
                                 ),
                           label: Text(
                             _isDeleting
@@ -1001,7 +1001,7 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
                                 : 'Eliminar solicitud',
                             style: const TextStyle(
                               fontWeight: FontWeight.w600,
-                              color: Colors.red,
+                              color: const Color(0xFF8D72C2),
                               fontSize: 16,
                             ),
                           ),
@@ -1068,7 +1068,7 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          Icon(icon, color: const Color(0xFFE01D25), size: 20),
+          Icon(icon, color: const Color(0xFF8D72C2), size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -1149,7 +1149,7 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
               width: 70,
               height: 70,
               decoration: BoxDecoration(
-                color: const Color(0xFFFFE5E7),
+                color: const Color(0xFFF0E6FF),
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.white, width: 3),
                 boxShadow: [
@@ -1168,7 +1168,7 @@ class _RequestStatusPageState extends State<RequestStatusPage> {
                     : null,
               ),
               child: _providerPhotoUrl == null || _providerPhotoUrl!.isEmpty
-                  ? const Icon(Icons.person, color: Color(0xFFE01D25), size: 36)
+                  ? const Icon(Icons.person, color: Color(0xFF8D72C2), size: 36)
                   : null,
             ),
             const SizedBox(width: 14),

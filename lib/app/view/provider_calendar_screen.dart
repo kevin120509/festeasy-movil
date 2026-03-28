@@ -60,7 +60,7 @@ class _ProviderCalendarScreenState extends State<ProviderCalendarScreen> {
     if (_isLoading) {
       return const Center(
         child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE01D25)),
+          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF8D72C2)),
         ),
       );
     }
@@ -109,18 +109,18 @@ class _ProviderCalendarScreenState extends State<ProviderCalendarScreen> {
         ),
         calendarStyle: CalendarStyle(
           selectedDecoration: const BoxDecoration(
-            color: Color(0xFFE01D25),
+            color: Color(0xFF8D72C2),
             shape: BoxShape.circle,
           ),
           todayDecoration: BoxDecoration(
-            color: const Color(0xFFE01D25).withOpacity(0.3),
+            color: const Color(0xFF8D72C2).withOpacity(0.3),
             shape: BoxShape.circle,
           ),
           markerDecoration: const BoxDecoration(
             color: Color(0xFF2C3E50),
             shape: BoxShape.circle,
           ),
-          weekendTextStyle: const TextStyle(color: Color(0xFFE01D25)),
+          weekendTextStyle: const TextStyle(color: Color(0xFF8D72C2)),
         ),
       ),
     );
@@ -335,7 +335,7 @@ class _ProviderCalendarScreenState extends State<ProviderCalendarScreen> {
       case 'finalizado':
         return Colors.green;
       case 'rechazada':
-        return Colors.red;
+        return const Color(0xFF8D72C2);
       default:
         return Colors.grey;
     }

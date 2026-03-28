@@ -101,7 +101,7 @@ class _ChatListPageState extends State<ChatListPage> {
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFFE01D25)),
+          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF8D72C2)),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
@@ -138,7 +138,7 @@ class _ChatListPageState extends State<ChatListPage> {
             )
           : RefreshIndicator(
               onRefresh: _loadConversations,
-              color: const Color(0xFFE01D25),
+              color: const Color(0xFF8D72C2),
               child: ListView.separated(
                 itemCount: _conversaciones.length,
                 separatorBuilder: (context, index) =>

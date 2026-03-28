@@ -109,7 +109,7 @@ class _MisEventosPageState extends State<MisEventosPage>
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications, color: Color(0xFFE01D25)),
+            icon: const Icon(Icons.notifications, color: Color(0xFF8D72C2)),
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -140,9 +140,9 @@ class _MisEventosPageState extends State<MisEventosPage>
         ],
         bottom: TabBar(
           controller: _tabController,
-          labelColor: const Color(0xFFE01D25),
+          labelColor: const Color(0xFF8D72C2),
           unselectedLabelColor: Colors.grey,
-          indicatorColor: const Color(0xFFE01D25),
+          indicatorColor: const Color(0xFF8D72C2),
           tabs: [
             Tab(text: 'Activas (${_activas.length})'),
             Tab(text: 'Próximas (${_proximas.length})'),
@@ -153,7 +153,7 @@ class _MisEventosPageState extends State<MisEventosPage>
       body: _isLoading
           ? const Center(
               child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE01D25)),
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF8D72C2)),
               ),
             )
           : TabBarView(
@@ -161,7 +161,7 @@ class _MisEventosPageState extends State<MisEventosPage>
               children: [
                 RefreshIndicator(
                   onRefresh: _loadSolicitudes,
-                  color: const Color(0xFFE01D25),
+                  color: const Color(0xFF8D72C2),
                   child: _buildSolicitudesList(
                     _activas,
                     emptyMessage: 'No tienes solicitudes activas',
@@ -169,7 +169,7 @@ class _MisEventosPageState extends State<MisEventosPage>
                 ),
                 RefreshIndicator(
                   onRefresh: _loadSolicitudes,
-                  color: const Color(0xFFE01D25),
+                  color: const Color(0xFF8D72C2),
                   child: _buildSolicitudesList(
                     _proximas,
                     emptyMessage: 'No tienes eventos próximos',
@@ -177,7 +177,7 @@ class _MisEventosPageState extends State<MisEventosPage>
                 ),
                 RefreshIndicator(
                   onRefresh: _loadSolicitudes,
-                  color: const Color(0xFFE01D25),
+                  color: const Color(0xFF8D72C2),
                   child: _buildSolicitudesList(
                     _historial,
                     emptyMessage: 'No tienes eventos en historial',
@@ -312,12 +312,12 @@ class _MisEventosPageState extends State<MisEventosPage>
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFFE5E7),
+                          color: const Color(0xFFF0E6FF),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Icon(
                           Icons.store,
-                          color: Color(0xFFE01D25),
+                          color: Color(0xFF8D72C2),
                           size: 20,
                         ),
                       ),
@@ -354,7 +354,7 @@ class _MisEventosPageState extends State<MisEventosPage>
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
-                              color: Color(0xFFE01D25),
+                              color: Color(0xFF8D72C2),
                             ),
                           ),
                           Text(
@@ -442,7 +442,7 @@ class _MisEventosPageState extends State<MisEventosPage>
                               .then((_) => _loadSolicitudes());
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFE01D25),
+                          backgroundColor: const Color(0xFF8D72C2),
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
@@ -561,7 +561,7 @@ class _MisEventosPageState extends State<MisEventosPage>
           'icon': Icons.cancel,
         };
       case 'rechazada':
-        return {'label': 'Rechazada', 'color': Colors.red, 'icon': Icons.block};
+        return {'label': 'Rechazada', 'color': const Color(0xFF8D72C2), 'icon': Icons.block};
       case 'abandonada':
         return {
           'label': 'Abandonada',

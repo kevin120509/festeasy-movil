@@ -159,7 +159,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         children: [
                           const Icon(
                             Icons.calendar_today,
-                            color: Color(0xFFE01D25),
+                            color: Color(0xFF8D72C2),
                             size: 18,
                           ),
                           const SizedBox(width: 10),
@@ -200,7 +200,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         children: [
                           const Icon(
                             Icons.access_time,
-                            color: Color(0xFFE01D25),
+                            color: Color(0xFF8D72C2),
                             size: 18,
                           ),
                           const SizedBox(width: 10),
@@ -238,7 +238,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   style: const TextStyle(fontWeight: FontWeight.w500),
                 ),
               ),
-              const Icon(Icons.search, color: Color(0xFFE01D25)),
+              const Icon(Icons.search, color: Color(0xFF8D72C2)),
             ],
           ),
         ),
@@ -275,7 +275,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
               const Center(
                 child: Icon(
                   Icons.location_pin,
-                  color: Color(0xFFE01D25),
+                  color: Color(0xFF8D72C2),
                   size: 40,
                 ),
               ),
@@ -327,12 +327,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
             ),
             Row(
               children: [
-                Icon(Icons.lock, color: Color(0xFFE01D25), size: 16),
+                Icon(Icons.lock, color: Color(0xFF8D72C2), size: 16),
                 SizedBox(width: 4),
                 Text(
                   'Seguro',
                   style: TextStyle(
-                    color: Color(0xFFE01D25),
+                    color: Color(0xFF8D72C2),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -358,11 +358,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
                     horizontal: 8,
                   ),
                   decoration: BoxDecoration(
-                    color: isSelected ? const Color(0xFFFFE5E7) : Colors.white,
+                    color: isSelected ? const Color(0xFFF0E6FF) : Colors.white,
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
                       color: isSelected
-                          ? const Color(0xFFE01D25)
+                          ? const Color(0xFF8D72C2)
                           : Colors.grey.shade200,
                       width: isSelected ? 2 : 1,
                     ),
@@ -374,7 +374,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                           Icon(
                             method['icon']! as IconData,
                             color: isSelected
-                                ? const Color(0xFFE01D25)
+                                ? const Color(0xFF8D72C2)
                                 : Colors.grey,
                             size: 28,
                           ),
@@ -384,7 +384,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                               top: -4,
                               child: Icon(
                                 Icons.check_circle,
-                                color: Color(0xFFE01D25),
+                                color: Color(0xFF8D72C2),
                                 size: 14,
                               ),
                             ),
@@ -397,7 +397,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                           fontWeight: FontWeight.bold,
                           fontSize: 13,
                           color: isSelected
-                              ? const Color(0xFFE01D25)
+                              ? const Color(0xFF8D72C2)
                               : const Color(0xFF010302),
                         ),
                       ),
@@ -508,7 +508,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 22,
-                        color: Color(0xFFE01D25),
+                        color: Color(0xFF8D72C2),
                       ),
                     ),
                   ],
@@ -526,7 +526,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
             width: width,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFE01D25),
+                backgroundColor: const Color(0xFF8D72C2),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(40),
                 ),
@@ -595,7 +595,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         width: double.infinity,
         child: ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFE01D25),
+            backgroundColor: const Color(0xFF8D72C2),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
             ),
@@ -640,7 +640,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       builder: (context, child) {
         return Theme(
           data: ThemeData.light().copyWith(
-            colorScheme: const ColorScheme.light(primary: Color(0xFFE01D25)),
+            colorScheme: const ColorScheme.light(primary: Color(0xFF8D72C2)),
           ),
           child: child!,
         );
@@ -660,7 +660,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       builder: (context, child) {
         return Theme(
           data: ThemeData.light().copyWith(
-            colorScheme: const ColorScheme.light(primary: Color(0xFFE01D25)),
+            colorScheme: const ColorScheme.light(primary: Color(0xFF8D72C2)),
           ),
           child: child!,
         );

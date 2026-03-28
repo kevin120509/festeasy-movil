@@ -69,7 +69,7 @@ class _PackageDetailPageClientState extends State<PackageDetailPageClient> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('No se pudo guardar en la base de datos: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: const Color(0xFF8D72C2),
           ),
         );
       }
@@ -107,7 +107,7 @@ class _PackageDetailPageClientState extends State<PackageDetailPageClient> {
           'Detalle del Paquete',
           style: TextStyle(color: Colors.white),
         ),
-        backgroundColor: const Color(0xFFE01D25),
+        backgroundColor: const Color(0xFF8D72C2),
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -128,7 +128,7 @@ class _PackageDetailPageClientState extends State<PackageDetailPageClient> {
                     child: Container(
                       padding: const EdgeInsets.all(4),
                       decoration: const BoxDecoration(
-                        color: Colors.red,
+                        color: const Color(0xFF8D72C2),
                         shape: BoxShape.circle,
                       ),
                       constraints: const BoxConstraints(
@@ -241,7 +241,7 @@ class _PackageDetailPageClientState extends State<PackageDetailPageClient> {
               child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE01D25).withOpacity(0.1),
+                  color: const Color(0xFF8D72C2).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
@@ -256,7 +256,7 @@ class _PackageDetailPageClientState extends State<PackageDetailPageClient> {
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFFE01D25),
+                        color: Color(0xFF8D72C2),
                       ),
                     ),
                   ],
@@ -370,7 +370,7 @@ class _PackageDetailPageClientState extends State<PackageDetailPageClient> {
                   ElevatedButton(
                     onPressed: _addToCart,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFE01D25),
+                      backgroundColor: const Color(0xFF8D72C2),
                       foregroundColor: Colors.white,
                       minimumSize: const Size(double.infinity, 48),
                     ),
@@ -389,14 +389,14 @@ class _PackageDetailPageClientState extends State<PackageDetailPageClient> {
                       onPressed: _goToCart,
                       style: OutlinedButton.styleFrom(
                         minimumSize: const Size(double.infinity, 48),
-                        side: const BorderSide(color: Color(0xFFE01D25)),
+                        side: const BorderSide(color: Color(0xFF8D72C2)),
                       ),
                       child: const Text(
                         'Ir al Carrito',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFFE01D25),
+                          color: Color(0xFF8D72C2),
                         ),
                       ),
                     ),
@@ -458,7 +458,7 @@ class _PackageDetailPageClientState extends State<PackageDetailPageClient> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: _currentPhotoIndex == index
-                    ? const Color(0xFFE01D25)
+                    ? const Color(0xFF8D72C2)
                     : Colors.grey,
               ),
             ),
@@ -489,7 +489,7 @@ class _PackageDetailPageClientState extends State<PackageDetailPageClient> {
               const Icon(
                 Icons.check_circle,
                 size: 16,
-                color: Color(0xFFE01D25),
+                color: Color(0xFF8D72C2),
               ),
               const SizedBox(width: 8),
               Expanded(

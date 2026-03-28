@@ -54,7 +54,7 @@ class _ProviderPaqueteDetailPageState extends State<ProviderPaqueteDetailPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al cambiar estado: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Error al cambiar estado: $e'), backgroundColor: const Color(0xFF8D72C2)),
         );
       }
     }
@@ -227,7 +227,7 @@ class _ProviderPaqueteDetailPageState extends State<ProviderPaqueteDetailPage> {
                       Positioned(
                         right: 0,
                         child: IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
+                          icon: const Icon(Icons.delete, color: const Color(0xFF8D72C2)),
                           onPressed: () => setState(() => fotosActuales.removeAt(entry.key)),
                         ),
                       ),
@@ -323,7 +323,7 @@ class _ProviderPaqueteDetailPageState extends State<ProviderPaqueteDetailPage> {
                 }
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF8D72C2)),
             child: const Text('Eliminar'),
           ),
         ],
@@ -349,7 +349,7 @@ class _ProviderPaqueteDetailPageState extends State<ProviderPaqueteDetailPage> {
         centerTitle: true,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFFE01D25)),
+          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF8D72C2)),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
@@ -402,12 +402,12 @@ class _ProviderPaqueteDetailPageState extends State<ProviderPaqueteDetailPage> {
                               Container(
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFFFE5E7),
+                                  color: const Color(0xFFF0E6FF),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: const Icon(
                                   Icons.inventory_2,
-                                  color: Color(0xFFE01D25),
+                                  color: Color(0xFF8D72C2),
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -458,8 +458,8 @@ class _ProviderPaqueteDetailPageState extends State<ProviderPaqueteDetailPage> {
                               child: TextButton.icon(
                                 onPressed: _toggleEstado,
                                 style: TextButton.styleFrom(
-                                  backgroundColor: _paquete.isPublished ? Colors.red.withOpacity(0.1) : Colors.green.withOpacity(0.1),
-                                  foregroundColor: _paquete.isPublished ? Colors.red : Colors.green,
+                                  backgroundColor: _paquete.isPublished ? const Color(0xFF8D72C2).withOpacity(0.1) : Colors.green.withOpacity(0.1),
+                                  foregroundColor: _paquete.isPublished ? const Color(0xFF8D72C2) : Colors.green,
                                   padding: const EdgeInsets.symmetric(horizontal: 10),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(8),
@@ -659,13 +659,13 @@ class _ProviderPaqueteDetailPageState extends State<ProviderPaqueteDetailPage> {
                               Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFFFE5E7),
+                                  color: const Color(0xFFF0E6FF),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: const Icon(
                                   Icons.checklist,
                                   size: 18,
-                                  color: Color(0xFFE01D25),
+                                  color: Color(0xFF8D72C2),
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -730,7 +730,7 @@ class _ProviderPaqueteDetailPageState extends State<ProviderPaqueteDetailPage> {
                                   style: TextStyle(fontWeight: FontWeight.w600),
                                 ),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFFE01D25),
+                                  backgroundColor: const Color(0xFF8D72C2),
                                   foregroundColor: Colors.white,
                                   padding: const EdgeInsets.symmetric(vertical: 14),
                                   shape: RoundedRectangleBorder(
@@ -771,8 +771,8 @@ class _ProviderPaqueteDetailPageState extends State<ProviderPaqueteDetailPage> {
                               style: TextStyle(fontWeight: FontWeight.w600),
                             ),
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.red,
-                              side: const BorderSide(color: Colors.red),
+                              foregroundColor: const Color(0xFF8D72C2),
+                              side: const BorderSide(color: const Color(0xFF8D72C2)),
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),

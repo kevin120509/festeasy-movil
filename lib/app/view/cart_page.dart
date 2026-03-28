@@ -76,8 +76,8 @@ class _CartPageState extends State<CartPage> {
     if (widget.initialDate != null) selectedDate = widget.initialDate!;
     if (widget.initialTime != null) selectedTime = widget.initialTime!;
     
-    eventName = ServiceSessionData.getInstance().eventName ?? widget.categoryName;
-    guests = ServiceSessionData.getInstance().numberOfGuests ?? widget.initialGuests;
+    eventName = ServiceSessionData.getInstance().getEventNameForCart(widget.carritoId, widget.categoryName) ?? widget.categoryName;
+    guests = ServiceSessionData.getInstance().getGuestsForCart(widget.carritoId) ?? widget.initialGuests;
     _eventController.text = eventName;
     _guestsController.text = guests?.toString() ?? '';
 
@@ -198,7 +198,7 @@ class _CartPageState extends State<CartPage> {
             child: const Text(
               'Vaciar',
               style: TextStyle(
-                color: Color(0xFFE01D25),
+                color: Color(0xFF8D72C2),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -283,10 +283,10 @@ class _CartPageState extends State<CartPage> {
         children: [
           CircleAvatar(
             radius: 28,
-            backgroundColor: const Color(0xFFFFE5E7),
+            backgroundColor: const Color(0xFFF0E6FF),
             backgroundImage: avatar != null ? NetworkImage(avatar) : null,
             child: avatar == null
-                ? const Icon(Icons.person, color: Color(0xFFE01D25))
+                ? const Icon(Icons.person, color: Color(0xFF8D72C2))
                 : null,
           ),
           const SizedBox(width: 12),
@@ -336,13 +336,13 @@ class _CartPageState extends State<CartPage> {
             controller: _eventController,
             decoration: InputDecoration(
               labelText: 'Nombre del Evento',
-              prefixIcon: const Icon(Icons.celebration, color: Color(0xFFE01D25), size: 18),
+              prefixIcon: const Icon(Icons.celebration, color: Color(0xFF8D72C2), size: 18),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
             onChanged: (val) {
               eventName = val;
-              ServiceSessionData.getInstance().eventName = val;
+              ServiceSessionData.getInstance().setEventNameForCart(widget.carritoId, val);
             },
           ),
           const SizedBox(height: 12),
@@ -351,13 +351,13 @@ class _CartPageState extends State<CartPage> {
             keyboardType: TextInputType.number,
             decoration: InputDecoration(
               labelText: 'Número de Invitados (Opcional)',
-              prefixIcon: const Icon(Icons.people, color: Color(0xFFE01D25), size: 18),
+              prefixIcon: const Icon(Icons.people, color: Color(0xFF8D72C2), size: 18),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
             onChanged: (val) {
               guests = int.tryParse(val);
-              ServiceSessionData.getInstance().numberOfGuests = guests;
+              ServiceSessionData.getInstance().setGuestsForCart(widget.carritoId, guests);
             },
           ),
           const SizedBox(height: 16),
@@ -374,7 +374,7 @@ class _CartPageState extends State<CartPage> {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.calendar_today, color: Color(0xFFE01D25), size: 18),
+                        const Icon(Icons.calendar_today, color: Color(0xFF8D72C2), size: 18),
                         const SizedBox(width: 8),
                         Flexible(
                           child: Text(
@@ -400,7 +400,7 @@ class _CartPageState extends State<CartPage> {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.schedule, color: Color(0xFFE01D25), size: 18),
+                        const Icon(Icons.schedule, color: Color(0xFF8D72C2), size: 18),
                         const SizedBox(width: 8),
                         Flexible(
                           child: Text(
@@ -434,7 +434,7 @@ class _CartPageState extends State<CartPage> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.location_on, color: Color(0xFFE01D25), size: 18),
+                  const Icon(Icons.location_on, color: Color(0xFF8D72C2), size: 18),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -477,7 +477,7 @@ class _CartPageState extends State<CartPage> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFE01D25),
+              backgroundColor: const Color(0xFF8D72C2),
             ),
             onPressed: () {
               setState(() {
@@ -522,7 +522,7 @@ class _CartPageState extends State<CartPage> {
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: selected
-                          ? const Color(0xFFE01D25)
+                          ? const Color(0xFF8D72C2)
                           : Colors.grey.shade200,
                     ),
                   ),
@@ -530,7 +530,7 @@ class _CartPageState extends State<CartPage> {
                     children: [
                       Icon(
                         icon,
-                        color: selected ? const Color(0xFFE01D25) : Colors.grey,
+                        color: selected ? const Color(0xFF8D72C2) : Colors.grey,
                       ),
                       const SizedBox(height: 6),
                       Text(
@@ -538,7 +538,7 @@ class _CartPageState extends State<CartPage> {
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: selected
-                              ? const Color(0xFFE01D25)
+                              ? const Color(0xFF8D72C2)
                               : Colors.black,
                         ),
                       ),
@@ -602,13 +602,13 @@ class _CartPageState extends State<CartPage> {
             width: 70,
             height: 70,
             decoration: BoxDecoration(
-              color: const Color(0xFFFFE5E7),
+              color: const Color(0xFFF0E6FF),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(
               Icons.inventory_2,
               size: 32,
-              color: Color(0xFFE01D25),
+              color: Color(0xFF8D72C2),
             ),
           ),
           const SizedBox(width: 14),
@@ -642,7 +642,7 @@ class _CartPageState extends State<CartPage> {
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
-                          color: Color(0xFFE01D25),
+                          color: Color(0xFF8D72C2),
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -691,7 +691,7 @@ class _CartPageState extends State<CartPage> {
                 ).catchError((e) {
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error al actualizar: $e'), backgroundColor: Colors.red),
+                      SnackBar(content: Text('Error al actualizar: $e'), backgroundColor: const Color(0xFF8D72C2)),
                     );
                   }
                 });
@@ -704,7 +704,7 @@ class _CartPageState extends State<CartPage> {
                     .catchError((e) {
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Error al eliminar: $e'), backgroundColor: Colors.red),
+                          SnackBar(content: Text('Error al eliminar: $e'), backgroundColor: const Color(0xFF8D72C2)),
                         );
                       }
                     });
@@ -743,7 +743,7 @@ class _CartPageState extends State<CartPage> {
               ).catchError((e) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error al actualizar: $e'), backgroundColor: Colors.red),
+                    SnackBar(content: Text('Error al actualizar: $e'), backgroundColor: const Color(0xFF8D72C2)),
                   );
                 }
               });
@@ -752,7 +752,7 @@ class _CartPageState extends State<CartPage> {
           child: Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: const Color(0xFFE01D25),
+              color: const Color(0xFF8D72C2),
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Icon(Icons.add, size: 18, color: Colors.white),
@@ -810,7 +810,7 @@ class _CartPageState extends State<CartPage> {
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 22,
-                  color: Color(0xFFE01D25),
+                  color: Color(0xFF8D72C2),
                 ),
               ),
             ],
@@ -820,7 +820,7 @@ class _CartPageState extends State<CartPage> {
             width: double.infinity,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFE01D25),
+                backgroundColor: const Color(0xFF8D72C2),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
@@ -938,7 +938,7 @@ class _CartPageState extends State<CartPage> {
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Confirmar', style: TextStyle(color: Color(0xFFE01D25))),
+            child: const Text('Confirmar', style: TextStyle(color: Color(0xFF8D72C2))),
           ),
         ],
       ),

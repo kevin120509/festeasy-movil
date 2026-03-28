@@ -148,7 +148,7 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
       context: context,
       barrierDismissible: false,
       builder: (context) => const Center(
-        child: CircularProgressIndicator(color: Color(0xFFE01D25)),
+        child: CircularProgressIndicator(color: Color(0xFF8D72C2)),
       ),
     );
 
@@ -336,7 +336,7 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
                     (d) => ListTile(
                       leading: const Icon(
                         Icons.location_on,
-                        color: Color(0xFFE01D25),
+                        color: Color(0xFF8D72C2),
                       ),
                       title: Text(d['titulo'] ?? ''),
                       subtitle: Text(d['direccion'] ?? ''),
@@ -430,7 +430,7 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
           child: LinearProgressIndicator(
             value: 0.33,
             backgroundColor: Color(0xFFF4F7F9),
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE01D25)),
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF8D72C2)),
             minHeight: 5,
           ),
         ),
@@ -469,12 +469,12 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFE5E7),
+        color: const Color(0xFFF0E6FF),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
         children: [
-          Icon(widget.categoryIcon, color: const Color(0xFFE01D25), size: 36),
+          Icon(widget.categoryIcon, color: const Color(0xFF8D72C2), size: 36),
           const SizedBox(width: 14),
           Text(
             widget.categoryName,
@@ -503,7 +503,7 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.calendar_today, color: Color(0xFFE01D25)),
+                  const Icon(Icons.calendar_today, color: Color(0xFF8D72C2)),
                   const SizedBox(width: 10),
                   Text(
                     selectedDate != null
@@ -531,7 +531,7 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.access_time, color: Color(0xFFE01D25)),
+                  const Icon(Icons.access_time, color: Color(0xFF8D72C2)),
                   const SizedBox(width: 10),
                   Text(
                     selectedTime != null
@@ -573,7 +573,7 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
             fillColor: const Color(0xFFF4F7F9),
             hintText: 'Ej: 50',
             hintStyle: const TextStyle(color: Colors.grey),
-            prefixIcon: const Icon(Icons.people, color: Color(0xFFE01D25)),
+            prefixIcon: const Icon(Icons.people, color: Color(0xFF8D72C2)),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
@@ -610,7 +610,7 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
             fillColor: const Color(0xFFF4F7F9),
             hintText: 'Ej: Boda de Carlos y Ana',
             hintStyle: const TextStyle(color: Colors.grey),
-            prefixIcon: const Icon(Icons.celebration, color: Color(0xFFE01D25)),
+            prefixIcon: const Icon(Icons.celebration, color: Color(0xFF8D72C2)),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
@@ -641,7 +641,7 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
               icon: const Icon(Icons.my_location, size: 16),
               label: const Text('Usar mi ubicación actual'),
               style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFFE01D25),
+                foregroundColor: const Color(0xFF8D72C2),
                 padding: EdgeInsets.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
@@ -656,9 +656,9 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
             filled: true,
             fillColor: const Color(0xFFF4F7F9),
             hintText: 'Buscar dirección...',
-            prefixIcon: const Icon(Icons.location_on, color: Color(0xFFE01D25)),
+            prefixIcon: const Icon(Icons.location_on, color: Color(0xFF8D72C2)),
             suffixIcon: IconButton(
-              icon: const Icon(Icons.bookmark, color: Color(0xFFE01D25)),
+              icon: const Icon(Icons.bookmark, color: Color(0xFF8D72C2)),
               tooltip: 'Usar dirección guardada',
               onPressed: _showSavedAddresses,
             ),
@@ -675,7 +675,7 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
           width: double.infinity,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFE01D25).withOpacity(0.3)),
+            border: Border.all(color: const Color(0xFF8D72C2).withOpacity(0.3)),
           ),
           clipBehavior: Clip.antiAlias,
           child: Stack(
@@ -709,7 +709,7 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
                   padding: EdgeInsets.only(bottom: 36),
                   child: Icon(
                     Icons.location_pin,
-                    color: Color(0xFFE01D25),
+                    color: Color(0xFF8D72C2),
                     size: 48,
                   ),
                 ),
@@ -731,7 +731,7 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
                   },
                   child: const Icon(
                     Icons.my_location,
-                    color: Color(0xFFE01D25),
+                    color: Color(0xFF8D72C2),
                   ),
                 ),
               ),
@@ -764,8 +764,8 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
         width: double.infinity,
         child: ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFE01D25),
-            disabledBackgroundColor: const Color(0xFFE01D25).withOpacity(0.4),
+            backgroundColor: const Color(0xFF8D72C2),
+            disabledBackgroundColor: const Color(0xFF8D72C2).withOpacity(0.4),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(18),
             ),
@@ -794,7 +794,7 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
       builder: (context, child) {
         return Theme(
           data: ThemeData.light().copyWith(
-            colorScheme: const ColorScheme.light(primary: Color(0xFFE01D25)),
+            colorScheme: const ColorScheme.light(primary: Color(0xFF8D72C2)),
           ),
           child: child!,
         );
@@ -814,7 +814,7 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
       builder: (context, child) {
         return Theme(
           data: ThemeData.light().copyWith(
-            colorScheme: const ColorScheme.light(primary: Color(0xFFE01D25)),
+            colorScheme: const ColorScheme.light(primary: Color(0xFF8D72C2)),
           ),
           child: child!,
         );
@@ -854,7 +854,7 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE01D25)),
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF8D72C2)),
             ),
             SizedBox(height: 20),
             Text(

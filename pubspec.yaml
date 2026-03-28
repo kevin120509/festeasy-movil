@@ -52,15 +52,15 @@ flutter:
   generate: true
   uses-material-design: true
   assets:
-    - assets/icons/app_icon.jpeg
-    - assets/icons/logo.jpeg
+    - assets/icons/app_icon.png
+    - assets/icons/logo.png
 
 # Configuration for flutter_launcher_icons
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/icons/app_icon.jpeg"
+  image_path: "assets/icons/app_icon.png"
   min_sdk_android: 21
   adaptive_icon_background: "#ffffff"
-  adaptive_icon_foreground: "assets/icons/app_icon.jpeg"
+  adaptive_icon_foreground: "assets/icons/app_icon.png"
   remove_alpha_ios: true

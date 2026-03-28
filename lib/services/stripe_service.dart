@@ -72,7 +72,7 @@ class StripeService {
           style: ThemeMode.light,
           appearance: const PaymentSheetAppearance(
             colors: PaymentSheetAppearanceColors(
-              primary: Color(0xFFE01D25),
+              primary: Color(0xFF8D72C2),
             ),
           ),
         ),

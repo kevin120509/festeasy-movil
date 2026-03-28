@@ -12,16 +12,41 @@ class SplashPage extends StatefulWidget {
   State<SplashPage> createState() => _SplashPageState();
 }
 
-class _SplashPageState extends State<SplashPage> {
+class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _fadeAnimation;
+
   @override
   void initState() {
     super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+
+    _scaleAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.elasticOut,
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _controller, curve: const Interval(0, 0.5)),
+    );
+
+    _controller.forward();
     Future.microtask(_checkAuthAndNavigate);
   }
 
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
   Future<void> _checkAuthAndNavigate() async {
-    // Breve pausa para que se alcance a ver el logo
-    await Future.delayed(const Duration(milliseconds: 1500));
+    // Breve pausa para que se alcance a ver el logo y termine la animación
+    await Future.delayed(const Duration(milliseconds: 2500));
 
     if (!mounted) return;
 
@@ -83,15 +108,21 @@ class _SplashPageState extends State<SplashPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset(
-              'assets/icons/logo.jpeg',
-              width: 280,
-              height: 140,
-              fit: BoxFit.contain,
+            FadeTransition(
+              opacity: _fadeAnimation,
+              child: ScaleTransition(
+                scale: _scaleAnimation,
+                child: Image.asset(
+                  'assets/icons/logo.png',
+                  width: 280,
+                  height: 140,
+                  fit: BoxFit.contain,
+                ),
+              ),
             ),
             const SizedBox(height: 32),
             const CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE01D25)),
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF8D72C2)),
             ),
           ],
         ),

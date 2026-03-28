@@ -122,7 +122,7 @@ class _ProviderSolicitudDetailPageState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Error: $e'), backgroundColor: const Color(0xFF8D72C2)),
         );
       }
     } finally {
@@ -162,7 +162,7 @@ class _ProviderSolicitudDetailPageState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Error: $e'), backgroundColor: const Color(0xFF8D72C2)),
         );
       }
     } finally {
@@ -251,7 +251,7 @@ class _ProviderSolicitudDetailPageState
               onPressed: () {
                 _showChatModal(context);
               },
-              backgroundColor: const Color(0xFFE01D25),
+              backgroundColor: const Color(0xFF8D72C2),
               child: const Icon(Icons.chat_bubble, color: Colors.white),
             )
           : null,
@@ -268,7 +268,7 @@ class _ProviderSolicitudDetailPageState
         centerTitle: true,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFFE01D25)),
+          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF8D72C2)),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
@@ -299,12 +299,12 @@ class _ProviderSolicitudDetailPageState
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFFE5E7),
+                          color: const Color(0xFFF0E6FF),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Icon(
                           Icons.request_quote,
-                          color: Color(0xFFE01D25),
+                          color: Color(0xFF8D72C2),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -363,10 +363,10 @@ class _ProviderSolicitudDetailPageState
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFE5E7),
+                        color: const Color(0xFFF0E6FF),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(Icons.person, color: Color(0xFFE01D25)),
+                      child: const Icon(Icons.person, color: Color(0xFF8D72C2)),
                     ),
                     const SizedBox(width: 16),
                     Column(
@@ -659,8 +659,8 @@ class _ProviderSolicitudDetailPageState
                         style: TextStyle(fontWeight: FontWeight.w600),
                       ),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.red,
-                        side: const BorderSide(color: Colors.red),
+                        foregroundColor: const Color(0xFF8D72C2),
+                        side: const BorderSide(color: const Color(0xFF8D72C2)),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -758,7 +758,7 @@ class _ProviderSolicitudDetailPageState
                         style: TextStyle(fontWeight: FontWeight.w600),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFE01D25),
+                        backgroundColor: const Color(0xFF8D72C2),
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
@@ -880,7 +880,7 @@ class _ProviderSolicitudDetailPageState
         builder: (context, setDialogState) => AlertDialog(
           title: const Row(
             children: [
-              Icon(Icons.lock, color: Color(0xFFE01D25)),
+              Icon(Icons.lock, color: Color(0xFF8D72C2)),
               SizedBox(width: 8),
               Flexible(
                 child: Text(
@@ -922,7 +922,7 @@ class _ProviderSolicitudDetailPageState
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(
-                      color: Color(0xFFE01D25),
+                      color: Color(0xFF8D72C2),
                       width: 2,
                     ),
                   ),
@@ -968,14 +968,14 @@ class _ProviderSolicitudDetailPageState
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text('$e'),
-                              backgroundColor: Colors.red,
+                              backgroundColor: const Color(0xFF8D72C2),
                             ),
                           );
                         }
                       }
                     },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFE01D25),
+                backgroundColor: const Color(0xFF8D72C2),
               ),
               child: isValidating
                   ? const SizedBox(
@@ -1119,7 +1119,7 @@ class _ProviderSolicitudDetailPageState
       case 'finalizado':
         return Colors.teal;
       case 'rechazada':
-        return Colors.red;
+        return const Color(0xFF8D72C2);
       default:
         return Colors.grey;
     }

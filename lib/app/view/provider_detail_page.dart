@@ -207,7 +207,7 @@ class _ProviderDetailPageState extends State<ProviderDetailPage>
                     child: Container(
                       padding: const EdgeInsets.all(4),
                       decoration: const BoxDecoration(
-                        color: Color(0xFFE01D25),
+                        color: Color(0xFF8D72C2),
                         shape: BoxShape.circle,
                       ),
                       constraints: const BoxConstraints(
@@ -251,7 +251,7 @@ class _ProviderDetailPageState extends State<ProviderDetailPage>
             ),
             child: Icon(
               isFavorite ? Icons.favorite : Icons.favorite_border,
-              color: isFavorite ? const Color(0xFFE01D25) : Colors.white,
+              color: isFavorite ? const Color(0xFF8D72C2) : Colors.white,
             ),
           ),
         ),
@@ -273,7 +273,7 @@ class _ProviderDetailPageState extends State<ProviderDetailPage>
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [Color(0xFFE01D25), Color(0xFF8B0000)],
+                    colors: [Color(0xFF8D72C2), Color(0xFF8B0000)],
                   ),
                 ),
                 child: Center(
@@ -327,7 +327,7 @@ class _ProviderDetailPageState extends State<ProviderDetailPage>
                   vertical: 5,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE01D25),
+                  color: const Color(0xFF8D72C2),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
@@ -371,9 +371,9 @@ class _ProviderDetailPageState extends State<ProviderDetailPage>
       child: TabBar(
         controller: _tabController,
         onTap: (_) => setState(() {}),
-        labelColor: const Color(0xFFE01D25),
+        labelColor: const Color(0xFF8D72C2),
         unselectedLabelColor: Colors.grey,
-        indicatorColor: const Color(0xFFE01D25),
+        indicatorColor: const Color(0xFF8D72C2),
         labelStyle: const TextStyle(fontWeight: FontWeight.bold),
         tabs: const [
           Tab(text: 'Paquetes'),
@@ -397,7 +397,7 @@ class _ProviderDetailPageState extends State<ProviderDetailPage>
         padding: EdgeInsets.all(40),
         child: Center(
           child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE01D25)),
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF8D72C2)),
           ),
         ),
       );
@@ -450,7 +450,7 @@ class _ProviderDetailPageState extends State<ProviderDetailPage>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE01D25),
+                  color: const Color(0xFF8D72C2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -480,7 +480,7 @@ class _ProviderDetailPageState extends State<ProviderDetailPage>
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: qty > 0
-            ? Border.all(color: const Color(0xFFE01D25), width: 2)
+            ? Border.all(color: const Color(0xFF8D72C2), width: 2)
             : null,
         boxShadow: [
           BoxShadow(
@@ -501,13 +501,13 @@ class _ProviderDetailPageState extends State<ProviderDetailPage>
                 width: 70,
                 height: 70,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFE5E7),
+                  color: const Color(0xFFF0E6FF),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
                   Icons.inventory_2,
                   size: 32,
-                  color: Color(0xFFE01D25),
+                  color: Color(0xFF8D72C2),
                 ),
               ),
               const SizedBox(width: 14),
@@ -539,7 +539,7 @@ class _ProviderDetailPageState extends State<ProviderDetailPage>
                     Text(
                       '\$${pkg.precioBase.toStringAsFixed(2)}',
                       style: const TextStyle(
-                        color: Color(0xFFE01D25),
+                        color: Color(0xFF8D72C2),
                         fontWeight: FontWeight.bold,
                         fontSize: 20,
                       ),
@@ -601,7 +601,7 @@ class _ProviderDetailPageState extends State<ProviderDetailPage>
                       '+ ${pkg.items.length - 4} items más...',
                       style: const TextStyle(
                         fontSize: 12,
-                        color: Color(0xFFE01D25),
+                        color: Color(0xFF8D72C2),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -616,7 +616,7 @@ class _ProviderDetailPageState extends State<ProviderDetailPage>
               width: double.infinity,
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFE01D25),
+                  backgroundColor: const Color(0xFF8D72C2),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -702,7 +702,7 @@ class _ProviderDetailPageState extends State<ProviderDetailPage>
             child: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: qty == 1 ? Colors.red.shade50 : const Color(0xFFF4F7F9),
+                color: qty == 1 ? const Color(0xFFF0E6FF) : const Color(0xFFF4F7F9),
                 borderRadius: const BorderRadius.horizontal(
                   left: Radius.circular(12),
                 ),
@@ -710,7 +710,7 @@ class _ProviderDetailPageState extends State<ProviderDetailPage>
               child: Icon(
                 qty == 1 ? Icons.delete_outline : Icons.remove,
                 size: 20,
-                color: qty == 1 ? Colors.red : const Color(0xFFE01D25),
+                color: qty == 1 ? const Color(0xFF8D72C2) : const Color(0xFF8D72C2),
               ),
             ),
           ),
@@ -730,7 +730,7 @@ class _ProviderDetailPageState extends State<ProviderDetailPage>
             child: Container(
               padding: const EdgeInsets.all(8),
               decoration: const BoxDecoration(
-                color: Color(0xFFE01D25),
+                color: Color(0xFF8D72C2),
                 borderRadius: BorderRadius.horizontal(
                   right: Radius.circular(12),
                 ),
@@ -796,7 +796,7 @@ class _ProviderDetailPageState extends State<ProviderDetailPage>
             Expanded(
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFE01D25),
+                  backgroundColor: const Color(0xFF8D72C2),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                   ),

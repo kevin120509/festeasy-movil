@@ -301,7 +301,7 @@ class _ChatBottomSheetState extends State<ChatBottomSheet> {
                           ),
                           decoration: BoxDecoration(
                             color: isMe
-                                ? const Color(0xFFE01D25)
+                                ? const Color(0xFF8D72C2)
                                 : Colors.grey[100],
                             borderRadius: BorderRadius.circular(16).copyWith(
                               bottomRight: isMe
@@ -404,7 +404,7 @@ class _ChatBottomSheetState extends State<ChatBottomSheet> {
                 ),
                 const SizedBox(width: 8),
                 CircleAvatar(
-                  backgroundColor: const Color(0xFFE01D25),
+                  backgroundColor: const Color(0xFF8D72C2),
                   child: IconButton(
                     icon: const Icon(Icons.send, color: Colors.white, size: 20),
                     onPressed: _sendMessage,

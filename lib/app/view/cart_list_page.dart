@@ -132,7 +132,7 @@ class CartListPageState extends State<CartListPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error al cargar carrito: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: const Color(0xFF8D72C2),
           ),
         );
       }
@@ -168,7 +168,7 @@ class CartListPageState extends State<CartListPage> {
         centerTitle: true,
         actions: [
           if (!widget.isStandalone) IconButton(
-            icon: const Icon(Icons.notifications, color: Color(0xFFE01D25)),
+            icon: const Icon(Icons.notifications, color: Color(0xFF8D72C2)),
             onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ClientNotificationsPage())),
           ),
           if (!widget.isStandalone) IconButton(
@@ -180,7 +180,7 @@ class CartListPageState extends State<CartListPage> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE01D25))))
+          ? const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF8D72C2))))
           : _allItems.isEmpty
               ? _buildEmptyCart()
               : _buildCartDashboard(),
@@ -190,7 +190,7 @@ class CartListPageState extends State<CartListPage> {
   Widget _buildEmptyCart() {
     return RefreshIndicator(
       onRefresh: loadCart,
-      color: const Color(0xFFE01D25),
+      color: const Color(0xFF8D72C2),
       child: ListView(
         children: [
           SizedBox(
@@ -213,7 +213,7 @@ class CartListPageState extends State<CartListPage> {
     final groups = _itemsByProvider;
     return RefreshIndicator(
       onRefresh: loadCart,
-      color: const Color(0xFFE01D25),
+      color: const Color(0xFF8D72C2),
       child: ListView.separated(
         padding: const EdgeInsets.all(16),
         itemCount: groups.length,
@@ -232,7 +232,7 @@ class CartListPageState extends State<CartListPage> {
     final totalAmount = items.fold(0.0, (sum, i) => sum + (i.precioUnitario * i.cantidad));
     
     final cartInfo = _cartsMap[first.carritoId];
-    final eventName = cartInfo?['nombre_evento'] as String? ?? ServiceSessionData.getInstance().eventName ?? 'Evento sin nombre';
+    final eventName = cartInfo?['nombre_evento'] as String? ?? ServiceSessionData.getInstance().getEventNameForCart(first.carritoId, 'Evento sin nombre');
 
     return GestureDetector(
       onTap: () => _goToProviderCheckout(first.proveedorUsuarioId, items, first.carritoId),
@@ -252,9 +252,9 @@ class CartListPageState extends State<CartListPage> {
               children: [
                 CircleAvatar(
                   radius: 25,
-                  backgroundColor: const Color(0xFFFFE5E7),
+                  backgroundColor: const Color(0xFFF0E6FF),
                   backgroundImage: first.proveedorAvatarUrl != null ? NetworkImage(first.proveedorAvatarUrl!) : null,
-                  child: first.proveedorAvatarUrl == null ? const Icon(Icons.person, color: Color(0xFFE01D25)) : null,
+                  child: first.proveedorAvatarUrl == null ? const Icon(Icons.person, color: Color(0xFF8D72C2)) : null,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -262,7 +262,7 @@ class CartListPageState extends State<CartListPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(first.proveedorNombre, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                      Text(eventName, style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                      Text(eventName ?? 'Evento sin nombre', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
                     ],
                   ),
                 ),
@@ -277,13 +277,13 @@ class CartListPageState extends State<CartListPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text('Total parcial', style: TextStyle(color: Colors.grey, fontSize: 13)),
-                    Text('\$${totalAmount.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFFE01D25))),
+                    Text('\$${totalAmount.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF8D72C2))),
                   ],
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(color: const Color(0xFFFFE5E7), borderRadius: BorderRadius.circular(20)),
-                  child: Text('$totalItems items', style: const TextStyle(color: Color(0xFFE01D25), fontWeight: FontWeight.bold, fontSize: 12)),
+                  decoration: BoxDecoration(color: const Color(0xFFF0E6FF), borderRadius: BorderRadius.circular(20)),
+                  child: Text('$totalItems items', style: const TextStyle(color: Color(0xFF8D72C2), fontWeight: FontWeight.bold, fontSize: 12)),
                 ),
               ],
             ),

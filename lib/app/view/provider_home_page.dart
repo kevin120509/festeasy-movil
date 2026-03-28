@@ -97,7 +97,7 @@ class _ImagePreviewItem extends StatelessWidget {
                     ],
                   ),
                   child: IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                    icon: const Icon(Icons.delete, color: const Color(0xFF8D72C2), size: 20),
                     onPressed: onDelete,
                     constraints: const BoxConstraints(
                       minWidth: 32,
@@ -507,7 +507,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text('${foto.name} excede 5MB'),
-                                backgroundColor: Colors.red,
+                                backgroundColor: const Color(0xFF8D72C2),
                               ),
                             );
                           }
@@ -588,7 +588,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFE01D25),
+              backgroundColor: const Color(0xFF8D72C2),
               foregroundColor: Colors.white,
             ),
             onPressed: () => Navigator.of(context).pop(true),
@@ -629,7 +629,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
             IconButton(
               icon: const Icon(
                 Icons.chat_bubble_outline,
-                color: Color(0xFFE01D25),
+                color: Color(0xFF8D72C2),
               ),
               onPressed: () {
                 Navigator.of(context).push(
@@ -640,7 +640,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
               },
             ),
             IconButton(
-              icon: const Icon(Icons.notifications, color: Color(0xFFE01D25)),
+              icon: const Icon(Icons.notifications, color: Color(0xFF8D72C2)),
               onPressed: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
@@ -655,7 +655,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                       backgroundImage: NetworkImage(_perfil!.avatarUrl!),
                       radius: 16,
                     )
-                  : const Icon(Icons.person, color: Color(0xFFE01D25)),
+                  : const Icon(Icons.person, color: Color(0xFF8D72C2)),
               onPressed: () {
                 if (_perfil != null) {
                   _showAjustesDialog();
@@ -692,7 +692,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
             },
             type: BottomNavigationBarType.fixed,
             backgroundColor: Colors.white,
-            selectedItemColor: const Color(0xFFE01D25),
+            selectedItemColor: const Color(0xFF8D72C2),
             unselectedItemColor: Colors.grey,
             selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
             elevation: 0,
@@ -788,7 +788,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                             child: Container(
                               padding: const EdgeInsets.all(8),
                               decoration: const BoxDecoration(
-                                color: Color(0xFFE01D25),
+                                color: Color(0xFF8D72C2),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
@@ -841,7 +841,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                         padding: EdgeInsets.only(top: 16),
                         child: CircularProgressIndicator(
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            Color(0xFFE01D25),
+                            Color(0xFF8D72C2),
                           ),
                         ),
                       ),
@@ -869,7 +869,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                               ),
                               ElevatedButton(
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFFE01D25),
+                                  backgroundColor: const Color(0xFF8D72C2),
                                 ),
                                 onPressed: () => Navigator.pop(context, true),
                                 child: const Text(
@@ -894,7 +894,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                       },
                 child: const Text(
                   'Cerrar Sesión',
-                  style: TextStyle(color: Colors.red),
+                  style: TextStyle(color: const Color(0xFF8D72C2)),
                 ),
               ),
               Row(
@@ -909,7 +909,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                   ),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFE01D25),
+                      backgroundColor: const Color(0xFF8D72C2),
                     ),
                     onPressed: isLoading
                         ? null
@@ -965,7 +965,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text('Error: $e'),
-                                    backgroundColor: Colors.red,
+                                    backgroundColor: const Color(0xFF8D72C2),
                                   ),
                                 );
                               }
@@ -995,7 +995,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
           _loadProductos(),
         ]);
       },
-      color: const Color(0xFFE01D25),
+      color: const Color(0xFF8D72C2),
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         child: Padding(
@@ -1022,7 +1022,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
     if (_isLoadingPerfil) {
       return const Center(
         child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE01D25)),
+          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF8D72C2)),
         ),
       );
     }
@@ -1030,9 +1030,9 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
     if (_perfil == null) {
       return Container(
         decoration: BoxDecoration(
-          color: const Color(0xFFFFE5E7),
+          color: const Color(0xFFF0E6FF),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE01D25).withOpacity(0.3)),
+          border: Border.all(color: const Color(0xFF8D72C2).withOpacity(0.3)),
         ),
         padding: const EdgeInsets.all(20),
         child: Row(
@@ -1045,7 +1045,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
               ),
               child: const Icon(
                 Icons.warning_amber_rounded,
-                color: Color(0xFFE01D25),
+                color: Color(0xFF8D72C2),
                 size: 32,
               ),
             ),
@@ -1080,7 +1080,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                       }
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFE01D25),
+                      backgroundColor: const Color(0xFF8D72C2),
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
@@ -1189,7 +1189,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                 decoration: BoxDecoration(
                   color: _perfil!.estado == 'active'
                       ? Colors.green[50]
-                      : Colors.red[50],
+                      : const Color(0xFFF0E6FF),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -1198,7 +1198,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                       : Icons.cancel,
                   color: _perfil!.estado == 'active'
                       ? Colors.green
-                      : Colors.red,
+                      : const Color(0xFF8D72C2),
                   size: 28,
                 ),
               ),
@@ -1233,12 +1233,12 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFE5E7),
+                  color: const Color(0xFFF0E6FF),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
                   Icons.location_on,
-                  color: Color(0xFFE01D25),
+                  color: Color(0xFF8D72C2),
                   size: 28,
                 ),
               ),
@@ -1348,7 +1348,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
               },
               child: const Text(
                 'Ver todas',
-                style: TextStyle(color: Color(0xFFE01D25)),
+                style: TextStyle(color: Color(0xFF8D72C2)),
               ),
             ),
           ],
@@ -1370,7 +1370,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
             padding: const EdgeInsets.all(24),
             child: const Center(
               child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE01D25)),
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF8D72C2)),
               ),
             ),
           )
@@ -1440,12 +1440,12 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                   leading: Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFE5E7),
+                      color: const Color(0xFFF0E6FF),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(
                       Icons.request_quote,
-                      color: Color(0xFFE01D25),
+                      color: Color(0xFF8D72C2),
                     ),
                   ),
                   title: Text(
@@ -1464,7 +1464,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                   trailing: const Icon(
                     Icons.arrow_forward_ios,
                     size: 16,
-                    color: Color(0xFFE01D25),
+                    color: Color(0xFF8D72C2),
                   ),
                   onTap: () {
                     setState(() => _currentIndex = 1);
@@ -1498,7 +1498,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
               },
               child: const Text(
                 'Ver todos',
-                style: TextStyle(color: Color(0xFFE01D25)),
+                style: TextStyle(color: Color(0xFF8D72C2)),
               ),
             ),
           ],
@@ -1507,7 +1507,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
         if (_isLoadingPaquetes)
           const Center(
             child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE01D25)),
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF8D72C2)),
             ),
           )
         else if (_paquetes.isEmpty)
@@ -1555,7 +1555,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                   icon: const Icon(Icons.add),
                   label: const Text('Crear Paquete'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFE01D25),
+                    backgroundColor: const Color(0xFF8D72C2),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
@@ -1593,12 +1593,12 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                   leading: Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFE5E7),
+                      color: const Color(0xFFF0E6FF),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(
                       Icons.inventory_2,
-                      color: Color(0xFFE01D25),
+                      color: Color(0xFF8D72C2),
                     ),
                   ),
                   title: Text(
@@ -1693,7 +1693,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                         _loadProductos();
                       }
                     },
-                    backgroundColor: const Color(0xFFE01D25),
+                    backgroundColor: const Color(0xFF8D72C2),
                     foregroundColor: Colors.white,
                     icon: const Icon(Icons.add),
                     label: const Text('Nuevo'),
@@ -1723,7 +1723,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
               ? const Center(
                   child: CircularProgressIndicator(
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      Color(0xFFE01D25),
+                      Color(0xFF8D72C2),
                     ),
                   ),
                 )
@@ -1754,7 +1754,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                           }
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFE01D25),
+                          backgroundColor: const Color(0xFF8D72C2),
                         ),
                         icon: const Icon(Icons.add),
                         label: const Text('Crear Producto'),
@@ -1764,7 +1764,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                 )
               : RefreshIndicator(
                   onRefresh: _loadProductos,
-                  color: const Color(0xFFE01D25),
+                  color: const Color(0xFF8D72C2),
                   child: GridView.builder(
                     padding: const EdgeInsets.all(16),
                     gridDelegate:
@@ -1814,7 +1814,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                                 ),
                                 ElevatedButton(
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.red,
+                                    backgroundColor: const Color(0xFF8D72C2),
                                   ),
                                   onPressed: () => Navigator.pop(context, true),
                                   child: const Text(
@@ -1845,7 +1845,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text('Error: $e'),
-                                    backgroundColor: Colors.red,
+                                    backgroundColor: const Color(0xFF8D72C2),
                                   ),
                                 );
                               }
@@ -1873,7 +1873,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text('Error: $e'),
-                                  backgroundColor: Colors.red,
+                                  backgroundColor: const Color(0xFF8D72C2),
                                 ),
                               );
                             }
@@ -1897,7 +1897,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
         setState(() => _filtroActual = filtro);
       },
       backgroundColor: Colors.grey[200],
-      selectedColor: const Color(0xFFE01D25),
+      selectedColor: const Color(0xFF8D72C2),
       labelStyle: TextStyle(
         color: isActive ? Colors.white : Colors.black,
         fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
@@ -1909,7 +1909,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
     if (_isLoadingPaquetes) {
       return const Center(
         child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE01D25)),
+          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF8D72C2)),
         ),
       );
     }
@@ -1933,7 +1933,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
               icon: const Icon(Icons.add, size: 18),
               label: const Text('Nuevo'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFE01D25),
+                backgroundColor: const Color(0xFF8D72C2),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
@@ -2035,12 +2035,12 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                                   Container(
                                     padding: const EdgeInsets.all(10),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFFFE5E7),
+                                      color: const Color(0xFFF0E6FF),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: const Icon(
                                       Icons.inventory_2,
-                                      color: Color(0xFFE01D25),
+                                      color: Color(0xFF8D72C2),
                                     ),
                                   ),
                                   const SizedBox(width: 12),
@@ -2162,7 +2162,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                             Icon(
                               Icons.arrow_forward_ios,
                               size: 14,
-                              color: const Color(0xFFE01D25).withOpacity(0.6),
+                              color: const Color(0xFF8D72C2).withOpacity(0.6),
                             ),
                           ],
                         ),
@@ -2316,7 +2316,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                 }
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF8D72C2)),
             child: const Text('Eliminar'),
           ),
         ],

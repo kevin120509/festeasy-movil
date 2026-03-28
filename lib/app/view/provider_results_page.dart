@@ -89,12 +89,12 @@ class _ProviderResultsPageState extends State<ProviderResultsPage> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: const Color(0xFFFFE5E7),
+              color: const Color(0xFFF0E6FF),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(
               Icons.celebration,
-              color: Color(0xFFE01D25),
+              color: Color(0xFF8D72C2),
               size: 24,
             ),
           ),
@@ -125,7 +125,7 @@ class _ProviderResultsPageState extends State<ProviderResultsPage> {
                   width: 8,
                   height: 8,
                   decoration: const BoxDecoration(
-                    color: Color(0xFFE01D25),
+                    color: Color(0xFF8D72C2),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -188,11 +188,11 @@ class _ProviderResultsPageState extends State<ProviderResultsPage> {
                   vertical: 10,
                 ),
                 decoration: BoxDecoration(
-                  color: isSelected ? const Color(0xFFE01D25) : Colors.white,
+                  color: isSelected ? const Color(0xFF8D72C2) : Colors.white,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
                     color: isSelected
-                        ? const Color(0xFFE01D25)
+                        ? const Color(0xFF8D72C2)
                         : Colors.grey.shade300,
                   ),
                 ),
@@ -204,7 +204,7 @@ class _ProviderResultsPageState extends State<ProviderResultsPage> {
                         size: 16,
                         color: isSelected
                             ? Colors.white
-                            : const Color(0xFFE01D25),
+                            : const Color(0xFF8D72C2),
                       ),
                     if (index == 1)
                       Icon(
@@ -259,7 +259,7 @@ class _ProviderResultsPageState extends State<ProviderResultsPage> {
             child: const Text(
               'Ver mapa',
               style: TextStyle(
-                color: Color(0xFFE01D25),
+                color: Color(0xFF8D72C2),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -322,7 +322,7 @@ class _ProviderResultsPageState extends State<ProviderResultsPage> {
                       vertical: 5,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE01D25),
+                      color: const Color(0xFF8D72C2),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Text(
@@ -401,7 +401,7 @@ class _ProviderResultsPageState extends State<ProviderResultsPage> {
                         provider['isFavorite'] == true
                             ? Icons.favorite
                             : Icons.favorite_border,
-                        color: const Color(0xFFE01D25),
+                        color: const Color(0xFF8D72C2),
                       ),
                       onPressed: () {
                         setState(() {
@@ -467,7 +467,7 @@ class _ProviderResultsPageState extends State<ProviderResultsPage> {
                         provider['priceLevel'] as String,
                         style: TextStyle(
                           color: (provider['priceLevel'] as String).length == 1
-                              ? const Color(0xFFE01D25)
+                              ? const Color(0xFF8D72C2)
                               : Colors.orange,
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
@@ -485,10 +485,10 @@ class _ProviderResultsPageState extends State<ProviderResultsPage> {
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
-                        foregroundColor: const Color(0xFFE01D25),
+                        foregroundColor: const Color(0xFF8D72C2),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
-                          side: const BorderSide(color: Color(0xFFE01D25)),
+                          side: const BorderSide(color: Color(0xFF8D72C2)),
                         ),
                         padding: const EdgeInsets.symmetric(
                           horizontal: 22,
@@ -530,7 +530,7 @@ class _ProviderResultsPageState extends State<ProviderResultsPage> {
         backgroundColor: Colors.white,
         currentIndex: _currentIndex,
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFFE01D25),
+        selectedItemColor: const Color(0xFF8D72C2),
         unselectedItemColor: Colors.grey,
         onTap: (index) {
           setState(() {

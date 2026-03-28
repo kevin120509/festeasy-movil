@@ -115,7 +115,7 @@ class _ProviderSolicitudesPageState extends State<ProviderSolicitudesPage> {
                 return const Center(
                   child: CircularProgressIndicator(
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      Color(0xFFE01D25),
+                      Color(0xFF8D72C2),
                     ),
                   ),
                 );
@@ -143,13 +143,13 @@ class _ProviderSolicitudesPageState extends State<ProviderSolicitudesPage> {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: Colors.red[50],
+                            color: const Color(0xFFF0E6FF),
                             borderRadius: BorderRadius.circular(50),
                           ),
                           child: Icon(
                             Icons.error_outline,
                             size: 48,
-                            color: Colors.red[400],
+                            color: const Color(0xFF8D72C2),
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -166,7 +166,7 @@ class _ProviderSolicitudesPageState extends State<ProviderSolicitudesPage> {
                           icon: const Icon(Icons.refresh),
                           label: const Text('Reintentar'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFE01D25),
+                            backgroundColor: const Color(0xFF8D72C2),
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(20),
@@ -282,11 +282,11 @@ class _FilterChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFE01D25) : const Color(0xFFF4F7F9),
+          color: isSelected ? const Color(0xFF8D72C2) : const Color(0xFFF4F7F9),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected
-                ? const Color(0xFFE01D25)
+                ? const Color(0xFF8D72C2)
                 : Colors.grey.withOpacity(0.3),
           ),
         ),
@@ -340,12 +340,12 @@ class _SolicitudCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFFE5E7),
+                          color: const Color(0xFFF0E6FF),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Icon(
                           Icons.request_quote,
-                          color: Color(0xFFE01D25),
+                          color: Color(0xFF8D72C2),
                           size: 20,
                         ),
                       ),
@@ -446,7 +446,7 @@ class _SolicitudCard extends StatelessWidget {
                     'Ver detalles',
                     style: TextStyle(
                       fontSize: 12,
-                      color: const Color(0xFFE01D25).withOpacity(0.8),
+                      color: const Color(0xFF8D72C2).withOpacity(0.8),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -454,7 +454,7 @@ class _SolicitudCard extends StatelessWidget {
                   Icon(
                     Icons.arrow_forward_ios,
                     size: 12,
-                    color: const Color(0xFFE01D25).withOpacity(0.8),
+                    color: const Color(0xFF8D72C2).withOpacity(0.8),
                   ),
                 ],
               ),
@@ -523,7 +523,7 @@ class _SolicitudCard extends StatelessWidget {
       case 'finalizado':
         return Colors.teal;
       case 'rechazada':
-        return Colors.red;
+        return const Color(0xFF8D72C2);
       default:
         return Colors.grey;
     }

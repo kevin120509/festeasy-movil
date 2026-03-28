@@ -176,7 +176,7 @@ class _LoginPageState extends State<LoginPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(message),
-          backgroundColor: Colors.red,
+          backgroundColor: const Color(0xFF8D72C2),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
@@ -228,7 +228,7 @@ class _LoginPageState extends State<LoginPage> {
                 children: [
                   // Logo de la app
                   Image.asset(
-                    'assets/icons/logo.jpeg',
+                    'assets/icons/logo.png',
                     width: 220,
                     height: 110,
                     fit: BoxFit.contain,
@@ -263,7 +263,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(color: Color(0xFFE01D25)),
+                        borderSide: const BorderSide(color: Color(0xFF8D72C2)),
                       ),
                     ),
                   ),
@@ -305,7 +305,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(color: Color(0xFFE01D25)),
+                        borderSide: const BorderSide(color: Color(0xFF8D72C2)),
                       ),
                     ),
                   ),
@@ -317,7 +317,7 @@ class _LoginPageState extends State<LoginPage> {
                       onPressed: _handleForgotPassword,
                       child: const Text(
                         '¿Olvidaste tu contraseña?',
-                        style: TextStyle(color: Color(0xFFE01D25)),
+                        style: TextStyle(color: Color(0xFF8D72C2)),
                       ),
                     ),
                   ),
@@ -327,9 +327,9 @@ class _LoginPageState extends State<LoginPage> {
                     width: double.infinity,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFE01D25),
+                        backgroundColor: const Color(0xFF8D72C2),
                         disabledBackgroundColor: const Color(
-                          0xFFE01D25,
+                          0xFF8D72C2,
                         ).withOpacity(0.5),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(24),
@@ -390,7 +390,7 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           icon: const Icon(
                             Icons.g_mobiledata,
-                            color: Colors.red,
+                            color: const Color(0xFF8D72C2),
                             size: 32,
                           ),
                           label: const Text(
@@ -422,7 +422,7 @@ class _LoginPageState extends State<LoginPage> {
                         child: const Text(
                           'Regístrate',
                           style: TextStyle(
-                            color: Color(0xFFE01D25),
+                            color: Color(0xFF8D72C2),
                             fontWeight: FontWeight.bold,
                           ),
                         ),

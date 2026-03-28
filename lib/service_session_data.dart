@@ -74,6 +74,40 @@ class ServiceSessionData {
   // Carrito local
   List<CartItemLocal> cartItems = [];
 
+  // Almacenar datos por carritoId para independencia si hay múltiples pedidos
+  final Map<String, String> _eventNamesByCart = {};
+  final Map<String, int> _guestsByCart = {};
+
+  void setEventNameForCart(String? cartId, String name) {
+    if (cartId == null) {
+      eventName = name;
+      return;
+    }
+    _eventNamesByCart[cartId] = name;
+  }
+
+  String? getEventNameForCart(String? cartId, String? defaultName) {
+    if (cartId == null) return eventName ?? defaultName;
+    return _eventNamesByCart[cartId] ?? eventName ?? defaultName;
+  }
+
+  void setGuestsForCart(String? cartId, int? g) {
+    if (cartId == null) {
+      numberOfGuests = g;
+      return;
+    }
+    if (g == null) {
+      _guestsByCart.remove(cartId);
+    } else {
+      _guestsByCart[cartId] = g;
+    }
+  }
+
+  int? getGuestsForCart(String? cartId) {
+    if (cartId == null) return numberOfGuests;
+    return _guestsByCart[cartId] ?? numberOfGuests;
+  }
+
   /// Inicializa los datos de la sesión
   void initialize({
     required DateTime eventDate,
