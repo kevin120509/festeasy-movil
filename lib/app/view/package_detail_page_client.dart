@@ -53,8 +53,16 @@ class _PackageDetailPageClientState extends State<PackageDetailPageClient> {
         categoryId: _sessionData.categoryId ?? '',
         fechaServicio: _sessionData.date,
         direccion: _sessionData.address,
+        latitud: _sessionData.latitude,
+        longitud: _sessionData.longitude,
       );
       _sessionData.carritoId = carritoId;
+      if (_sessionData.eventName != null) {
+        _sessionData.setEventNameForCart(carritoId, _sessionData.eventName!);
+      }
+      if (_sessionData.numberOfGuests != null) {
+        _sessionData.setGuestsForCart(carritoId, _sessionData.numberOfGuests!);
+      }
 
       // Agregar item al carrito
       await cartService.addItemToCart(

@@ -63,6 +63,7 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
   double selectedLongitude = -89.6243;
   late final MapController _mapController;
   bool _isMapReady = false;
+  Timer? _debounceTimer;
 
   bool get isFormValid =>
       addressController.text.isNotEmpty &&
@@ -364,10 +365,40 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
   }
 
   void _onPositionChanged(MapCamera camera, bool hasGesture) {
-    // Solo actualizar coordenadas, no llamar setState para evitar rebuild
     if (hasGesture) {
       selectedLatitude = camera.center.latitude;
       selectedLongitude = camera.center.longitude;
+
+      // Cancelar el timer anterior si el usuario sigue moviendo el mapa.
+      _debounceTimer?.cancel();
+      // Esperar 800ms de inactividad antes de buscar la dirección (para no saturar la API)
+      _debounceTimer = Timer(const Duration(milliseconds: 800), () async {
+        try {
+          final placemarks = await placemarkFromCoordinates(
+            selectedLatitude,
+            selectedLongitude,
+          );
+
+          if (!mounted) return;
+
+          if (placemarks.isNotEmpty) {
+            final place = placemarks.first;
+            final addressParts = <String>[];
+            if (place.street?.isNotEmpty ?? false) addressParts.add(place.street!);
+            if (place.subLocality?.isNotEmpty ?? false) addressParts.add(place.subLocality!);
+            if (place.locality?.isNotEmpty ?? false) addressParts.add(place.locality!);
+            if (place.administrativeArea?.isNotEmpty ?? false) addressParts.add(place.administrativeArea!);
+            if (place.country?.isNotEmpty ?? false) addressParts.add(place.country!);
+
+            final address = addressParts.join(', ');
+            setState(() {
+              addressController.text = address;
+            });
+          }
+        } catch (e) {
+          debugPrint('Error updating address from map move: $e');
+        }
+      });
     }
   }
 
@@ -396,6 +427,7 @@ class _ServiceRequirementPageState extends State<ServiceRequirementPage> {
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     addressController.dispose();
     guestsController.dispose();
     eventNameController.dispose();

@@ -27,7 +27,6 @@ class _ProviderCotizacionPageState extends State<ProviderCotizacionPage> {
   late double _basePrice;
   late int _baseQuantity;
   final List<Map<String, dynamic>> _extraItems = [];
-  final TextEditingController _notesController = TextEditingController();
 
   @override
   void initState() {
@@ -40,6 +39,21 @@ class _ProviderCotizacionPageState extends State<ProviderCotizacionPage> {
           0.0;
       _baseQuantity =
           (widget.itemsOriginales.first['cantidad'] as num?)?.toInt() ?? 1;
+      
+      // Cargar el resto de los items (productos/ítems extra) a la UI  
+      if (widget.itemsOriginales.length > 1) {
+        for (int i = 1; i < widget.itemsOriginales.length; i++) {
+          final extraMap = widget.itemsOriginales[i];
+          _extraItems.add({
+            // Como estos extraItems de items_solicitud no traen el id de inventario,
+            // asignamos su nombre como id temporal y su propio nombre para mostrar en pantalla.
+            'id': 'temporal_$i',
+            'nombre': extraMap['nombre_paquete_snapshot'] ?? 'Extra $i',
+            'precio': (extraMap['precio_unitario'] as num?)?.toDouble() ?? 0.0,
+            'cantidad': (extraMap['cantidad'] as num?)?.toInt() ?? 1,
+          });
+        }
+      }
     } else {
       _basePrice = 0.0;
       _baseQuantity = 1;
@@ -111,7 +125,9 @@ class _ProviderCotizacionPageState extends State<ProviderCotizacionPage> {
         nuevoMontoTotal: total,
         nuevoMontoAnticipo: anticipo,
         nuevoMontoLiquidacion: liquida,
-        notasCotizacion: _notesController.text.trim(),
+        baseItemId: widget.itemsOriginales.isNotEmpty ? widget.itemsOriginales.first['id'] as String? : null,
+        baseItemPrecio: _basePrice,
+        baseItemCantidad: _baseQuantity,
         extraItems: _extraItems,
       );
 
@@ -450,69 +466,7 @@ class _ProviderCotizacionPageState extends State<ProviderCotizacionPage> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
 
-                  // Notas
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Row(
-                          children: [
-                            Icon(Icons.notes, color: Color(0xFF8D72C2)),
-                            SizedBox(width: 8),
-                            Text(
-                              'Notas para el cliente',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                            SizedBox(width: 4),
-                            Text(
-                              '(Opcional)',
-                              style: TextStyle(
-                                color: Colors.grey,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        TextField(
-                          controller: _notesController,
-                          maxLines: 3,
-                          decoration: InputDecoration(
-                            hintText:
-                                'Ej: El precio incluye montaje y desmontaje...',
-                            hintStyle: TextStyle(
-                              color: Colors.grey.shade400,
-                              fontSize: 12,
-                            ),
-                            filled: true,
-                            fillColor: Colors.grey[50],
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
 
                   // Inventario List To Pick
                   const Text(
@@ -573,14 +527,14 @@ class _ProviderCotizacionPageState extends State<ProviderCotizacionPage> {
                             },
                           ),
                   ),
-                  const SizedBox(height: 150),
+                  const SizedBox(height: 24),
                 ],
               ),
             ),
-      bottomSheet: Container(
+      bottomNavigationBar: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: const Color(0xFF1E2838),
+          color: Colors.white,
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(20),
             topRight: Radius.circular(20),
@@ -600,18 +554,18 @@ class _ProviderCotizacionPageState extends State<ProviderCotizacionPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Subtotal',
-                  style: TextStyle(color: Colors.white70, fontSize: 14),
+                  style: TextStyle(color: Colors.grey.shade700, fontSize: 14),
                 ),
                 Text(
                   '\$${_subtotal.toStringAsFixed(2)}',
-                  style: const TextStyle(color: Colors.white70, fontSize: 14),
+                  style: const TextStyle(color: Colors.black, fontSize: 14, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
             const SizedBox(height: 12),
-            const Divider(color: Colors.white24),
+            Divider(color: Colors.grey.shade300),
             const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -619,7 +573,7 @@ class _ProviderCotizacionPageState extends State<ProviderCotizacionPage> {
                 const Text(
                   'TOTAL A PAGAR',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: Color(0xFF010302),
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
                   ),
@@ -627,7 +581,7 @@ class _ProviderCotizacionPageState extends State<ProviderCotizacionPage> {
                 Text(
                   '\$${_subtotal.toStringAsFixed(2)}',
                   style: const TextStyle(
-                    color: Color(0xFF10F2A3),
+                    color: Color(0xFF8D72C2),
                     fontWeight: FontWeight.bold,
                     fontSize: 24,
                   ),

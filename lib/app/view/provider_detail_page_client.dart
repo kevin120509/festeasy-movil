@@ -26,7 +26,7 @@ class _ProviderDetailPageClientState extends State<ProviderDetailPageClient> {
   }
 
   void _loadPaquetes() {
-    _paquetesFuture = ProviderPaquetesService.instance.getPaquetesByProveedor(
+    _paquetesFuture = ProviderPaquetesService.instance.getPaquetesPublicados(
       widget.provider.usuarioId,
     );
   }

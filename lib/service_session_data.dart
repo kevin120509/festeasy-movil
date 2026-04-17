@@ -88,7 +88,7 @@ class ServiceSessionData {
 
   String? getEventNameForCart(String? cartId, String? defaultName) {
     if (cartId == null) return eventName ?? defaultName;
-    return _eventNamesByCart[cartId] ?? eventName ?? defaultName;
+    return _eventNamesByCart[cartId] ?? defaultName;
   }
 
   void setGuestsForCart(String? cartId, int? g) {
@@ -105,7 +105,7 @@ class ServiceSessionData {
 
   int? getGuestsForCart(String? cartId) {
     if (cartId == null) return numberOfGuests;
-    return _guestsByCart[cartId] ?? numberOfGuests;
+    return _guestsByCart[cartId];
   }
 
   /// Inicializa los datos de la sesión

@@ -75,7 +75,6 @@ class _CartPageState extends State<CartPage> {
     address = widget.initialAddress ?? '';
     if (widget.initialDate != null) selectedDate = widget.initialDate!;
     if (widget.initialTime != null) selectedTime = widget.initialTime!;
-    
     eventName = ServiceSessionData.getInstance().getEventNameForCart(widget.carritoId, widget.categoryName) ?? widget.categoryName;
     guests = ServiceSessionData.getInstance().getGuestsForCart(widget.carritoId) ?? widget.initialGuests;
     _eventController.text = eventName;

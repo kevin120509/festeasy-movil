@@ -91,7 +91,7 @@ class ProviderSolicitudData {
   bool get isCotizacionEnviada =>
       estado == 'pendiente_aprobacion' && montoAnticipo > 0;
   bool get isRechazada => estado == 'rechazada';
-  bool get espeandoAnticipo => estado == 'esperando_anticipo';
+  bool get esperandoAnticipo => estado == 'esperando_anticipo';
   bool get isReservado => estado == 'reservado';
   bool get isEnProgreso => estado == 'en_progreso';
 }
@@ -239,8 +239,84 @@ class ProviderSolicitudesService {
           .select()
           .single();
 
-      return ProviderSolicitudData.fromMap(response);
+      // Deducir el inventario (proceso secundario, no debe bloquear el flujo principal si falla)
+      try {
+        final itemsData = await _client
+            .from('items_solicitud')
+            .select('paquete_id, cantidad, nombre_paquete_snapshot')
+            .eq('solicitud_id', solicitudId);
+        
+        if (itemsData != null && itemsData is List) {
+          final itemList = List<Map<String, dynamic>>.from(itemsData);
+          
+          // Obtener el proveedor de la solicitud para filtrar inventario
+          final solData = await _client
+              .from('solicitudes')
+              .select('proveedor_usuario_id')
+              .eq('id', solicitudId)
+              .maybeSingle();
+          
+          final provId = solData?['proveedor_usuario_id'] as String?;
+
+          for (final item in itemList) {
+            final cant = (item['cantidad'] as num?)?.toInt() ?? 1;
+            
+            if (item['paquete_id'] != null) {
+              // Es un paquete base
+              final pkgId = item['paquete_id'] as String;
+              final pData = await _client
+                  .from('paquetes_proveedor')
+                  .select('detalles_json')
+                  .eq('id', pkgId)
+                  .maybeSingle();
+              
+              if (pData != null && pData['detalles_json'] != null) {
+                final json = Map<String, dynamic>.from(pData['detalles_json'] as Map);
+                if (json.containsKey('stock')) {
+                  final currentStock = int.tryParse(json['stock'].toString()) ?? 0;
+                  int newStock = currentStock - cant;
+                  if (newStock < 0) newStock = 0;
+                  json['stock'] = newStock;
+                  await _client
+                      .from('paquetes_proveedor')
+                      .update({'detalles_json': json})
+                      .eq('id', pkgId);
+                }
+              }
+            } else {
+              // Es un artículo extra de inventario
+              final nombreProd = item['nombre_paquete_snapshot'] as String?;
+              if (nombreProd != null && provId != null) {
+                final prodData = await _client
+                    .from('inventario_proveedor')
+                    .select('id, stock')
+                    .eq('proveedor_id', provId)
+                    .eq('nombre', nombreProd)
+                    .limit(1);
+                    
+                if (prodData != null && (prodData as List).isNotEmpty) {
+                  final pData = (prodData as List).first as Map<String, dynamic>;
+                  if (pData['stock'] != null) {
+                    final currentStock = int.tryParse(pData['stock'].toString()) ?? 0;
+                    int newStock = currentStock - cant;
+                    if (newStock < 0) newStock = 0;
+                    await _client
+                        .from('inventario_proveedor')
+                        .update({'stock': newStock})
+                        .eq('id', pData['id']);
+                  }
+                }
+              }
+            }
+          }
+        }
+      } catch (innerError) {
+        debugPrint('⚠️ Error no-crítico en deducción de inventario: $innerError');
+      }
+
+      return ProviderSolicitudData.fromMap(response as Map<String, dynamic>);
     } catch (e) {
+      debugPrint('❌ Error fatal en aceptarSolicitud: $e');
       throw Exception('Error aceptando solicitud: $e');
     }
   }
@@ -251,7 +327,9 @@ class ProviderSolicitudesService {
     required double nuevoMontoTotal,
     required double nuevoMontoAnticipo,
     required double nuevoMontoLiquidacion,
-    String? notasCotizacion,
+    String? baseItemId,
+    double? baseItemPrecio,
+    int? baseItemCantidad,
     List<Map<String, dynamic>>? extraItems,
   }) async {
     try {
@@ -263,7 +341,12 @@ class ProviderSolicitudesService {
         'actualizado_en': DateTime.now().toUtc().toIso8601String(),
       };
 
-      // if notasCotizacion exists we could place it somewhere if there is a column for it. We'll skip for now if no column exists, or we could add it to a generic JSON field if present.
+      if (baseItemId != null && baseItemPrecio != null && baseItemCantidad != null) {
+        await _client.from('items_solicitud').update({
+          'precio_unitario': baseItemPrecio,
+          'cantidad': baseItemCantidad,
+        }).eq('id', baseItemId);
+      }
 
       final response = await _client
           .from('solicitudes')
@@ -272,11 +355,14 @@ class ProviderSolicitudesService {
           .select()
           .single();
 
+      // Antes de insertar los nuevos ítems extras, purgamos todos los que ya existían
+      // (sabemos que son ítems extras si su paquete_id es nulo).
+      await _client.from('items_solicitud')
+          .delete()
+          .eq('solicitud_id', solicitudId)
+          .filter('paquete_id', 'is', null);
+
       if (extraItems != null && extraItems.isNotEmpty) {
-        // We will insert these into items_solicitud. But first we probably want to delete any existing 
-        // extra items? If they are building on top of the base package, we can just insert them.
-        // Actually, the simplest approach is to fetch the current items, keep the base, and clear the rest, 
-        // OR just insert the new extra items. Let's insert them directly.
         final itemsToInsert = extraItems.map((item) {
           return {
             'solicitud_id': solicitudId,

@@ -135,7 +135,23 @@ class PaqueteProveedorData {
   bool get isArchived => estado == 'archivado';
   bool get esCobroFijo => tipoCobro == 'fijo';
   bool get esCobroPorPersona => tipoCobro == 'por_persona';
+
+  int get stock => (detallesJson?['stock'] as num?)?.toInt() ?? 0;
+
+  /// Obtiene el estado del stock basado en la cantidad disponible
+  String getEstadoStock() {
+    if (stock == 0) {
+      return 'sinStock';
+    } else if (stock <= 5) { // Stock bajo si es <= 5 (incluye 1-5, como en productos si usas < 5 allí)
+      return 'stockBajo';
+    } else {
+      return 'stockAlto';
+    }
+  }
 }
+
+/// Filtros consistentes usados tanto en productos como en paquetes
+enum PaqueteFiltroStock { todos, bajo, agotado }
 
 /// Servicio para gestionar paquetes/servicios del proveedor
 class ProviderPaquetesService {
@@ -183,6 +199,7 @@ class ProviderPaquetesService {
             (item) =>
                 PaqueteProveedorData.fromMap(item as Map<String, dynamic>),
           )
+          .where((p) => p.stock > 0)
           .toList();
     } catch (e) {
       return [];
@@ -218,6 +235,7 @@ class ProviderPaquetesService {
     String? descripcion,
     String tipoCobro = 'fijo',
     List<String> fotos = const [],
+    int? stock,
   }) async {
     try {
       final response = await _client
@@ -229,7 +247,7 @@ class ProviderPaquetesService {
             'descripcion': descripcion,
             'precio_base': precioBase,
             'estado': 'borrador',
-            'detalles_json': {'tipoCobro': tipoCobro, 'fotos': fotos},
+            'detalles_json': {'tipoCobro': tipoCobro, 'fotos': fotos, if (stock != null) 'stock': stock},
           })
           .select('*, items_paquete(*)')
           .single();

@@ -232,7 +232,7 @@ class CartListPageState extends State<CartListPage> {
     final totalAmount = items.fold(0.0, (sum, i) => sum + (i.precioUnitario * i.cantidad));
     
     final cartInfo = _cartsMap[first.carritoId];
-    final eventName = cartInfo?['nombre_evento'] as String? ?? ServiceSessionData.getInstance().getEventNameForCart(first.carritoId, 'Evento sin nombre');
+    final eventName = ServiceSessionData.getInstance().getEventNameForCart(first.carritoId, 'Evento sin nombre');
 
     return GestureDetector(
       onTap: () => _goToProviderCheckout(first.proveedorUsuarioId, items, first.carritoId),
@@ -314,12 +314,12 @@ class CartListPageState extends State<CartListPage> {
           allItems: allItemsList,
           providerName: items.first.proveedorNombre,
           providerUserId: providerId,
-          categoryName: cartInfo['nombre_evento'] ?? 'Servicio',
+          categoryName: ServiceSessionData.getInstance().getEventNameForCart(carritoId, 'Servicio') ?? 'Servicio',
           initialAddress: cartInfo['direccion_servicio'],
           initialDate: dateStr != null ? DateTime.parse(dateStr) : null,
           initialTime: _parseTime(timeStr),
           carritoId: carritoId,
-          initialGuests: cartInfo['numero_invitados'] as int?,
+          initialGuests: ServiceSessionData.getInstance().getGuestsForCart(carritoId),
         ),
       ),
     ).then((result) {

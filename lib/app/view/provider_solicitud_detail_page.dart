@@ -42,11 +42,11 @@ class _ProviderSolicitudDetailPageState
       final client = Supabase.instance.client;
       final result = await client
           .from('items_solicitud')
-          .select('nombre_paquete_snapshot, cantidad, precio_unitario')
+          .select('id, paquete_id, nombre_paquete_snapshot, cantidad, precio_unitario')
           .eq('solicitud_id', _solicitud.id);
-      if (mounted) {
+      if (mounted && result != null) {
         setState(() {
-          _items = List<Map<String, dynamic>>.from(result);
+          _items = List<Map<String, dynamic>>.from(result as List);
         });
       }
     } catch (e) {
@@ -506,7 +506,7 @@ class _ProviderSolicitudDetailPageState
                                 ),
                               ),
                               Text(
-                                '\$${((item['precio_unitario'] as num?)?.toDouble() ?? 0).toStringAsFixed(2)}',
+                                '\$${(((item['precio_unitario'] as num?)?.toDouble() ?? 0) * ((item['cantidad'] as num?)?.toInt() ?? 1)).toStringAsFixed(2)}',
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w600,
                                   fontSize: 14,
@@ -704,6 +704,40 @@ class _ProviderSolicitudDetailPageState
                   ],
                 ),
               )
+            else if (_solicitud.esperandoAnticipo)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.blue.shade200),
+                ),
+                child: const Column(
+                  children: [
+                    Icon(
+                      Icons.hourglass_empty,
+                      color: Colors.blue,
+                      size: 48,
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Solicitud Aceptada',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Esperando que el cliente realice el pago del anticipo',
+                      style: TextStyle(color: Colors.blue),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              )
             // Botón para validar PIN cuando está reservado
             else if (_solicitud.isReservado)
               Column(
@@ -853,7 +887,7 @@ class _ProviderSolicitudDetailPageState
                   child: Text(
                     'Esta solicitud ya fue ${_solicitud.isRechazada
                         ? 'rechazada'
-                        : _solicitud.espeandoAnticipo
+                        : _solicitud.esperandoAnticipo
                         ? 'aceptada - esperando pago'
                         : 'procesada'}',
                     style: TextStyle(

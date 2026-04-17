@@ -122,6 +122,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
   List<ProviderSolicitudData> _solicitudes = [];
   List<ProductoInventarioData> _productos = [];
   FiltroInventario _filtroActual = FiltroInventario.todos;
+  FiltroInventario _filtroPaquetes = FiltroInventario.todos;
   bool _isLoadingPerfil = true;
   bool _isLoadingPaquetes = true;
   bool _isLoadingSolicitudes = true;
@@ -277,6 +278,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
     final nombreController = TextEditingController();
     final descripcionController = TextEditingController();
     final precioController = TextEditingController();
+    final stockController = TextEditingController(text: '0');
     String? selectedCategoryId;
     var tipoCobro = 'fijo'; // 'fijo' o 'por_persona'
     var categorias = <Map<String, dynamic>>[];
@@ -396,6 +398,17 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                       decimal: true,
                     ),
                   ),
+                  const SizedBox(height: 12),
+                  // Stock Disponible
+                  TextField(
+                    controller: stockController,
+                    decoration: const InputDecoration(
+                      labelText: 'Stock Disponible',
+                      hintText: 'Ej: 10',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
                   const SizedBox(height: 16),
                   // Fotos
                   Text(
@@ -491,6 +504,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                           precioBase: precioBase,
                           tipoCobro: tipoCobro,
                           fotos: [], // Fotos vacías por ahora
+                          stock: int.tryParse(stockController.text) ?? 0,
                         );
 
                     // Subir fotos si existen
@@ -1115,39 +1129,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
             ),
           ],
         ),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: _perfil!.tipoSuscripcion == 'plus'
-                ? Colors.amber[100]
-                : const Color(0xFFF4F7F9),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                _perfil!.tipoSuscripcion == 'plus' ? Icons.star : Icons.badge,
-                size: 16,
-                color: _perfil!.tipoSuscripcion == 'plus'
-                    ? Colors.amber[700]
-                    : Colors.grey[600],
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'Plan ${_perfil!.tipoSuscripcion.toUpperCase()}',
-                style: TextStyle(
-                  color: _perfil!.tipoSuscripcion == 'plus'
-                      ? Colors.amber[800]
-                      : Colors.grey[700],
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
-                ),
-              ),
-            ],
-          ),
-        ),
+
       ],
     );
   }
@@ -1198,7 +1180,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                       : Icons.cancel,
                   color: _perfil!.estado == 'active'
                       ? Colors.green
-                      : const Color(0xFF8D72C2),
+                      : const Color(0xFFFF0B0B),
                   size: 28,
                 ),
               ),
@@ -1289,7 +1271,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                   ),
                   child: const Icon(
                     Icons.account_balance_wallet,
-                    color: Color(0xFF4CAF50),
+                    color: Color(0xFF1EAD13),
                     size: 28,
                   ),
                 ),
@@ -1660,6 +1642,220 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
   Widget _buildInventarioTab() {
     return Column(
       children: [
+        // ---------- SECCIÓN DE PAQUETES (TOP) ----------
+        if (_paquetes.isNotEmpty)
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Tus Paquetes',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: Color(0xFF010302),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        if (_paquetes.isNotEmpty)
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.only(left: 16, right: 16), // Alineación exacta a la izquierda
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                _buildFiltroPaquetesButton('Todos', FiltroInventario.todos),
+                const SizedBox(width: 8),
+                _buildFiltroPaquetesButton('Stock bajo', FiltroInventario.bajo),
+                const SizedBox(width: 8),
+                _buildFiltroPaquetesButton('Sin stock', FiltroInventario.agotado),
+              ],
+            ),
+          ),
+        if (_paquetes.isNotEmpty)
+          SizedBox(
+            height: 220, // Aumentado verticalmente
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              itemCount: _paquetes.where((p) {
+                if (_filtroPaquetes == FiltroInventario.todos) return true;
+                if (_filtroPaquetes == FiltroInventario.bajo) return p.getEstadoStock() == 'stockBajo';
+                if (_filtroPaquetes == FiltroInventario.agotado) return p.getEstadoStock() == 'sinStock';
+                return true;
+              }).length,
+              itemBuilder: (context, index) {
+                final filteredPaquetes = _paquetes.where((p) {
+                  if (_filtroPaquetes == FiltroInventario.todos) return true;
+                  if (_filtroPaquetes == FiltroInventario.bajo) return p.getEstadoStock() == 'stockBajo';
+                  if (_filtroPaquetes == FiltroInventario.agotado) return p.getEstadoStock() == 'sinStock';
+                  return true;
+                }).toList();
+                
+                final paquete = filteredPaquetes[index];
+                final estadoStockColor = paquete.getEstadoStock() == 'sinStock' ? const Color(0xFF8D72C2) : (paquete.getEstadoStock() == 'stockBajo' ? Colors.orange : Colors.green);
+                final estadoStockLabel = paquete.getEstadoStock() == 'sinStock' ? 'SIN STOCK' : (paquete.getEstadoStock() == 'stockBajo' ? 'STOCK BAJO' : 'STOCK ALTO');
+
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).push<void>(
+                      MaterialPageRoute<void>(
+                        builder: (context) => ProviderPaqueteDetailPage(
+                          paquete: paquete,
+                          onPaqueteUpdated: _loadPaquetes,
+                        ),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    width: 240,
+                    margin: const EdgeInsets.only(right: 12),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'PAQUETE',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: estadoStockColor.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                estadoStockLabel,
+                                style: TextStyle(
+                                  color: estadoStockColor,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 9,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          paquete.nombre,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            color: Color(0xFF010302),
+                          ),
+                        ),
+                        const Spacer(),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'PRECIO',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '\$${paquete.precioBase.toStringAsFixed(2)}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                    color: Color(0xFF010302),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  'STOCK',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  paquete.stock.toString(),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                    color: Color(0xFF00A878),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        // Botones de Editar y Eliminar
+                        SizedBox(
+                          height: 40,
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  icon: const Icon(Icons.edit, size: 16),
+                                  label: const Text('Editar', style: TextStyle(fontSize: 12)),
+                                  onPressed: () => _showEditPaqueteDialog(paquete),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              SizedBox(
+                                width: 48,
+                                child: OutlinedButton(
+                                  onPressed: () => _showDeletePaqueteConfirm(paquete),
+                                  style: OutlinedButton.styleFrom(
+                                    padding: EdgeInsets.zero,
+                                    foregroundColor: const Color(0xFF8D72C2),
+                                    side: const BorderSide(color: Color(0xFF8D72C2)),
+                                  ),
+                                  child: const Icon(Icons.delete, size: 16),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        
+        // ---------- SECCIÓN DE PRODUCTOS (BOTTOM) ----------
         // Header con botones de filtro
         Container(
           padding: const EdgeInsets.all(16),
@@ -1895,6 +2091,23 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
       selected: isActive,
       onSelected: (selected) {
         setState(() => _filtroActual = filtro);
+      },
+      backgroundColor: Colors.grey[200],
+      selectedColor: const Color(0xFF8D72C2),
+      labelStyle: TextStyle(
+        color: isActive ? Colors.white : Colors.black,
+        fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+      ),
+    );
+  }
+
+  Widget _buildFiltroPaquetesButton(String label, FiltroInventario filtro) {
+    final isActive = _filtroPaquetes == filtro;
+    return FilterChip(
+      label: Text(label),
+      selected: isActive,
+      onSelected: (selected) {
+        setState(() => _filtroPaquetes = filtro);
       },
       backgroundColor: Colors.grey[200],
       selectedColor: const Color(0xFF8D72C2),
@@ -2189,6 +2402,9 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
     final priceController = TextEditingController(
       text: paquete.precioBase.toString(),
     );
+    final stockController = TextEditingController(
+      text: paquete.stock.toString(),
+    );
     var tipoCobroSelected = paquete.tipoCobro;
 
     showDialog(
@@ -2213,6 +2429,12 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
               TextField(
                 controller: priceController,
                 decoration: const InputDecoration(labelText: 'Precio Base'),
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: stockController,
+                decoration: const InputDecoration(labelText: 'Stock Disponible'),
                 keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 12),
@@ -2247,9 +2469,10 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                   descripcion: descriptionController.text,
                   precioBase: double.tryParse(priceController.text),
                   detallesJson: {
+                    ...?paquete.detallesJson,
                     'tipoCobro': tipoCobroSelected,
                     'fotos': paquete.fotos,
-                    ...?paquete.detallesJson,
+                    'stock': int.tryParse(stockController.text) ?? 0,
                   },
                 );
 
